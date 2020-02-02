@@ -45,7 +45,7 @@ struct HashTable {
 
 static LinkedList* allocate_list () {
     // Allocates memory for a Linkedlist pointer
-    LinkedList* list = (LinkedList*) malloc (sizeof(LinkedList));
+    LinkedList* list = (LinkedList*) calloc (1, sizeof(LinkedList));
     return list;
 }
 
@@ -82,6 +82,8 @@ static LinkedList* linkedlist_insert(LinkedList* list, Ht_item* item) {
 
 static void free_linkedlist(LinkedList* list) {
     LinkedList* temp = list;
+    if (!list)
+        return;
     while (list) {
         temp = list;
         list = list->next;
@@ -112,8 +114,8 @@ static void free_overflow_buckets(HashTable* table) {
 Ht_item* create_item(char* key, char* value) {
     // Creates a pointer to a new hash table item
     Ht_item* item = (Ht_item*) malloc (sizeof(Ht_item));
-    item->key = (char*) malloc (strlen(key) + 1);
-    item->value = (char*) malloc (strlen(value) + 1);
+    item->key = (char*) calloc (strlen(key) + 1, sizeof(char));
+    item->value = (char*) calloc (strlen(value) + 1, sizeof(char));
     
     strcpy(item->key, key);
     strcpy(item->value, value);
@@ -199,7 +201,10 @@ void ht_insert(HashTable* table, char* key, char* value) {
     else {
             // Scenario 1: We only need to update value
             if (strcmp(current_item->key, key) == 0) {
+                free(table->items[index]->value);
+                table->items[index]->value = (char*) calloc (strlen(value) + 1, sizeof(char));
                 strcpy(table->items[index]->value, value);
+                free_item(item);
                 return;
             }
     
