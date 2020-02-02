@@ -20,9 +20,6 @@ Build a compiler for a custom language **ERPLAG**, that is a strongly typed lang
 * Code Optimizer :black_square_button:
 * Intermediate Code Generation :black_square_button:
 
-Group Number : <br/>
-**42**
-
-Group Members : <br/>
-**VijayKrishna Ramchandran : 2017A7PS0183P **<br/>
-**Rohit Krishnamoorthy : 2017A7PS0177P **
+Group Members:<br/>
+**VijayKrishna Ramchandran : 2017A7PS0183P**<br/>
+**Rohit Krishnamoorthy : 2017A7PS0177P**
