@@ -13,12 +13,12 @@ Build a compiler for a custom language **ERPLAG**, that is a strongly typed lang
 
 
 ## Stage 1
-* DFA :black_square_button:
-* Lexer / Tokenizer :black_square_button:
-* Symbol Table Operations :black_square_button:
-* Parser :black_square_button:
-* Code Optimizer :black_square_button:
-* Intermediate Code Generation :black_square_button:
+* DFA - [x]
+* Lexer / Tokenizer - [x]
+* Symbol Table Operations - []
+* Parser - []
+* Code Optimizer - []
+* Intermediate Code Generation - []
 
 Group Members:<br/>
 **VijayKrishna Ramchandran : 2017A7PS0183P**<br/>
