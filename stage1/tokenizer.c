@@ -1,7 +1,10 @@
+// Group #42:
+// R.VIJAY KRISHNA -> 2017A7PS0183P
+// ROHIT K -> 2017A7PS0177P
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "hash_table.h"
 
 #define BUF_SIZE 4096
 #define NUM_KEYWORDS 33
@@ -12,7 +15,6 @@ enum bool { false = 0, true = ~0 };
 typedef enum bool bool;
 
 // Define the Terminals here
-
 typedef enum {
     TK_NUM,
     TK_RNUM,
@@ -71,11 +73,9 @@ typedef enum {
     TK_COMMENTMARK,
     TK_ID,
     TK_EPSILON,
-    $,
     TK_EOF,
     TK_ERROR,
     TK_NONE,
-    TK_NOT_KEYWORD,
 }term;
 
 
@@ -125,15 +125,6 @@ Keyword keywords[] = {
     {"with", TK_WITH},
 };
 
-typedef enum {
-    LEXEME_INT,
-    LEXEME_FLOAT,
-    LEXEME_CHAR,
-    LEXEME_STRING,
-    LEXEME_ERROR,
-    LEXEME_NONE
-}LexemeType;
-
 
 typedef enum {
     LEX_UNRECOGNISED,
@@ -149,25 +140,106 @@ typedef struct Token Token;
 // Define the Token here
 struct Token {
     // A Token consists of a token name (terminal), a lexeme,
-    // and the length, followed by pointers to the previous
+    // followed by pointers to the previous
     // and next tokens in the line to be tokenized
 
     term token_type;
     void* lexeme;
     int line_no;
-    Token* prev, *next;
+    //Token* prev, *next;
+};
+
+
+// Define the TokenStream Linked List here
+typedef struct TokenStream TokenStream;
+
+struct TokenStream {
+    Token token;
+    TokenStream* prev, *next;
 };
 
 
 // Declare all Global Variables here
 FILE* fp; // The file pointer to the source code file
 int line_no; // For Detecting errors
+int num_tokens; // To keep track of the number of tokens tokenized
 char* buffer1, *buffer2; // A Double Buffer scheme
 int lexeme_size; // Keep track of the lexeme size
 char* curr_lexeme; // Current lexeme
 char* look_ahead; // Pointers to look at the lexemes
 bool reload_buffer1 = false; // To signal reloading the buffer1
 bool reload_buffer2 = false; // To signal reloadiing the buffer2
+TokenStream* first_tk, *last_tk; // Pointers for the first and last tokenstream elements
+
+
+// Declare all function prototypes here
+TokenStream* create_token_stream();
+void insert_token_stream(Token);
+void free_token(TokenStream*);
+void free_token_stream();
+void init_tokenizer();
+void close_tokenizer();
+char get_char();
+void unget_char(int);
+void print_buffers();
+void print_token_stream();
+void print_token_type(Token);
+void print_lexical_error(char, LexerError);
+char* get_lexeme();
+void dfa_signal();
+Token DFA();
+term is_keyword(char*);
+void run_tokenizer(char*);
+
+// Define all function definitions here
+TokenStream* create_token_stream() {
+    // Creates a token stream element
+    TokenStream* tk_str = (TokenStream*) calloc (1, sizeof(TokenStream));
+    tk_str->next = tk_str->prev = NULL;
+    return tk_str;
+}
+
+void insert_token_stream(Token token) {
+    // Inserts an element into the tokenstream
+    TokenStream* curr = last_tk;
+    TokenStream* tk = create_token_stream();
+    tk->token = token;
+    if (!last_tk) {
+        first_tk = tk;
+        last_tk = tk;
+        return;
+    }
+    curr->next = tk;
+    tk->prev = last_tk;
+    last_tk = tk;
+}
+
+void free_token(TokenStream* tk) {
+    // Frees a tokenstream element
+    free((tk->token).lexeme);
+    tk->prev = tk->next = NULL;
+    free(tk);
+}
+
+void free_token_stream() {
+    // Frees the complete chain of tokenstream elements
+    TokenStream* curr = last_tk;
+    if (!curr) {
+        return;
+    }
+    
+    if (curr->prev == NULL) {
+        free_token(curr);
+        first_tk = last_tk = NULL;
+        return;
+    }
+
+    curr = curr->prev;
+    TokenStream* temp = last_tk;
+    free_token(temp);
+    last_tk = curr;
+    free_token_stream();
+}
 
 void init_tokenizer(char* filename) {
     // Initializes the tokenizer
@@ -177,16 +249,20 @@ void init_tokenizer(char* filename) {
 		exit(EXIT_FAILURE);
 	}
     line_no = 1;
+    num_tokens = 0;
     buffer1 = (char*) calloc (BUF_SIZE+1, sizeof(char));
     buffer2 = (char*) calloc (BUF_SIZE+1, sizeof(char));
     curr_lexeme = look_ahead = NULL;
     lexeme_size = 0;
     reload_buffer1 = reload_buffer2 = true;
+    first_tk = last_tk = NULL;
 }
 
 void close_tokenizer() {
     // Frees the buffers and closes
     // the file pointer
+    // along with the token stream
+    free_token_stream();
     free(buffer1);
     free(buffer2);
 	fclose(fp);
@@ -283,6 +359,7 @@ void unget_char(int num_characters) {
 }
 
 void print_buffers() {
+    // Prints the buffer elements
     printf("Buffer 1: \n");
     for (int i=0; i<BUF_SIZE; i++) {
         printf("%c", buffer1[i]);
@@ -295,14 +372,27 @@ void print_buffers() {
     printf("\n");
 }
 
-void print_error(char ch, LexerError err) {
+void print_token_stream() {
+    // Prints the token stream elements
+    printf("Token Stream:\n");
+    TokenStream* temp = first_tk;
+    while (temp) {
+        printf("Token: %s, ", (temp->token).lexeme);
+        print_token_type(temp->token);
+        temp = temp->next;
+    }
+    printf("\n");
+}
+
+void print_lexical_error(char ch, LexerError err) {
+    // Prints an error to the console on a Lexical Error
     switch(err) {
         case LEX_UNRECOGNISED:
             fprintf(stderr, "ERPLAG Lexical Error: (Line No %d) Unrecognized character: %c\n", line_no, ch);
             break;
 
         case LEX_ID_OVERFLOW:
-            fprintf(stderr, "ERPLAG Lexical Error: (Line No %d) Identifier length exceeded (>20)\n", line_no);
+            fprintf(stderr, "ERPLAG Lexical Error: (Line No %d) Identifier length exceeded 20 characters\n", line_no);
             break;
 
         case LEX_UNRECOGNISED_EXPONENT:
@@ -369,7 +459,7 @@ term is_keyword(char* lexeme) {
         }
     }
 
-    return TK_NOT_KEYWORD;
+    return TK_ID;
 }
 
 void dfa_signal() {
@@ -459,6 +549,8 @@ Token DFA() {
                     state = 40;
                 else if (ch == ',')
                     state = 41;
+                else if (ch == EOF)
+                    state = 42;
                 else {
                     err = LEX_UNRECOGNISED;
                     state = -1;
@@ -527,6 +619,7 @@ Token DFA() {
                 }
                 else if (ch == '.'){
                     // For range op, we need to unget both the dots
+                    // and classify the number as an integer
                     unget_char(2);
                     token.lexeme = get_lexeme();
                     token.token_type = TK_NUM;
@@ -623,15 +716,21 @@ Token DFA() {
                 ch = get_char();
                 if (ch == '*')
                     state = 16;
-                else
+                else {
+                    if (ch == '\n')
+                        line_no++;
                     state = 15;
+                }
                 break;
             case 16:
                 ch = get_char();
                 if (ch == '*')
                     state = 17;
-                else
-                    state = 16;
+                else {
+                    if (ch == '\n')
+                        line_no++;
+                    state = 15;
+                }
                 break;
             case 17:
                 // This is just a comment. Return nothing as a lexeme
@@ -829,232 +928,240 @@ Token DFA() {
                 dfa_signal();
                 return token;
                 break;
+            case 42:
+                token.lexeme = NULL;
+                token.token_type = TK_EOF;
+                token.line_no = line_no;
+                dfa_signal();
+                return token;
+                break;
             default:
                 break;
 
         }
     }
 
-    print_error(ch, err);
+    print_lexical_error(ch, err);
     token.token_type = TK_ERROR;
     dfa_signal();
     return token;
 }
 
-int scanner() {
-    // Scanner
-    char ch;
-    while (true) {
-        ch = get_char();
-        if (ch == EOF)
+void print_token_type(Token t) {
+    // Prints the token type
+    switch(t.token_type) {
+        case TK_NUM:
+        printf("TK_NUM\n");
+        break;
+        case TK_RNUM:
+        printf("TK_RNUM\n");
+        break;
+        case TK_BOOLEAN:
+        printf("TK_BOOLEAN\n");
+        break;
+        case TK_OF:
+        printf("TK_OF\n");
+        break;
+        case TK_ARRAY:
+        printf("TK_ARRAY\n");
+        break;
+        case TK_START:
+        printf("TK_START\n");
+        break;
+        case TK_END:
+        printf("TK_END\n");
+        break;
+        case TK_DECLARE:
+        printf("TK_DECLARE\n");
+        break;
+        case TK_MODULE:
+        printf("TK_MODULE\n");
+        break;
+        case TK_DRIVER:
+        printf("TK_DRIVER\n");
+        break;
+        case TK_PROGRAM:
+        printf("TK_PROGRAM\n");
+        break;
+        case TK_RECORD:
+        printf("TK_RECORD\n");
+        break;
+        case TK_TAGGED:
+        printf("TK_TAGGED\n");
+        break;
+        case TK_UNION:
+        printf("TK_UNION\n");
+        break;
+        case TK_GET_VALUE:
+        printf("TK_GET_VALUE\n");
+        break;
+        case TK_PRINT:
+        printf("TK_PRINT\n");
+        break;
+        case TK_USE:
+        printf("TK_USE\n");
+        break;
+        case TK_WITH:
+        printf("TK_WITH\n");
+        break;
+        case TK_PARAMETERS:
+        printf("TK_PARAMETERS\n");
+        break;
+        case TK_TRUE:
+        printf("TK_TRUE\n");
+        break;
+        case TK_FALSE:
+        printf("TK_FALSE\n");
+        break;
+        case TK_TAKES:
+        printf("TK_TAKES\n");
+        break;
+        case TK_INPUT:
+        printf("TK_INPUT\n");
+        break;
+        case TK_RETURNS:
+        printf("TK_RETURNS\n");
+        break;
+        case TK_AND:
+        printf("TK_AND\n");
+        break;
+        case TK_OR:
+        printf("TK_OR\n");
+        break;
+        case TK_FOR:
+        printf("TK_FOR\n");
+        break;
+        case TK_IN:
+        printf("TK_IN\n");
+        break;
+        case TK_SWITCH:
+        printf("TK_SWITCH\n");
+        break;
+        case TK_CASE:
+        printf("TK_CASE\n");
+        break;
+        case TK_BREAK:
+        printf("TK_BREAK\n");
+        break;
+        case TK_DEFAULT:
+        printf("TK_DEFAULT\n");
+        break;
+        case TK_WHILE:
+        printf("TK_WHILE\n");
+        break;
+        case TK_PLUS:
+        printf("TK_PLUS\n");
+        break;
+        case TK_MINUS:
+        printf("TK_MINUS\n");
+        break;
+        case TK_MUL:
+        printf("TK_MUL\n");
+        break;
+        case TK_DIV:
+        printf("TK_DIV\n");
+        break;
+        case TK_LT:
+        printf("TK_LT\n");
+        break;
+        case TK_LE:
+        printf("TK_LE\n");
+        break;
+        case TK_GE:
+        printf("TK_GE\n");
+        break;
+        case TK_GT:
+        printf("TK_GT\n");
+        break;
+        case TK_EQ:
+        printf("TK_EQ\n");
+        break;
+        case TK_NE:
+        printf("TK_NE\n");
+        break;
+        case TK_DEF:
+        printf("TK_DEF\n");
+        break;
+        case TK_ENDDEF:
+        printf("TK_ENDDEF\n");
+        break;
+        case TK_COLON:
+        printf("TK_COLON\n");
+        break;
+        case TK_RANGEOP:
+        printf("TK_RANGEOP\n");
+        break;
+        case TK_SEMICOL:
+        printf("TK_SEMICOL\n");
+        break;
+        case TK_COMMA:
+        printf("TK_COMMA\n");
+        break;
+        case TK_ASSIGNOP:
+        printf("TK_ASSIGNOP\n");
+        break;
+        case TK_SQBO:
+        printf("TK_SQBO\n");
+        break;
+        case TK_SQBC:
+        printf("TK_SQBC\n");
+        break;
+        case TK_BO:
+        printf("TK_BO\n");
+        break;
+        case TK_BC:
+        printf("TK_BC\n");
+        break;
+        case TK_COMMENTMARK:
+        printf("TK_COMMENTMARK\n");
+        break;
+        case TK_ID:
+        printf("TK_ID\n");
+        break;
+        case TK_EPSILON:
+        printf("TK_EPSILON\n");
+        break;
+        case TK_EOF:
+        printf("TK_EOF\n");
+        break;
+        case TK_ERROR:
+        printf("TK_ERROR\n");
+        break;
+        case TK_NONE:
+        printf("TK_NONE\n");
+        break;
+        default:
+        break;
+    }
+}
+
+void run_tokenizer(char* filename) {
+    // Runs the tokenizer on the input file
+    init_tokenizer(filename);
+
+    // Process the tokens using DFA()
+    for (;;) {
+        Token t = DFA();
+        if (t.token_type == TK_EOF)
             break;
-        if (ch == '\0')
-            continue;
-        printf("Next character is: %c\n", ch);
-        DFA();
-        //print_buffers();
+        if (t.lexeme) {
+            printf("Line no: %d\n", t.line_no);
+            printf("Token: %s\n", (char*)t.lexeme);
+            printf("Type: ");
+            // Insert the token into the token stream
+            insert_token_stream(t);
+            print_token_type(t);
+        }
     }
 
-    return -1;
+    // Prints the token stream
+    print_token_stream();
+    // Close the tokenizer
+    close_tokenizer();
 }
 
 int main() {
-    init_tokenizer("sample.txt");
-    //scanner();
-    for (int i=0; i<8; i++) {
-        Token t = DFA();
-        printf("Line no: %d\n", t.line_no);
-        printf("Token: %s\n", (char*)t.lexeme);
-        printf("Type: ");
-        switch(t.token_type) {
-            case TK_NUM:
-            printf("TK_NUM\n");
-            break;
-            case TK_RNUM:
-            printf("TK_RNUM\n");
-            break;
-            case TK_BOOLEAN:
-            printf("TK_BOOLEAN\n");
-            break;
-            case TK_OF:
-            printf("TK_OF\n");
-            break;
-            case TK_ARRAY:
-            printf("TK_ARRAY\n");
-            break;
-            case TK_START:
-            printf("TK_START\n");
-            break;
-            case TK_END:
-            printf("TK_END\n");
-            break;
-            case TK_DECLARE:
-            printf("TK_DECLARE\n");
-            break;
-            case TK_MODULE:
-            printf("TK_MODULE\n");
-            break;
-            case TK_DRIVER:
-            printf("TK_DRIVER\n");
-            break;
-            case TK_PROGRAM:
-            printf("TK_PROGRAM\n");
-            break;
-            case TK_RECORD:
-            printf("TK_RECORD\n");
-            break;
-            case TK_TAGGED:
-            printf("TK_TAGGED\n");
-            break;
-            case TK_UNION:
-            printf("TK_UNION\n");
-            break;
-            case TK_GET_VALUE:
-            printf("TK_GET_VALUE\n");
-            break;
-            case TK_PRINT:
-            printf("TK_PRINT\n");
-            break;
-            case TK_USE:
-            printf("TK_USE\n");
-            break;
-            case TK_WITH:
-            printf("TK_WITH\n");
-            break;
-            case TK_PARAMETERS:
-            printf("TK_PARAMETERS\n");
-            break;
-            case TK_TRUE:
-            printf("TK_TRUE\n");
-            break;
-            case TK_FALSE:
-            printf("TK_FALSE\n");
-            break;
-            case TK_TAKES:
-            printf("TK_TAKES\n");
-            break;
-            case TK_INPUT:
-            printf("TK_INPUT\n");
-            break;
-            case TK_RETURNS:
-            printf("TK_RETURNS\n");
-            break;
-            case TK_AND:
-            printf("TK_AND\n");
-            break;
-            case TK_OR:
-            printf("TK_OR\n");
-            break;
-            case TK_FOR:
-            printf("TK_FOR\n");
-            break;
-            case TK_IN:
-            printf("TK_IN\n");
-            break;
-            case TK_SWITCH:
-            printf("TK_SWITCH\n");
-            break;
-            case TK_CASE:
-            printf("TK_CASE\n");
-            break;
-            case TK_BREAK:
-            printf("TK_BREAK\n");
-            break;
-            case TK_DEFAULT:
-            printf("TK_DEFAULT\n");
-            break;
-            case TK_WHILE:
-            printf("TK_WHILE\n");
-            break;
-            case TK_PLUS:
-            printf("TK_PLUS\n");
-            break;
-            case TK_MINUS:
-            printf("TK_MINUS\n");
-            break;
-            case TK_MUL:
-            printf("TK_MUL\n");
-            break;
-            case TK_DIV:
-            printf("TK_DIV\n");
-            break;
-            case TK_LT:
-            printf("TK_LT\n");
-            break;
-            case TK_LE:
-            printf("TK_LE\n");
-            break;
-            case TK_GE:
-            printf("TK_GE\n");
-            break;
-            case TK_GT:
-            printf("TK_GT\n");
-            break;
-            case TK_EQ:
-            printf("TK_EQ\n");
-            break;
-            case TK_NE:
-            printf("TK_NE\n");
-            break;
-            case TK_DEF:
-            printf("TK_DEF\n");
-            break;
-            case TK_ENDDEF:
-            printf("TK_ENDDEF\n");
-            break;
-            case TK_COLON:
-            printf("TK_COLON\n");
-            break;
-            case TK_RANGEOP:
-            printf("TK_RANGEOP\n");
-            break;
-            case TK_SEMICOL:
-            printf("TK_SEMICOL\n");
-            break;
-            case TK_COMMA:
-            printf("TK_COMMA\n");
-            break;
-            case TK_ASSIGNOP:
-            printf("TK_ASSIGNOP\n");
-            break;
-            case TK_SQBO:
-            printf("TK_SQBO\n");
-            break;
-            case TK_SQBC:
-            printf("TK_SQBC\n");
-            break;
-            case TK_BO:
-            printf("TK_BO\n");
-            break;
-            case TK_BC:
-            printf("TK_BC\n");
-            break;
-            case TK_COMMENTMARK:
-            printf("TK_COMMENTMARK\n");
-            break;
-            case TK_ID:
-            printf("TK_ID\n");
-            break;
-            case TK_EPSILON:
-            printf("TK_EPSILON\n");
-            break;
-            case $:
-            printf("$\n");
-            break;
-            case TK_EOF:
-            printf("TK_EOF\n");
-            break;
-            case TK_ERROR:
-            printf("TK_ERROR\n");
-            break;
-            case TK_NONE:
-            printf("TK_NONE\n");
-            break;
-            case TK_NOT_KEYWORD:
-            printf("TK_NOT_KEYWORD\n");
-            break;
-        }
-    }
-    close_tokenizer();
+    // Driver function to test the tokenizer
+    run_tokenizer("sample.txt");
     return 0;
 }
