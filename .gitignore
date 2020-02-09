@@ -50,3 +50,9 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
+
+# Cache
+.mypy_cache/
+
+# Ignore old_ files
+old_*

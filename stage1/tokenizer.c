@@ -127,12 +127,13 @@ Keyword keywords[] = {
 
 
 typedef enum {
-    LEX_UNRECOGNISED,
+    LEX_UNRECOGNISED_CHAR,
     LEX_ID_OVERFLOW,
     LEX_NONE,
     LEX_UNRECOGNISED_EXPONENT,
     LEX_UNRECOGNISED_REAL_NUMBER,
     LEX_UNRECOGNISED_EQUAL,
+    LEX_UNRECOGNISED_NOT,
 }LexerError;
 
 typedef struct Token Token;
@@ -387,8 +388,8 @@ void print_token_stream() {
 void print_lexical_error(char ch, LexerError err) {
     // Prints an error to the console on a Lexical Error
     switch(err) {
-        case LEX_UNRECOGNISED:
-            fprintf(stderr, "ERPLAG Lexical Error: (Line No %d) Unrecognized character: %c\n", line_no, ch);
+        case LEX_UNRECOGNISED_CHAR:
+            fprintf(stderr, "ERPLAG Lexical Error: (Line No %d) Unrecognized character: '%c'\n", line_no, ch);
             break;
 
         case LEX_ID_OVERFLOW:
@@ -396,15 +397,19 @@ void print_lexical_error(char ch, LexerError err) {
             break;
 
         case LEX_UNRECOGNISED_EXPONENT:
-            fprintf(stderr, "ERPLAG Lexical Error: (Line No %d) Unrecognised Exponent Symbol\n", line_no);
+            fprintf(stderr, "ERPLAG Lexical Error: (Line No %d) Unrecognised Exponent Symbol: '%c'\n", line_no, ch);
             break;
 
         case LEX_UNRECOGNISED_REAL_NUMBER:
-            fprintf(stderr, "ERPLAG Lexical Error: (Line No %d) Unrecognised Real Number\n", line_no);
+            fprintf(stderr, "ERPLAG Lexical Error: (Line No %d) Unrecognised Real Number: '%c'\n", line_no, ch);
             break;
 
         case LEX_UNRECOGNISED_EQUAL:
-            fprintf(stderr, "ERPLAG Lexical Error: (Line No %d) Unrecognised Character after equal to sign (=)\n", line_no);
+            fprintf(stderr, "ERPLAG Lexical Error: (Line No %d) Unrecognised Character after equal to sign (=): '%c'\n", line_no, ch);
+            break;
+
+        case LEX_UNRECOGNISED_NOT:
+            fprintf(stderr, "ERPLAG Lexical Error: (Line No %d) Unrecognised Character after NOT sign (!): '%c'\n", line_no, ch);
             break;
     }
 }
@@ -552,7 +557,7 @@ Token DFA() {
                 else if (ch == EOF)
                     state = 42;
                 else {
-                    err = LEX_UNRECOGNISED;
+                    err = LEX_UNRECOGNISED_CHAR;
                     state = -1;
                 }
                 break;
@@ -845,7 +850,7 @@ Token DFA() {
                     state = 32;
                 else {
                     state = -1;
-                    err = LEX_UNRECOGNISED;
+                    err = LEX_UNRECOGNISED_NOT;
                 }
                 break;
             case 32:
@@ -883,7 +888,7 @@ Token DFA() {
                     state = 37;
                 else {
                     state = -1;
-                    err = LEX_UNRECOGNISED;
+                    err = LEX_UNRECOGNISED_CHAR;
                 }
                 break;
             case 37:
@@ -897,7 +902,7 @@ Token DFA() {
                 }
                 else {
                     state = -1;
-                    err = LEX_UNRECOGNISED;
+                    err = LEX_UNRECOGNISED_CHAR;
                 }
                 break;
             case 38:
@@ -1144,6 +1149,8 @@ void run_tokenizer(char* filename) {
         Token t = DFA();
         if (t.token_type == TK_EOF)
             break;
+        // Process token only if the lexeme exists.
+        // This means that any TK_COMMENTMARK is avoided
         if (t.lexeme) {
             printf("Line no: %d\n", t.line_no);
             printf("Token: %s\n", (char*)t.lexeme);
