@@ -400,7 +400,7 @@ void print_token_stream() {
     printf("\nToken Stream:\n");
     TokenStream* temp = first_tk;
     while (temp) {
-        printf("Token: %s, ", (temp->token).lexeme);
+        printf("Token: %s, ", (char*)(temp->token).lexeme);
         print_token_type(temp->token);
         temp = temp->next;
     }
@@ -432,6 +432,9 @@ void print_lexical_error(char ch, LexerError err) {
 
         case LEX_UNRECOGNISED_NOT:
             fprintf(stderr, "ERPLAG Lexical Error: (Line No %d) Unrecognised Character after NOT sign (!): '%c'\n", line_no, ch);
+            break;
+
+        default:
             break;
     }
 }

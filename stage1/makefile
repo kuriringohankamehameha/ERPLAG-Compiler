@@ -1,3 +1,3 @@
 all:
-	gcc -o tokenizer.out tokenizer.c
-	gcc -o driver.out driver.c
+	gcc -o tokenizer.out tokenizer.c -Wall -Wextra
+	gcc -o driver.out driver.c -Wall -Wextra
