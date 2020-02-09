@@ -72,6 +72,8 @@ typedef enum {
     TK_BC,
     TK_COMMENTMARK,
     TK_ID,
+    TK_INTEGER,
+    TK_REAL,
     TK_EPSILON,
     TK_EOF,
     TK_ERROR,
@@ -90,7 +92,10 @@ struct Keyword {
 // Complete list of keywords here
 // ASSUMPTION: No Keyword has a length exceeding 20 characters
 Keyword keywords[] = {
-    {"and", TK_AND},
+    {"AND", TK_AND},
+    {"FALSE", TK_FALSE},
+    {"OR", TK_OR},
+    {"TRUE", TK_TRUE},
     {"array", TK_ARRAY},
     {"boolean", TK_BOOLEAN},
     {"break", TK_BREAK},
@@ -99,26 +104,23 @@ Keyword keywords[] = {
     {"default", TK_DEFAULT},
     {"driver", TK_DRIVER},
     {"end", TK_END},
-    {"false", TK_FALSE},
     {"for", TK_FOR},
     {"get_value", TK_GET_VALUE},
     {"in", TK_IN},
     {"input", TK_INPUT},
-    {"integer", TK_NUM},
+    {"integer", TK_INTEGER},
     {"module", TK_MODULE},
     {"of", TK_OF},
-    {"or", TK_OR},
     {"parameters", TK_PARAMETERS},
     {"print", TK_PRINT},
     {"program", TK_PROGRAM},
-    {"real", TK_RNUM},
+    {"real", TK_REAL},
     {"record", TK_RECORD},
     {"returns", TK_RETURNS},
     {"start", TK_START},
     {"switch", TK_SWITCH},
     {"tagged", TK_TAGGED},
     {"takes", TK_TAKES},
-    {"true", TK_TRUE},
     {"union", TK_UNION},
     {"use", TK_USE},
     {"while", TK_WHILE},
@@ -575,7 +577,7 @@ Token DFA() {
                 else if (ch == ',')
                     state = 41;
                 else if (ch == EOF)
-                    state = 42;
+                    state = 43;
                 else {
                     err = LEX_UNRECOGNISED_CHAR;
                     state = -1;
@@ -645,12 +647,7 @@ Token DFA() {
                 else if (ch == '.'){
                     // For range op, we need to unget both the dots
                     // and classify the number as an integer
-                    unget_char(2);
-                    token.lexeme = get_lexeme();
-                    token.token_type = TK_NUM;
-                    token.line_no = line_no;
-                    dfa_signal();
-                    return token;
+                    state = 42;
                 }
                 else {
                     // Throw a lexical error
@@ -662,6 +659,8 @@ Token DFA() {
                 ch = get_char();
                 if (ch >= '0' && ch <= '9')
                     state = 6;
+                else if (ch == '.')
+                    state = 42;
                 else if (ch == 'e' || ch == 'E')
                     state = 7;
                 else {
@@ -912,18 +911,11 @@ Token DFA() {
                 }
                 break;
             case 37:
-                ch = get_char();
-                if (ch == '.') {
-                    token.lexeme = get_lexeme();
-                    token.token_type = TK_RANGEOP;
-                    token.line_no = line_no;
-                    dfa_signal();
-                    return token;
-                }
-                else {
-                    state = -1;
-                    err = LEX_UNRECOGNISED_CHAR;
-                }
+                token.lexeme = get_lexeme();
+                token.token_type = TK_RANGEOP;
+                token.line_no = line_no;
+                dfa_signal();
+                return token;
                 break;
             case 38:
                 token.lexeme = get_lexeme();
@@ -954,6 +946,14 @@ Token DFA() {
                 return token;
                 break;
             case 42:
+                unget_char(2);
+                token.lexeme = get_lexeme();
+                token.token_type = TK_NUM;
+                token.line_no = line_no;
+                dfa_signal();
+                return token;
+                break;
+            case 43:
                 token.lexeme = NULL;
                 token.token_type = TK_EOF;
                 token.line_no = line_no;
@@ -1155,6 +1155,12 @@ void print_token_type(Token t) {
         case TK_NONE:
         printf("TK_NONE\n");
         break;
+        case TK_INTEGER:
+        printf("TK_INTEGER\n");
+        break;
+        case TK_REAL:
+        printf("TK_REAL\n");
+        break;
         default:
         break;
     }
@@ -1172,12 +1178,15 @@ void run_tokenizer(char* filename) {
         // Process token only if the lexeme exists.
         // This means that any TK_COMMENTMARK is avoided
         if (t.lexeme) {
+            /*
             printf("Line no: %d\n", t.line_no);
             printf("Token: %s\n", (char*)t.lexeme);
             printf("Type: ");
+            print_token_type(t);
+            */
+
             // Insert the token into the token stream
             insert_token_stream(t);
-            print_token_type(t);
         }
     }
 
