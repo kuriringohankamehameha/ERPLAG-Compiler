@@ -215,6 +215,26 @@ void insert_token_stream(Token token) {
     last_tk = tk;
 }
 
+void delete_from_token_stream() {
+    // Removes the last element from the tokenstream
+    if (!last_tk)
+        return;
+    
+    TokenStream* temp = last_tk->prev;
+    
+    if (!temp) {
+        free_token(last_tk);
+        first_tk = last_tk = NULL;
+        return;
+    }
+
+    temp->next = NULL;
+    last_tk->prev = NULL;
+    free_token(last_tk);
+    last_tk = temp;
+    return;
+}
+
 void free_token(TokenStream* tk) {
     // Frees a tokenstream element
     free((tk->token).lexeme);
@@ -375,7 +395,7 @@ void print_buffers() {
 
 void print_token_stream() {
     // Prints the token stream elements
-    printf("Token Stream:\n");
+    printf("\nToken Stream:\n");
     TokenStream* temp = first_tk;
     while (temp) {
         printf("Token: %s, ", (temp->token).lexeme);
