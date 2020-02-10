@@ -136,6 +136,7 @@ typedef enum {
     LEX_UNRECOGNISED_REAL_NUMBER,
     LEX_UNRECOGNISED_EQUAL,
     LEX_UNRECOGNISED_NOT,
+    LEX_INVALID_DECIMAL_POINT,
 }LexerError;
 
 typedef struct Token Token;
@@ -434,6 +435,9 @@ void print_lexical_error(char ch, LexerError err) {
             fprintf(stderr, "ERPLAG Lexical Error: (Line No %d) Unrecognised Character after NOT sign (!): '%c'\n", line_no, ch);
             break;
 
+        case LEX_INVALID_DECIMAL_POINT:
+            fprintf(stderr, "ERPLAG Lexical Error: (Line No %d) Decimal point must have a prefix digit.\n", line_no);
+
         default:
             break;
     }
@@ -515,7 +519,7 @@ Token DFA() {
     token.token_type = TK_NONE;
     token.lexeme = NULL;
 
-    char ch;
+    int ch;
     LexerError err = LEX_NONE;
 
     // Identifier size must be < 20
@@ -662,8 +666,6 @@ Token DFA() {
                 ch = get_char();
                 if (ch >= '0' && ch <= '9')
                     state = 6;
-                else if (ch == '.')
-                    state = 42;
                 else if (ch == 'e' || ch == 'E')
                     state = 7;
                 else {
@@ -908,6 +910,10 @@ Token DFA() {
                 ch = get_char();
                 if (ch == '.')
                     state = 37;
+                else if (ch >= '0' && ch <= '9') {
+                    state = -1;
+                    err = LEX_INVALID_DECIMAL_POINT;
+                }
                 else {
                     state = -1;
                     err = LEX_UNRECOGNISED_CHAR;
