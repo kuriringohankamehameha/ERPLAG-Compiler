@@ -299,7 +299,7 @@ char get_char() {
         // None of the buffers are loaded.
         // Read into the first buffer
         size_t bytes_read = fread(buffer1, sizeof(char), BUF_SIZE, fp);
-        buffer1[bytes_read] = EOF;
+        buffer1[bytes_read] = '\0';
         curr_lexeme = look_ahead = buffer1;   
     }
 
@@ -315,7 +315,7 @@ char get_char() {
         look_ahead = buffer2;
         if (reload_buffer2) {
             size_t bytes_read = fread(buffer2, sizeof(char), BUF_SIZE, fp);
-            buffer2[bytes_read] = EOF;
+            buffer2[bytes_read] = '\0';
         }
     }
 
@@ -324,7 +324,7 @@ char get_char() {
         look_ahead = buffer1;
         if (reload_buffer1) {
             size_t bytes_read = fread(buffer1, sizeof(char), BUF_SIZE, fp);
-            buffer1[bytes_read] = EOF;
+            buffer1[bytes_read] = '\0';
         }
     }
 
