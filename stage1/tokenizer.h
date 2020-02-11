@@ -583,8 +583,9 @@ Token DFA() {
                     state = 40;
                 else if (ch == ',')
                     state = 41;
-                else if (ch == EOF)
+                else if (ch == EOF || ch == '\0') {
                     state = 43;
+                }
                 else {
                     err = LEX_UNRECOGNISED_CHAR;
                     state = -1;
