@@ -56,3 +56,6 @@ dkms.conf
 
 # Ignore old_ files
 old_*
+
+# Ignore any script files
+script_*
