@@ -10,10 +10,12 @@
 // Declare all function prototypes here
 TokenStream* create_token_stream();
 void insert_token_stream(Token);
+void delete_from_token_stream();
 void free_token(TokenStream*);
 void free_token_stream();
 void init_tokenizer();
 void close_tokenizer();
+FILE* get_stream(FILE*, int);
 char get_char();
 void unget_char(int);
 void print_buffers();
@@ -24,4 +26,5 @@ char* get_lexeme();
 void dfa_signal();
 Token get_next_token();
 term is_keyword(char*);
+void remove_comments(char*, char*);
 void run_tokenizer(char*);

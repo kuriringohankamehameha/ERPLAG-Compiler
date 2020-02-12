@@ -421,7 +421,6 @@ Token get_next_token() {
             case 1:
                 // Get the next character
                 ch = get_char();
-                //printf("ch = %c\n", ch);
                 if ((ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z') || (ch >= '0' && ch <= '9') || ch == '_') {
                     id_size ++;
                     state = 1;
@@ -509,8 +508,6 @@ Token get_next_token() {
                     state = 8;
                 }
                 else {
-                    // Are we simply supposed to throw a 
-                    // lexical error, or must we unget_char() also ??
                     state = -1;
                     err = LEX_UNRECOGNISED_EXPONENT;
                 }
@@ -1006,14 +1003,17 @@ void print_token_type(Token t) {
 void remove_comments(char* testcase_file, char* clean_file) {
     // Processes a testcase file and rewrites it
     // into an output file after removing comments
+    
     FILE* ip = fopen(testcase_file, "r");
     if (!ip) {
         fprintf(stderr, "Error opening %s\n", testcase_file);
         exit(EXIT_FAILURE);
     }
+
     FILE* op = fopen(clean_file, "w");
     if (!op) {
         fprintf(stderr, "Error opening %s\n", clean_file);
+        fclose(ip);
         exit(EXIT_FAILURE);
     }
 
@@ -1064,6 +1064,8 @@ void remove_comments(char* testcase_file, char* clean_file) {
                 }
 
                 else {
+                    // Don't print any character under a comment
+                    // provided that it's not a newline character
                     if (under_comment && buffer[curr] != '\n')
                         continue;
                     else
@@ -1072,6 +1074,8 @@ void remove_comments(char* testcase_file, char* clean_file) {
             }
         }
     } while (!feof(ip) && buffer[0] != '\0');
+
+    // Close stuff
     free(buffer);
     fclose(ip);
     fclose(op);
