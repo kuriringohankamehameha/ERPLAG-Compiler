@@ -1,4 +1,4 @@
-<<driver program>>
+<<<driver program>>>
 start
 	declare a,b:integer;
 	declare c:boolean;

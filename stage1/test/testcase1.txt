@@ -1,5 +1,5 @@
 declare module mod1; 
-<<driver program>> 
+<<<driver program>>>
 start 
  
 declare  v, w, r :integer; 
