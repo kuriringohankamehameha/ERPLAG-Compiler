@@ -5,80 +5,22 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "hash_table.h"
 
 #define BUF_SIZE 4096
 #define NUM_KEYWORDS 33
 
+// A Hash Function for the hash table of keywords
+unsigned long hash_func (char* str) {
+    unsigned long i = 0;
+    for (int j=0; str[j]; j++)
+        i += str[j];
+    return i % CAPACITY;
+}
 
 enum bool { false = 0, true = ~0 };
 
 typedef enum bool bool;
-
-// Define the Terminals here
-typedef enum {
-    TK_NUM,
-    TK_RNUM,
-    TK_BOOLEAN,
-    TK_OF,
-    TK_ARRAY,
-    TK_START,
-    TK_END,
-    TK_DECLARE,
-    TK_MODULE,
-    TK_DRIVER,
-    TK_PROGRAM,
-    TK_RECORD,
-    TK_TAGGED,
-    TK_UNION,
-    TK_GET_VALUE,
-    TK_PRINT,
-    TK_USE,
-    TK_WITH,
-    TK_PARAMETERS,
-    TK_TRUE,
-    TK_FALSE,
-    TK_TAKES,
-    TK_INPUT,
-    TK_RETURNS,
-    TK_AND,
-    TK_OR,
-    TK_FOR,
-    TK_IN,
-    TK_SWITCH,
-    TK_CASE,
-    TK_BREAK,
-    TK_DEFAULT,
-    TK_WHILE,
-    TK_PLUS,
-    TK_MINUS,
-    TK_MUL,
-    TK_DIV,
-    TK_LT,
-    TK_LE,
-    TK_GE,
-    TK_GT,
-    TK_EQ,
-    TK_NE,
-    TK_DEF,
-    TK_ENDDEF,
-    TK_COLON,
-    TK_RANGEOP,
-    TK_SEMICOL,
-    TK_COMMA,
-    TK_ASSIGNOP,
-    TK_SQBO,
-    TK_SQBC,
-    TK_BO,
-    TK_BC,
-    TK_COMMENTMARK,
-    TK_ID,
-    TK_INTEGER,
-    TK_REAL,
-    TK_EPSILON,
-    TK_EOF,
-    TK_ERROR,
-    TK_NONE,
-}term;
 
 
 // Define the Keyword here
@@ -126,6 +68,25 @@ Keyword keywords[] = {
     {"while", TK_WHILE},
     {"with", TK_WITH},
 };
+
+
+// Populate the Hash Table with Keywords
+HashTable* populate_hash_table(HashTable* ht, Keyword* keywords) {
+
+    // A Function Pointer to the Hash Function
+    unsigned long (*hash_fun)(char*);
+
+    // Point to hash_func()
+    hash_fun = hash_func;
+
+    ht = create_table(5000, hash_fun);
+
+    for (int i=0; i < NUM_KEYWORDS; i++) {
+        ht_insert(ht, keywords[i].key, keywords[i].tid);
+    }
+
+    return ht;
+}
 
 
 typedef enum {

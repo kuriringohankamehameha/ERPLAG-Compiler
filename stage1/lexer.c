@@ -411,7 +411,7 @@ Token get_next_token() {
                 else if (ch == ',')
                     state = 41;
                 else if (ch == EOF || ch == '\0') {
-                    state = 43;
+                    state = 45;
                 }
                 else {
                     err = LEX_UNRECOGNISED_CHAR;
@@ -611,11 +611,18 @@ Token get_next_token() {
                 return token;
                 break;
             case 20:
-                token.lexeme = get_lexeme();
-                token.token_type = TK_DEF;
-                token.line_no = line_no;
-                dfa_signal();
-                return token;          
+                ch = get_char();
+                if (ch == '<') {
+                    state = 44;
+                }
+                else {
+                    unget_char(1);
+                    token.lexeme = get_lexeme();
+                    token.token_type = TK_DEF;
+                    token.line_no = line_no;
+                    dfa_signal();
+                    return token;          
+                }
                 break;
             case 21:
                 unget_char(1);
@@ -663,11 +670,18 @@ Token get_next_token() {
                 return token;
                 break;
             case 27:
-                token.lexeme = get_lexeme();
-                token.token_type = TK_ENDDEF;
-                token.line_no = line_no;
-                dfa_signal();
-                return token;
+                ch = get_char();
+                if (ch == '>') {
+                    state = 43;
+                }
+                else {
+                    unget_char(1);
+                    token.lexeme = get_lexeme();
+                    token.token_type = TK_ENDDEF;
+                    token.line_no = line_no;
+                    dfa_signal();
+                    return token;
+                }
                 break;
             case 28:
                 unget_char(1);
@@ -788,6 +802,18 @@ Token get_next_token() {
                 return token;
                 break;
             case 43:
+                token.lexeme = get_lexeme();
+                token.token_type = TK_DRIVERENDDEF;
+                token.line_no = line_no;
+                dfa_signal();
+                return token;
+            case 44:
+                token.lexeme = get_lexeme();
+                token.token_type = TK_DRIVERDEF;
+                token.line_no = line_no;
+                dfa_signal();
+                return token;
+            case 45:
                 token.lexeme = NULL;
                 token.token_type = TK_EOF;
                 token.line_no = line_no;
@@ -995,6 +1021,12 @@ void print_token_type(Token t) {
         case TK_REAL:
         printf("TK_REAL\n");
         break;
+        case TK_DRIVERDEF:
+        printf("TK_DRIVERDEF\n");
+        break;
+        case TK_DRIVERENDDEF:
+        printf("TK_DRIVERENDDEF\n");
+        break;
         default:
         break;
     }
@@ -1118,7 +1150,7 @@ int main(int argc, char* argv[]) {
         // Run the tokenizer
     	run_tokenizer(argv[1]);
         // Remove comments and write to an output file
-        remove_comments(argv[1], "output.txt");
+        //remove_comments(argv[1], "output.txt");
     }
     else {
     	fprintf(stderr, "Format: %s input.txt\n", argv[0]);

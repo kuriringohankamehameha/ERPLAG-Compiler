@@ -16,11 +16,11 @@ int main() {
 
     HashTable* ht = create_table(5000, hash_fun);
 
-    ht_insert(ht, "One", "This is the first string");
-    ht_insert(ht, "Two", "This is the second string");
-    ht_insert(ht, "One", "This is the first string part 2");
-    ht_insert(ht, "Hel", "String 1");
-    ht_insert(ht, "Cau", "String 2");
+    ht_insert(ht, "One", TK_NUM);
+    ht_insert(ht, "Two", TK_RNUM);
+    ht_insert(ht, "One", TK_EQ);
+    ht_insert(ht, "Hel", TK_BOOLEAN);
+    ht_insert(ht, "Cau", TK_FOR);
     
     print_search(ht, "One");
     print_search(ht, "Two");
@@ -32,7 +32,7 @@ int main() {
     
     ht_delete(ht, "Two");
     ht_delete(ht, "Cau");
-    ht_insert(ht, "Cau", "String 2 updated");
+    ht_insert(ht, "Cau", TK_WHILE);
     ht_delete(ht, "Hel");
     
     printf("\nSecond Time after deleting {Two, Cau}, and updating Cau\n");

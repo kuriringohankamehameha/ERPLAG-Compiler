@@ -2,6 +2,74 @@
 #include <stdlib.h>
 #include <string.h>
 
+// Define the Terminals here
+typedef enum {
+    TK_NUM,
+    TK_RNUM,
+    TK_BOOLEAN,
+    TK_OF,
+    TK_ARRAY,
+    TK_START,
+    TK_END,
+    TK_DECLARE,
+    TK_MODULE,
+    TK_DRIVER,
+    TK_PROGRAM,
+    TK_RECORD,
+    TK_TAGGED,
+    TK_UNION,
+    TK_GET_VALUE,
+    TK_PRINT,
+    TK_USE,
+    TK_WITH,
+    TK_PARAMETERS,
+    TK_TRUE,
+    TK_FALSE,
+    TK_TAKES,
+    TK_INPUT,
+    TK_RETURNS,
+    TK_AND,
+    TK_OR,
+    TK_FOR,
+    TK_IN,
+    TK_SWITCH,
+    TK_CASE,
+    TK_BREAK,
+    TK_DEFAULT,
+    TK_WHILE,
+    TK_PLUS,
+    TK_MINUS,
+    TK_MUL,
+    TK_DIV,
+    TK_LT,
+    TK_LE,
+    TK_GE,
+    TK_GT,
+    TK_EQ,
+    TK_NE,
+    TK_DEF,
+    TK_ENDDEF,
+    TK_DRIVERDEF,
+    TK_DRIVERENDDEF,
+    TK_COLON,
+    TK_RANGEOP,
+    TK_SEMICOL,
+    TK_COMMA,
+    TK_ASSIGNOP,
+    TK_SQBO,
+    TK_SQBC,
+    TK_BO,
+    TK_BC,
+    TK_COMMENTMARK,
+    TK_ID,
+    TK_INTEGER,
+    TK_REAL,
+    TK_EPSILON,
+    TK_EOF,
+    TK_ERROR,
+    TK_NONE,
+}term;
+
 #define CAPACITY 50000 // Size of the Hash Table
 
 unsigned long hash_function(char* str) {
@@ -16,7 +84,8 @@ typedef struct Ht_item Ht_item;
 // Define the Hash Table Item here
 struct Ht_item {
     char* key;
-    char* value;
+    //char* value;
+    term value;
 };
 
 
@@ -88,7 +157,7 @@ static void free_linkedlist(LinkedList* list) {
         temp = list;
         list = list->next;
         free(temp->item->key);
-        free(temp->item->value);
+        //free(temp->item->value);
         free(temp->item);
         free(temp);
     }
@@ -111,14 +180,15 @@ static void free_overflow_buckets(HashTable* table) {
 }
 
 
-Ht_item* create_item(char* key, char* value) {
+Ht_item* create_item(char* key, term value) {
     // Creates a pointer to a new hash table item
     Ht_item* item = (Ht_item*) malloc (sizeof(Ht_item));
     item->key = (char*) calloc (strlen(key) + 1, sizeof(char));
-    item->value = (char*) calloc (strlen(value) + 1, sizeof(char));
+    //item->value = (char*) calloc (strlen(value) + 1, sizeof(char));
     
     strcpy(item->key, key);
-    strcpy(item->value, value);
+    item->value = value;
+    //strcpy(item->value, value);
 
     return item;
 }
@@ -140,7 +210,7 @@ HashTable* create_table(int size, unsigned long (*hash_fun)(char*)) {
 void free_item(Ht_item* item) {
     // Frees an item
     free(item->key);
-    free(item->value);
+    //free(item->value);
     free(item);
 }
 
@@ -174,7 +244,7 @@ void handle_collision(HashTable* table, unsigned long index, Ht_item* item) {
     }
  }
 
-void ht_insert(HashTable* table, char* key, char* value) {
+void ht_insert(HashTable* table, char* key, term value) {
     // Create the item
     Ht_item* item = create_item(key, value);
 
@@ -201,9 +271,10 @@ void ht_insert(HashTable* table, char* key, char* value) {
     else {
             // Scenario 1: We only need to update value
             if (strcmp(current_item->key, key) == 0) {
-                free(table->items[index]->value);
-                table->items[index]->value = (char*) calloc (strlen(value) + 1, sizeof(char));
-                strcpy(table->items[index]->value, value);
+                //free(table->items[index]->value);
+                //table->items[index]->value = (char*) calloc (strlen(value) + 1, sizeof(char));
+                //strcpy(table->items[index]->value, value);
+                table->items[index]->value = value;
                 free_item(item);
                 return;
             }
@@ -216,7 +287,7 @@ void ht_insert(HashTable* table, char* key, char* value) {
     }
 }
 
-char* ht_search(HashTable* table, char* key) {
+term ht_search(HashTable* table, char* key) {
     // Searches the key in the hashtable
     // and returns NULL if it doesn't exist
     int index = table->hash_function(key);
@@ -228,11 +299,11 @@ char* ht_search(HashTable* table, char* key) {
         if (strcmp(item->key, key) == 0)
             return item->value;
         if (head == NULL)
-            return NULL;
+            return TK_NONE;
         item = head->item;
         head = head->next;
     }
-    return NULL;
+    return TK_NONE;
 }
 
 void ht_delete(HashTable* table, char* key) {
@@ -299,14 +370,209 @@ void ht_delete(HashTable* table, char* key) {
 
 }
 
+void print_term_type(term t, char ch) {
+    // Prints the term type
+    switch(t) {
+        case TK_NUM:
+        printf("TK_NUM%c", ch);
+        break;
+        case TK_RNUM:
+        printf("TK_RNUM%c", ch);
+        break;
+        case TK_BOOLEAN:
+        printf("TK_BOOLEAN%c", ch);
+        break;
+        case TK_OF:
+        printf("TK_OF%c", ch);
+        break;
+        case TK_ARRAY:
+        printf("TK_ARRAY%c", ch);
+        break;
+        case TK_START:
+        printf("TK_START%c", ch);
+        break;
+        case TK_END:
+        printf("TK_END%c", ch);
+        break;
+        case TK_DECLARE:
+        printf("TK_DECLARE%c", ch);
+        break;
+        case TK_MODULE:
+        printf("TK_MODULE%c", ch);
+        break;
+        case TK_DRIVER:
+        printf("TK_DRIVER%c", ch);
+        break;
+        case TK_PROGRAM:
+        printf("TK_PROGRAM%c", ch);
+        break;
+        case TK_RECORD:
+        printf("TK_RECORD%c", ch);
+        break;
+        case TK_TAGGED:
+        printf("TK_TAGGED%c", ch);
+        break;
+        case TK_UNION:
+        printf("TK_UNION%c", ch);
+        break;
+        case TK_GET_VALUE:
+        printf("TK_GET_VALUE%c", ch);
+        break;
+        case TK_PRINT:
+        printf("TK_PRINT%c", ch);
+        break;
+        case TK_USE:
+        printf("TK_USE%c", ch);
+        break;
+        case TK_WITH:
+        printf("TK_WITH%c", ch);
+        break;
+        case TK_PARAMETERS:
+        printf("TK_PARAMETERS%c", ch);
+        break;
+        case TK_TRUE:
+        printf("TK_TRUE%c", ch);
+        break;
+        case TK_FALSE:
+        printf("TK_FALSE%c", ch);
+        break;
+        case TK_TAKES:
+        printf("TK_TAKES%c", ch);
+        break;
+        case TK_INPUT:
+        printf("TK_INPUT%c", ch);
+        break;
+        case TK_RETURNS:
+        printf("TK_RETURNS%c", ch);
+        break;
+        case TK_AND:
+        printf("TK_AND%c", ch);
+        break;
+        case TK_OR:
+        printf("TK_OR%c", ch);
+        break;
+        case TK_FOR:
+        printf("TK_FOR%c", ch);
+        break;
+        case TK_IN:
+        printf("TK_IN%c", ch);
+        break;
+        case TK_SWITCH:
+        printf("TK_SWITCH%c", ch);
+        break;
+        case TK_CASE:
+        printf("TK_CASE%c", ch);
+        break;
+        case TK_BREAK:
+        printf("TK_BREAK%c", ch);
+        break;
+        case TK_DEFAULT:
+        printf("TK_DEFAULT%c", ch);
+        break;
+        case TK_WHILE:
+        printf("TK_WHILE%c", ch);
+        break;
+        case TK_PLUS:
+        printf("TK_PLUS%c", ch);
+        break;
+        case TK_MINUS:
+        printf("TK_MINUS%c", ch);
+        break;
+        case TK_MUL:
+        printf("TK_MUL%c", ch);
+        break;
+        case TK_DIV:
+        printf("TK_DIV%c", ch);
+        break;
+        case TK_LT:
+        printf("TK_LT%c", ch);
+        break;
+        case TK_LE:
+        printf("TK_LE%c", ch);
+        break;
+        case TK_GE:
+        printf("TK_GE%c", ch);
+        break;
+        case TK_GT:
+        printf("TK_GT%c", ch);
+        break;
+        case TK_EQ:
+        printf("TK_EQ%c", ch);
+        break;
+        case TK_NE:
+        printf("TK_NE%c", ch);
+        break;
+        case TK_DEF:
+        printf("TK_DEF%c", ch);
+        break;
+        case TK_ENDDEF:
+        printf("TK_ENDDEF%c", ch);
+        break;
+        case TK_COLON:
+        printf("TK_COLON%c", ch);
+        break;
+        case TK_RANGEOP:
+        printf("TK_RANGEOP%c", ch);
+        break;
+        case TK_SEMICOL:
+        printf("TK_SEMICOL%c", ch);
+        break;
+        case TK_COMMA:
+        printf("TK_COMMA%c", ch);
+        break;
+        case TK_ASSIGNOP:
+        printf("TK_ASSIGNOP%c", ch);
+        break;
+        case TK_SQBO:
+        printf("TK_SQBO%c", ch);
+        break;
+        case TK_SQBC:
+        printf("TK_SQBC%c", ch);
+        break;
+        case TK_BO:
+        printf("TK_BO%c", ch);
+        break;
+        case TK_BC:
+        printf("TK_BC%c", ch);
+        break;
+        case TK_COMMENTMARK:
+        printf("TK_COMMENTMARK%c", ch);
+        break;
+        case TK_ID:
+        printf("TK_ID%c", ch);
+        break;
+        case TK_EPSILON:
+        printf("TK_EPSILON%c", ch);
+        break;
+        case TK_EOF:
+        printf("TK_EOF%c", ch);
+        break;
+        case TK_ERROR:
+        printf("TK_ERROR%c", ch);
+        break;
+        case TK_NONE:
+        printf("TK_NONE%c", ch);
+        break;
+        case TK_INTEGER:
+        printf("TK_INTEGER%c", ch);
+        break;
+        case TK_REAL:
+        printf("TK_REAL%c", ch);
+        break;
+        default:
+        break;
+    }
+}
+
 void print_search(HashTable* table, char* key) {
-    char* val;
-    if ((val = ht_search(table, key)) == NULL) {
+    term val;
+    if ((val = ht_search(table, key)) == TK_NONE) {
         printf("%s does not exist\n", key);
         return;
     }
     else {
-        printf("Key:%s, Value:%s\n", key, val);
+        printf("Key:%s, Value:", key);
+        print_term_type(val, '\n');
     }
 }
 
@@ -314,12 +580,14 @@ void print_hashtable(HashTable* table) {
     printf("\n-------------------\n");
     for (int i=0; i<table->size; i++) {
         if (table->items[i]) {
-            printf("Index:%d, Key:%s, Value:%s", i, table->items[i]->key, table->items[i]->value);
+            printf("Index:%d, Key:%s, Value:", i, table->items[i]->key);
+            print_term_type(table->items[i]->value, '\0');
             if (table->overflow_buckets[i]) {
                 printf(" => Overflow Bucket => ");
                 LinkedList* head = table->overflow_buckets[i];
                 while (head) {
-                    printf("Key:%s, Value:%s ", head->item->key, head->item->value);
+                    printf("Key:%s, Value:" , head->item->key);
+                    print_term_type(head->item->value, ' ');
                     head = head->next;
                 }
             }
