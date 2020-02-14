@@ -16,7 +16,7 @@ unsigned long hash_func (char* str) {
 
 // Populate the Hash Table with Keywords, indexed by a hash function pointer
 HashTable* populate_hash_table(HashTable* ht, Keyword* keywords, unsigned long (*hash_fun)(char*)) {
-    ht = create_table(5000, hash_fun);
+    ht = create_table(CAPACITY, hash_fun);
     for (int i=0; i < NUM_KEYWORDS; i++) {
         ht_insert(ht, keywords[i].key, keywords[i].tid);
     }
