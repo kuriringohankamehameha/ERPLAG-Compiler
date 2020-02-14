@@ -10,14 +10,6 @@
 #define BUF_SIZE 4096
 #define NUM_KEYWORDS 33
 
-// A Hash Function for the hash table of keywords
-unsigned long hash_func (char* str) {
-    unsigned long i = 0;
-    for (int j=0; str[j]; j++)
-        i += str[j];
-    return i % CAPACITY;
-}
-
 enum bool { false = 0, true = ~0 };
 
 typedef enum bool bool;
@@ -70,25 +62,6 @@ Keyword keywords[] = {
 };
 
 
-// Populate the Hash Table with Keywords
-HashTable* populate_hash_table(HashTable* ht, Keyword* keywords) {
-
-    // A Function Pointer to the Hash Function
-    unsigned long (*hash_fun)(char*);
-
-    // Point to hash_func()
-    hash_fun = hash_func;
-
-    ht = create_table(5000, hash_fun);
-
-    for (int i=0; i < NUM_KEYWORDS; i++) {
-        ht_insert(ht, keywords[i].key, keywords[i].tid);
-    }
-
-    return ht;
-}
-
-
 typedef enum {
     LEX_UNRECOGNISED_CHAR,
     LEX_ID_OVERFLOW,
@@ -134,3 +107,5 @@ char* look_ahead; // Pointers to look at the lexemes
 bool reload_buffer1 = false; // To signal reloading the buffer1
 bool reload_buffer2 = false; // To signal reloadiing the buffer2
 TokenStream* first_tk, *last_tk; // Pointers for the first and last tokenstream elements
+HashTable* ht; // Pointer to the Keyword Hashtable
+unsigned long (*hash_fun)(char*); // Function Pointer to the Hash Function

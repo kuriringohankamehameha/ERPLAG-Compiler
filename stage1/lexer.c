@@ -5,6 +5,25 @@
 #include "lexer.h"
 
 // Define all function definitions here
+// A Hash Function for the hash table of keywords
+unsigned long hash_func (char* str) {
+    unsigned long i = 0;
+    for (int j=0; str[j]; j++)
+        i += str[j];
+    return i % CAPACITY;
+}
+
+
+// Populate the Hash Table with Keywords, indexed by a hash function pointer
+HashTable* populate_hash_table(HashTable* ht, Keyword* keywords, unsigned long (*hash_fun)(char*)) {
+    ht = create_table(5000, hash_fun);
+    for (int i=0; i < NUM_KEYWORDS; i++) {
+        ht_insert(ht, keywords[i].key, keywords[i].tid);
+    }
+    return ht;
+}
+
+
 TokenStream* create_token_stream() {
     // Creates a token stream element
     TokenStream* tk_str = (TokenStream*) calloc (1, sizeof(TokenStream));
@@ -89,6 +108,10 @@ void init_tokenizer(char* filename) {
     lexeme_size = 0;
     reload_buffer1 = reload_buffer2 = true;
     first_tk = last_tk = NULL;
+    hash_fun = hash_func;
+    // Hash Table of Keywords
+    ht = populate_hash_table(ht, keywords, hash_fun); 
+    //print_hashtable(ht);
 }
 
 void close_tokenizer() {
@@ -98,6 +121,7 @@ void close_tokenizer() {
     free_token_stream();
     free(buffer1);
     free(buffer2);
+    free_table(ht);
     fclose(fp);
 }
 
@@ -293,7 +317,7 @@ char* get_lexeme() {
     return lexeme;
 }
 
-term is_keyword(char* lexeme) {
+term is_keyword_binary_search(char* lexeme) {
     // Checks if the lexeme is a keyword or not
     // by performing a Binary Search on the Keyword Table
     if (!lexeme) {
@@ -321,6 +345,24 @@ term is_keyword(char* lexeme) {
     }
 
     return TK_ID;
+}
+
+term is_keyword(char* lexeme) {
+    // Checks if the lexeme is a keyword or not
+    // by performing a Lookup on the Keyword Hash Table
+    if (!lexeme) {
+        fprintf(stderr, "ERPLAG Error: Lexeme Corrupted\n");
+        exit(EXIT_FAILURE);
+    }
+
+    // Search the Hashtable
+    term tok = ht_search(ht, lexeme);
+
+    // Return an identifier if it is not a keyword
+    if (tok == TK_NONE)
+        return TK_ID;
+    else
+        return tok;
 }
 
 void dfa_signal() {

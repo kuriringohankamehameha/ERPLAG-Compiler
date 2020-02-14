@@ -28,3 +28,4 @@ Token get_next_token();
 term is_keyword(char*);
 void remove_comments(char*, char*);
 void run_tokenizer(char*);
+HashTable* populate_hash_table(HashTable*, Keyword*, unsigned long (*) (char*));
