@@ -29,10 +29,11 @@ struct Grammar{
     // language.
     // This consists of a set of Grammar Rules, and a first and follow
     // set for each rule. Since we encode the grammar to integer numbers,
-    // we can also have the first and follow sets as an array of integers
+    // we can also have the first and follow sets as a 2d-array of integers
     GrammarRule* rules;
-    int *first, *follow;
+    int **first, **follow;
     int num_rules; // Number of distinct rules (Nonterminals on the left)
+    int num_symbols; // Number of distinct symbols (Terminals + Non Terminals)
 };
 
 // Declare all global variables here
@@ -42,6 +43,8 @@ struct Grammar{
 GrammarSymbol make_grammar_symbol(term t) {
     // Construct the grammar Symbol from a token
     bool is_terminal = false;
+    // ASSUMPTION: Terminals start from {54, }
+    // and EPSILON = 0
     if (t >= 54 || t == 0)
         is_terminal = true;
     GrammarSymbol g = {t, is_terminal};
@@ -110,15 +113,20 @@ void free_grammar(Grammar g) {
         free_grammar_rule(g.rules[i]);
     }
     free(g.rules);
-    if (g.first)
+    if (g.first) {
+        for (int i=0; i<g.num_symbols; i++) {
+            if (g.first[i])
+                free(g.first[i]);
+        }
         free(g.first);
-    if (g.follow)
+    }
+    if (g.follow) {
+        for (int i=0; i<g.num_symbols; i++) {
+            if (g.follow[i])
+                free(g.follow[i]);
+        }
         free(g.follow);
-}
-
-GrammarSymbol init_grammar_symbol() {
-    GrammarSymbol gsymbol;
-    return gsymbol;
+    }
 }
 
 void print_rule(GrammarRule grule) {
@@ -137,6 +145,7 @@ void print_grammar(Grammar g) {
     if (g.num_rules <= 0)
         return;
     printf("Grammar retrieved from file.\n-----------------------------\nStatistics:\n");
+    printf("Number of symbols: %d\n", g.num_symbols);
     printf("Number of Rules: %d\n", g.num_rules);
     for (int i=0; i<g.num_rules; i++) {
         print_rule(g.rules[i]);
@@ -155,6 +164,7 @@ Grammar get_grammar(FILE* fp) {
     grammar.first = NULL;
     grammar.follow = NULL;
     grammar.num_rules = 0;
+    grammar.num_symbols = 0;
     
     int num;
     char ch = '\0';
@@ -169,7 +179,7 @@ Grammar get_grammar(FILE* fp) {
     bool is_pipe = false;
 
     // End of array marker
-    GrammarSymbol end_marker = {-2, true};
+    //GrammarSymbol end_marker = {-2, true};
 
     do {
         if (ch == '|') {
@@ -211,6 +221,10 @@ Grammar get_grammar(FILE* fp) {
         }
         while (fscanf(fp, " %d", &num) == 1) {
             // Add the number to the array
+            // and update the number of symbols
+            if (num > grammar.num_symbols) {
+                grammar.num_symbols = num;
+            }
             if (is_lhs) {
                 // This is the left most symbol, so add it to the grammar rule
                 grammar.rules[curr_rule].left = make_grammar_symbol(num);
@@ -256,4 +270,10 @@ Grammar get_grammar(FILE* fp) {
     //grammar.rules[curr_rule].right[curr_left][curr_right] = end_marker;
 
     return grammar;
+}
+
+void compute_first_set(Grammar g) {
+    // Computes the first set for the Grammar
+    if (g.num_rules == 0)
+        return;
 }
