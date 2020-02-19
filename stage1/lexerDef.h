@@ -2,18 +2,10 @@
 // R.VIJAY KRISHNA -> 2017A7PS0183P
 // ROHIT K -> 2017A7PS0177P
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include "hash_table.h"
 
 #define BUF_SIZE 4096
 #define NUM_KEYWORDS 33
-
-enum bool { false = 0, true = ~0 };
-
-typedef enum bool bool;
-
 
 // Define the Keyword here
 typedef struct Keyword Keyword;
