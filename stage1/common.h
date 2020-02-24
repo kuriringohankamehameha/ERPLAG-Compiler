@@ -75,7 +75,7 @@ typedef enum {
     // The below 8 tokens are not part of the
     // grammar structure, so it is separated from
     // it
-        TK_EOF = 570,
+        TK_EOF = 114,
         TK_ERROR = 580,
         TK_NONE = 590,
         TK_COMMENTMARK = 600,

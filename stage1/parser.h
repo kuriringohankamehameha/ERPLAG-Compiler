@@ -58,6 +58,7 @@ struct TreeNode {
     TreeNode* right_sibling; // Pointer to it's right sibling for moving across the tree
     int rule_no; // Store rule number for debugging
     int num_children;
+	bool check_term;
 };
 
 typedef struct StackNode StackNode;

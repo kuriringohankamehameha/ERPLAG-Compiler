@@ -77,7 +77,7 @@ struct Token {
     // and next tokens in the line to be tokenized
 
     term token_type;
-    void* lexeme;
+    char* lexeme;
     int line_no;
     //Token* prev, *next;
 };
