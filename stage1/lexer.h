@@ -1,13 +1,16 @@
 // Group #42:
 // R.VIJAY KRISHNA -> 2017A7PS0183P
 // ROHIT K -> 2017A7PS0177P
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "lexerDef.h"
 
 // Declare all function prototypes here
+void insert_token_stream(Token token);
+Token get_next_token();
+void print_token_type(Token t);
+void close_tokenizer();
 TokenStream* create_token_stream();
 void insert_token_stream(Token);
 void delete_from_token_stream();

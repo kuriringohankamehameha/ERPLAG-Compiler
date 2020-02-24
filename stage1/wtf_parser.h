@@ -1,6 +1,4 @@
-#ifndef PARSER_H
-#define PARSER_H
-#include "lexer.h"
+#include "common.h"
 
 typedef struct Rule Rule;
 
@@ -52,7 +50,7 @@ typedef struct TreeNode TreeNode;
 struct TreeNode {
     // Structure for the TreeNode used to
     // build the complete parse tree
-    struct Token token; // Token from the lexer
+    Token token; // Token from the lexer
     TreeNode* parent; // Pointer to it's parent
     TreeNode** children; // as well as to it's children
     TreeNode* right_sibling; // Pointer to it's right sibling for moving across the tree
@@ -68,4 +66,3 @@ struct StackNode {
 };
 
 // Declare all global variables here
-#endif

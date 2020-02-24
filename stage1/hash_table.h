@@ -1,3 +1,6 @@
+#ifndef HASH_TABLE_H
+#define HASH_TABLE_H
+
 #include "common.h"
 
 unsigned long hash_function(char* str) {
@@ -527,3 +530,4 @@ void print_hashtable(HashTable* table) {
     }
     printf("-------------------\n");
 }
+#endif

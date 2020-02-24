@@ -2,6 +2,9 @@
 // R.VIJAY KRISHNA -> 2017A7PS0183P
 // ROHIT K -> 2017A7PS0177P
 
+#ifndef LEXERDEF_H
+#define LEXERDEF_H
+
 #include "hash_table.h"
 
 #define BUF_SIZE 4096
@@ -101,3 +104,4 @@ bool reload_buffer2 = false; // To signal reloadiing the buffer2
 TokenStream* first_tk, *last_tk; // Pointers for the first and last tokenstream elements
 HashTable* ht; // Pointer to the Keyword Hashtable
 unsigned long (*hash_fun)(char*); // Function Pointer to the Hash Function
+#endif
