@@ -172,9 +172,10 @@ void handle_collision(HashTable* table, unsigned long index, Ht_item* item) {
     }
  }
 
-void ht_insert(HashTable* table, char* key, term value) {
+HashTable* ht_insert(HashTable* table, char* key, term value) {
     // Create the item
     Ht_item* item = create_item(key, value);
+    //printf("Inserting %s : %s\n", item->key, get_string_from_term(item->value));
 
     // Compute the index
     int index = table->hash_function(key);
@@ -188,11 +189,12 @@ void ht_insert(HashTable* table, char* key, term value) {
             printf("Insert Error: Hash Table is full\n");
             // Remove the create item
             free_item(item);
-            return;
+            return table;
         }
         
         // Insert directly
         table->items[index] = item; 
+        //printf("Inserting %s : %s\n", table->items[index]->key, get_string_from_term(table->items[index]->value));
         table->count++;
     }
 
@@ -204,15 +206,16 @@ void ht_insert(HashTable* table, char* key, term value) {
                 //strcpy(table->items[index]->value, value);
                 table->items[index]->value = value;
                 free_item(item);
-                return;
+                return table;
             }
     
         else {
             // Scenario 2: Collision
             handle_collision(table, index, item);
-            return;
+            return table;
         }
     }
+    return table;
 }
 
 term ht_search(HashTable* table, char* key) {

@@ -3,6 +3,8 @@
 #include <string.h>
 #include <stdint.h>
 
+#define DEBUG 1
+
 enum bool { false = 0, true = ~0 };
 
 typedef enum bool bool;
@@ -11,123 +13,276 @@ typedef enum bool bool;
 
 // Define the Terminals here
 typedef enum {
-    program = 1,
-    moduleDeclarations = 2,
-    moduleDeclaration = 3,
-    otherModules = 4,
-    driverModule = 5,
-    module = 6,
-    ret = 7,
-    input_plist = 8,
-    IPL = 9,
-    output_plist = 10,
-    OPL = 11,
-    dataType = 12,
-    type = 13,
-    moduleDef = 14,
-    statements = 15,
-    statement = 16,
-    ioStmt = 17,
-    var = 18,
-    whichId = 19,
-    simpleStmt = 20,
-    assignmentStmt = 21,
-    whichStmt = 22,
-    lvalueIDStmt = 23,
-    lvalueARRStmt = 24,
-    arrIndex = 25,
-    moduleReuseStmt = 26,
-    optional = 27,
-    idList = 28,
-    IDL = 29,
-    Unary = 30,
-    UX = 31,
-    expression = 32,
-    NX = 33,
-    AorBExpr = 34,
-    NY = 35,
-    arithmeticExpr = 36,
-    ARE = 37,
-    AOP = 38,
-    termExpr = 39,
-    FAC = 40,
-    MOP = 41,
-    factor = 42,
-    logicalOp = 43,
-    relationalOp = 44,
-    declareStmt = 45,
-    conditionalStmt = 46,
-    caseStmts = 47,
-    cStmt = 48,
-    value = 49,
-    defaultRule = 50,
-    iterativeStmt = 51,
-    range = 52,
-    TK_DECLARE = 54,
-    TK_MODULE = 55,
-    TK_ID = 56,
-    TK_SEMICOL = 57,
-    TK_DRIVERDEF = 58,
-    TK_DRIVER = 59,
-    TK_PROGRAM = 60,
-    TK_DRIVERENDDEF = 61,
-    TK_DEF = 62,
-    TK_ENDDEF = 63,
-    TK_TAKES = 64,
-    TK_INPUT = 65,
-    TK_SQBO = 66,
-    TK_SQBC = 67,
-    TK_RETURNS = 68,
-    TK_COLON = 69,
-    TK_COMMA = 70,
-    TK_INTEGER = 71,
-    TK_REAL = 72,
-    TK_BOOLEAN = 73,
-    TK_ARRAY = 74,
-    TK_OF = 75,
-    TK_START = 76,
-    TK_END = 77,
-    TK_GET_VALUE = 78,
-    TK_BO = 79,
-    TK_BC = 80,
-    TK_PRINT = 81,
-    TK_NUM = 82,
-    TK_RNUM = 83,
-    TK_TRUE = 84,
-    TK_FALSE = 85,
-    TK_ASSIGNOP = 86,
-    TK_USE = 87,
-    TK_WITH = 88,
-    TK_PARAMETERS = 89,
-    TK_MINUS = 90,
-    TK_PLUS = 91,
-    TK_MUL = 92,
-    TK_DIV = 93,
-    TK_AND = 94,
-    TK_OR = 95,
-    TK_LT = 96,
-    TK_LE = 97,
-    TK_GT = 98,
-    TK_GE = 99,
-    TK_EQ = 100,
-    TK_NE = 101,
-    TK_SWITCH = 102,
-    TK_CASE = 103,
-    TK_BREAK = 104,
-    TK_DEFAULT = 105,
-    TK_FOR = 106,
-    TK_IN = 107,
-    TK_WHILE = 108,
-    TK_RANGEOP = 109,
     TK_EPSILON = 0,
-    TK_EOF,
-    TK_ERROR,
-    TK_NONE,
-    TK_COMMENTMARK,
-    TK_RECORD,
-    TK_TAGGED,
-    TK_UNION,
+    TK_DECLARE = 1,
+    TK_MODULE = 2,
+    TK_ID = 3,
+    TK_SEMICOL = 4,
+    TK_DRIVERDEF = 5,
+    TK_DRIVER = 6,
+    TK_PROGRAM = 7,
+    TK_DRIVERENDDEF = 8,
+    TK_DEF = 9,
+    TK_ENDDEF = 10,
+    TK_TAKES = 11,
+    TK_INPUT = 12,
+    TK_SQBO = 13,
+    TK_SQBC = 14,
+    TK_RETURNS = 15,
+    TK_COLON = 16,
+    TK_COMMA = 17,
+    TK_INTEGER = 18,
+    TK_REAL = 19,
+    TK_BOOLEAN = 20,
+    TK_ARRAY = 21,
+    TK_OF = 22,
+    TK_START = 23,
+    TK_END = 24,
+    TK_GET_VALUE = 25,
+    TK_BO = 26,
+    TK_BC = 27,
+    TK_PRINT = 28,
+    TK_NUM = 29,
+    TK_RNUM = 30,
+    TK_TRUE = 31,
+    TK_FALSE = 32,
+    TK_ASSIGNOP = 33,
+    TK_USE = 34,
+    TK_WITH = 35,
+    TK_PARAMETERS = 36,
+    TK_MINUS = 37,
+    TK_PLUS = 38,
+    TK_MUL = 39,
+    TK_DIV = 40,
+    TK_AND = 41,
+    TK_OR = 42,
+    TK_LT = 43,
+    TK_LE = 44,
+    TK_GT = 45,
+    TK_GE = 46,
+    TK_EQ = 47,
+    TK_NE = 48,
+    TK_SWITCH = 49,
+    TK_CASE = 50,
+    TK_BREAK = 51,
+    TK_DEFAULT = 52,
+    TK_FOR = 53,
+    TK_IN = 54,
+    TK_WHILE = 55,
+    TK_RANGEOP = 56,
+    // The below 8 tokens are not part of the
+    // grammar structure, so it is separated from
+    // it
+        TK_EOF = 570,
+        TK_ERROR = 580,
+        TK_NONE = 590,
+        TK_COMMENTMARK = 600,
+        TK_RECORD = 610,
+        TK_TAGGED = 620,
+        TK_UNION = 630,
+        // ASSUMPTION: TK_DOLLAR is the last symbol
+        TK_DOLLAR = 114,
+    // Grammar non terminals start from here
+    program = 57,
+    moduleDeclarations = 58,
+    moduleDeclaration = 59,
+    otherModules = 60,
+    driverModule = 61,
+    module = 62,
+    ret = 63,
+    input_plist = 64,
+    N1 = 65,
+    output_plist = 66,
+    N2 = 67,
+    dataType = 68,
+    range_arrays = 69,
+    type = 70,
+    moduleDef = 71,
+    statements = 72,
+    statement = 73,
+    ioStmt = 74,
+    var = 75,
+    boolConstt = 76,
+    var_id_num = 77,
+    whichId = 78,
+    simpleStmt = 79,
+    assignmentStmt = 80,
+    whichStmt = 81,
+    lvalueIDStmt = 82,
+    lvalueARRStmt = 83,
+    g_index = 84,
+    moduleReuseStmt = 85,
+    optional = 86,
+    idList = 87,
+    N3 = 88,
+    expression = 89,
+    U = 90,
+    new_NT = 91,
+    unary_op = 92,
+    arithmeticOrBooleanExpr = 93,
+    N7 = 94,
+    AnyTerm = 95,
+    N8 = 96,
+    arithmeticExpr = 97,
+    N4 = 98,
+    g_term = 99,
+    N5 = 100,
+    factor = 101,
+    op1 = 102,
+    op2 = 103,
+    logicalOp = 104,
+    relationalOp = 105,
+    declareStmt = 106,
+    condionalStmt = 107,
+    caseStmts = 108,
+    N9 = 109,
+    value = 110,
+    g_default = 111,
+    iterativeStmt = 112,
+    range = 113,
 }term;
+
+
+/*
+bool is_terminal(term t) {
+    if (strncmp(get_string_from_term(t), "TK_", 3) == 0) {
+        return true;
+    }
+    return false;
+}
+*/
+
+bool is_terminal(int num) {
+	if ((term)num == TK_DOLLAR || (num >= 0 && num <= 56)) {
+		return true;
+	}
+	return false;
+}
+
+typedef struct Symbol Symbol;
+
+struct Symbol {
+    char key[30];
+    term tid;
+};
+
+// Complete list of Grammar Symbols here
+Symbol symbols[] = {
+    {"E", TK_EPSILON},
+    {"TK_DECLARE", TK_DECLARE},
+    {"TK_MODULE", TK_MODULE},
+    {"TK_ID", TK_ID},
+    {"TK_SEMICOL", TK_SEMICOL},
+    {"TK_DRIVERDEF", TK_DRIVERDEF},
+    {"TK_DRIVER", TK_DRIVER},
+    {"TK_PROGRAM", TK_PROGRAM},
+    {"TK_DRIVERENDDEF", TK_DRIVERENDDEF},
+    {"TK_DEF", TK_DEF},
+    {"TK_ENDDEF", TK_ENDDEF},
+    {"TK_TAKES", TK_TAKES},
+    {"TK_INPUT", TK_INPUT},
+    {"TK_SQBO", TK_SQBO},
+    {"TK_SQBC", TK_SQBC},
+    {"TK_RETURNS", TK_RETURNS},
+    {"TK_COLON", TK_COLON},
+    {"TK_COMMA", TK_COMMA},
+    {"TK_INTEGER", TK_INTEGER},
+    {"TK_REAL", TK_REAL},
+    {"TK_BOOLEAN", TK_BOOLEAN},
+    {"TK_ARRAY", TK_ARRAY},
+    {"TK_OF", TK_OF},
+    {"TK_START", TK_START},
+    {"TK_END", TK_END},
+    {"TK_GET_VALUE", TK_GET_VALUE},
+    {"TK_BO", TK_BO},
+    {"TK_BC", TK_BC},
+    {"TK_PRINT", TK_PRINT},
+    {"TK_NUM", TK_NUM},
+    {"TK_RNUM", TK_RNUM},
+    {"TK_TRUE", TK_TRUE},
+    {"TK_FALSE", TK_FALSE},
+    {"TK_ASSIGNOP", TK_ASSIGNOP},
+    {"TK_USE", TK_USE},
+    {"TK_WITH", TK_WITH},
+    {"TK_PARAMETERS", TK_PARAMETERS},
+    {"TK_MINUS", TK_MINUS},
+    {"TK_PLUS", TK_PLUS},
+    {"TK_MUL", TK_MUL},
+    {"TK_DIV", TK_DIV},
+    {"TK_AND", TK_AND},
+    {"TK_OR", TK_OR},
+    {"TK_LT", TK_LT},
+    {"TK_LE", TK_LE},
+    {"TK_GT", TK_GT},
+    {"TK_GE", TK_GE},
+    {"TK_EQ", TK_EQ},
+    {"TK_NE", TK_NE},
+    {"TK_SWITCH", TK_SWITCH},
+    {"TK_CASE", TK_CASE},
+    {"TK_BREAK", TK_BREAK},
+    {"TK_DEFAULT", TK_DEFAULT},
+    {"TK_FOR", TK_FOR},
+    {"TK_IN", TK_IN},
+    {"TK_WHILE", TK_WHILE},
+    {"TK_RANGEOP", TK_RANGEOP},
+    {"<program>", program},
+    {"<moduleDeclarations>", moduleDeclarations},
+    {"<moduleDeclaration>", moduleDeclaration},
+    {"<otherModules>", otherModules},
+    {"<driverModule>", driverModule},
+    {"<module>", module},
+    {"<ret>", ret},
+    {"<input_plist>", input_plist},
+    {"<N1>", N1},
+    {"<output_plist>", output_plist},
+    {"<N2>", N2},
+    {"<dataType>", dataType},
+    {"<range_arrays>", range_arrays},
+    {"<type>", type},
+    {"<moduleDef>", moduleDef},
+    {"<statements>", statements},
+    {"<statement>", statement},
+    {"<ioStmt>", ioStmt},
+    {"<var>", var},
+    {"<boolConstt>", boolConstt},
+    {"<var_id_num>", var_id_num},
+    {"<whichId>", whichId},
+    {"<simpleStmt>", simpleStmt},
+    {"<assignmentStmt>", assignmentStmt},
+    {"<whichStmt>", whichStmt},
+    {"<lvalueIDStmt>", lvalueIDStmt},
+    {"<lvalueARRStmt>", lvalueARRStmt},
+    {"<g_index>", g_index},
+    {"<moduleReuseStmt>", moduleReuseStmt},
+    {"<optional>", optional},
+    {"<idList>", idList},
+    {"<N3>", N3},
+    {"<expression>", expression},
+    {"<U>", U},
+    {"<new_NT>", new_NT},
+    {"<unary_op>", unary_op},
+    {"<arithmeticOrBooleanExpr>", arithmeticOrBooleanExpr},
+    {"<N7>", N7},
+    {"<AnyTerm>", AnyTerm},
+    {"<N8>", N8},
+    {"<arithmeticExpr>", arithmeticExpr},
+    {"<N4>", N4},
+    {"<g_term>", g_term},
+    {"<N5>", N5},
+    {"<factor>", factor},
+    {"<op1>", op1},
+    {"<op2>", op2},
+    {"<logicalOp>", logicalOp},
+    {"<relationalOp>", relationalOp},
+    {"<declareStmt>", declareStmt},
+    {"<condionalStmt>", condionalStmt},
+    {"<caseStmts>", caseStmts},
+    {"<N9>", N9},
+    {"<value>", value},
+    {"<g_default>", g_default},
+    {"<iterativeStmt>", iterativeStmt},
+    {"<range>", range},
+};
 
 char* get_string_from_term(term t) {
     switch(t) {
@@ -155,17 +310,20 @@ char* get_string_from_term(term t) {
         case input_plist:
         return "input_plist";
         break;
-        case IPL:
-        return "IPL";
+        case N1:
+        return "N1";
         break;
         case output_plist:
         return "output_plist";
         break;
-        case OPL:
-        return "OPL";
+        case N2:
+        return "N2";
         break;
         case dataType:
         return "dataType";
+        break;
+        case range_arrays:
+        return "range_arrays";
         break;
         case type:
         return "type";
@@ -185,6 +343,12 @@ char* get_string_from_term(term t) {
         case var:
         return "var";
         break;
+        case boolConstt:
+        return "boolConstt";
+        break;
+        case var_id_num:
+        return "var_id_num";
+        break;
         case whichId:
         return "whichId";
         break;
@@ -203,8 +367,8 @@ char* get_string_from_term(term t) {
         case lvalueARRStmt:
         return "lvalueARRStmt";
         break;
-        case arrIndex:
-        return "arrIndex";
+        case g_index:
+        return "g_index";
         break;
         case moduleReuseStmt:
         return "moduleReuseStmt";
@@ -215,47 +379,53 @@ char* get_string_from_term(term t) {
         case idList:
         return "idList";
         break;
-        case IDL:
-        return "IDL";
-        break;
-        case Unary:
-        return "Unary";
-        break;
-        case UX:
-        return "UX";
+        case N3:
+        return "N3";
         break;
         case expression:
         return "expression";
         break;
-        case NX:
-        return "NX";
+        case U:
+        return "U";
         break;
-        case AorBExpr:
-        return "AorBExpr";
+        case new_NT:
+        return "new_NT";
         break;
-        case NY:
-        return "NY";
+        case unary_op:
+        return "unary_op";
+        break;
+        case arithmeticOrBooleanExpr:
+        return "arithmeticOrBooleanExpr";
+        break;
+        case N7:
+        return "N7";
+        break;
+        case AnyTerm:
+        return "AnyTerm";
+        break;
+        case N8:
+        return "N8";
         break;
         case arithmeticExpr:
         return "arithmeticExpr";
         break;
-        case ARE:
-        return "ARE";
+        case N4:
+        return "N4";
         break;
-        case AOP:
-        return "AOP";
+        case g_term:
+        return "g_term";
         break;
-        case termExpr:
-        return "termExpr";
-        break;
-        case FAC:
-        return "FAC";
-        break;
-        case MOP:
-        return "MOP";
+        case N5:
+        return "N5";
         break;
         case factor:
         return "factor";
+        break;
+        case op1:
+        return "op1";
+        break;
+        case op2:
+        return "op2";
         break;
         case logicalOp:
         return "logicalOp";
@@ -266,20 +436,20 @@ char* get_string_from_term(term t) {
         case declareStmt:
         return "declareStmt";
         break;
-        case conditionalStmt:
-        return "conditionalStmt";
+        case condionalStmt:
+        return "condionalStmt";
         break;
         case caseStmts:
         return "caseStmts";
         break;
-        case cStmt:
-        return "cStmt";
+        case N9:
+        return "N9";
         break;
         case value:
         return "value";
         break;
-        case defaultRule:
-        return "defaultRule";
+        case g_default:
+        return "g_default";
         break;
         case iterativeStmt:
         return "iterativeStmt";
@@ -458,6 +628,9 @@ char* get_string_from_term(term t) {
         case TK_EPSILON:
         return "TK_EPSILON";
         break;
+        case TK_DOLLAR:
+        return "TK_DOLLAR";
+        break;
         default:
         return NULL;
     }
@@ -467,11 +640,10 @@ term get_term_from_int(int term_int) {
     if (term_int == -1) {
         return TK_ERROR;
     }
-    return term_int;
+    return (term)term_int;
 }
 
 term get_term_from_string(char* str) {
-    // Get a term from a string
     if (strcmp(str, "<program>") == 0) {
         return program;
     }
@@ -496,17 +668,20 @@ term get_term_from_string(char* str) {
     if (strcmp(str, "<input_plist>") == 0) {
         return input_plist;
     }
-    if (strcmp(str, "<IPL>") == 0) {
-        return IPL;
+    if (strcmp(str, "<N1>") == 0) {
+        return N1;
     }
     if (strcmp(str, "<output_plist>") == 0) {
         return output_plist;
     }
-    if (strcmp(str, "<OPL>") == 0) {
-        return OPL;
+    if (strcmp(str, "<N2>") == 0) {
+        return N2;
     }
     if (strcmp(str, "<dataType>") == 0) {
         return dataType;
+    }
+    if (strcmp(str, "<range_arrays>") == 0) {
+        return range_arrays;
     }
     if (strcmp(str, "<type>") == 0) {
         return type;
@@ -526,6 +701,12 @@ term get_term_from_string(char* str) {
     if (strcmp(str, "<var>") == 0) {
         return var;
     }
+    if (strcmp(str, "<boolConstt>") == 0) {
+        return boolConstt;
+    }
+    if (strcmp(str, "<var_id_num>") == 0) {
+        return var_id_num;
+    }
     if (strcmp(str, "<whichId>") == 0) {
         return whichId;
     }
@@ -544,8 +725,8 @@ term get_term_from_string(char* str) {
     if (strcmp(str, "<lvalueARRStmt>") == 0) {
         return lvalueARRStmt;
     }
-    if (strcmp(str, "<arrIndex>") == 0) {
-        return arrIndex;
+    if (strcmp(str, "<g_index>") == 0) {
+        return g_index;
     }
     if (strcmp(str, "<moduleReuseStmt>") == 0) {
         return moduleReuseStmt;
@@ -556,47 +737,53 @@ term get_term_from_string(char* str) {
     if (strcmp(str, "<idList>") == 0) {
         return idList;
     }
-    if (strcmp(str, "<IDL>") == 0) {
-        return IDL;
-    }
-    if (strcmp(str, "<Unary>") == 0) {
-        return Unary;
-    }
-    if (strcmp(str, "<UX>") == 0) {
-        return UX;
+    if (strcmp(str, "<N3>") == 0) {
+        return N3;
     }
     if (strcmp(str, "<expression>") == 0) {
         return expression;
     }
-    if (strcmp(str, "<NX>") == 0) {
-        return NX;
+    if (strcmp(str, "<U>") == 0) {
+        return U;
     }
-    if (strcmp(str, "<AorBExpr>") == 0) {
-        return AorBExpr;
+    if (strcmp(str, "<new_NT>") == 0) {
+        return new_NT;
     }
-    if (strcmp(str, "<NY>") == 0) {
-        return NY;
+    if (strcmp(str, "<unary_op>") == 0) {
+        return unary_op;
+    }
+    if (strcmp(str, "<arithmeticOrBooleanExpr>") == 0) {
+        return arithmeticOrBooleanExpr;
+    }
+    if (strcmp(str, "<N7>") == 0) {
+        return N7;
+    }
+    if (strcmp(str, "<AnyTerm>") == 0) {
+        return AnyTerm;
+    }
+    if (strcmp(str, "<N8>") == 0) {
+        return N8;
     }
     if (strcmp(str, "<arithmeticExpr>") == 0) {
         return arithmeticExpr;
     }
-    if (strcmp(str, "<ARE>") == 0) {
-        return ARE;
+    if (strcmp(str, "<N4>") == 0) {
+        return N4;
     }
-    if (strcmp(str, "<AOP>") == 0) {
-        return AOP;
+    if (strcmp(str, "<g_term>") == 0) {
+        return g_term;
     }
-    if (strcmp(str, "<termExpr>") == 0) {
-        return termExpr;
-    }
-    if (strcmp(str, "<FAC>") == 0) {
-        return FAC;
-    }
-    if (strcmp(str, "<MOP>") == 0) {
-        return MOP;
+    if (strcmp(str, "<N5>") == 0) {
+        return N5;
     }
     if (strcmp(str, "<factor>") == 0) {
         return factor;
+    }
+    if (strcmp(str, "<op1>") == 0) {
+        return op1;
+    }
+    if (strcmp(str, "<op2>") == 0) {
+        return op2;
     }
     if (strcmp(str, "<logicalOp>") == 0) {
         return logicalOp;
@@ -607,20 +794,20 @@ term get_term_from_string(char* str) {
     if (strcmp(str, "<declareStmt>") == 0) {
         return declareStmt;
     }
-    if (strcmp(str, "<conditionalStmt>") == 0) {
-        return conditionalStmt;
+    if (strcmp(str, "<condionalStmt>") == 0) {
+        return condionalStmt;
     }
     if (strcmp(str, "<caseStmts>") == 0) {
         return caseStmts;
     }
-    if (strcmp(str, "<cStmt>") == 0) {
-        return cStmt;
+    if (strcmp(str, "<N9>") == 0) {
+        return N9;
     }
     if (strcmp(str, "<value>") == 0) {
         return value;
     }
-    if (strcmp(str, "<defaultRule>") == 0) {
-        return defaultRule;
+    if (strcmp(str, "<g_default>") == 0) {
+        return g_default;
     }
     if (strcmp(str, "<iterativeStmt>") == 0) {
         return iterativeStmt;
@@ -795,6 +982,9 @@ term get_term_from_string(char* str) {
     }
     if (strcmp(str, "TK_RANGEOP") == 0) {
         return TK_RANGEOP;
+    }
+    if (strcmp(str, "TK_DOLLAR") == 0) {
+        return TK_DOLLAR;
     }
     return TK_ERROR;
 }

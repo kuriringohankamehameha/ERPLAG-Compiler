@@ -1,52 +1,105 @@
-<program> -> <moduleDeclarations> <otherModules> <driverModule> <otherModules>
-<moduleDeclarations> -> <moduleDeclaration> | E
-<moduleDeclaration> -> TK_DECLARE TK_MODULE TK_ID TK_SEMICOL
-<otherModules> -> <module> <otherModules> | E
-<driverModule> -> TK_DRIVERDEF TK_DRIVER TK_PROGRAM TK_DRIVERENDDEF <moduleDef>
-<module> -> TK_DEF TK_MODULE TK_ID TK_ENDDEF TK_TAKES TK_INPUT TK_SQBO <input_plist> TK_SQBC TK_SEMICOL <ret> <moduleDef>
-<ret> -> TK_RETURNS TK_SQBO <output_plist> TK_SQBC TK_SEMICOL | E
-<input_plist> -> TK_ID TK_COLON <dataType> <IPL>
-<IPL> -> TK_COMMA TK_ID TK_COLON <dataType> <IPL> | E
-<output_plist> -> TK_ID TK_COLON <type> <OPL>
-<OPL> -> TK_COMMA TK_ID TK_COLON <type> <OPL> | E 
-<dataType> -> TK_INTEGER | TK_REAL | TK_BOOLEAN | TK_ARRAY TK_SQBO <range> TK_SQBC TK_OF <type>
-<type> -> TK_INTEGER | TK_REAL | TK_BOOLEAN
-<moduleDef> -> TK_START <statements> TK_END
-<statements> -> <statement> <statements> | E
-<statement> -> <ioStmt> | <simpleStmt> | <declareStmt> | <conditionalStmt> | <iterativeStmt>
-<ioStmt> -> TK_GET_VALUE TK_BO TK_ID TK_BC TK_SEMICOL | TK_PRINT TK_BO <var> TK_BC TK_SEMICOL
-<var> -> TK_ID <whichId> | TK_NUM | TK_RNUM | TK_TRUE | TK_FALSE
-<whichId> -> TK_SQBO TK_ID TK_SQBC | E
-<simpleStmt> -> <assignmentStmt> | <moduleReuseStmt>
-<assignmentStmt> -> TK_ID <whichStmt>
-<whichStmt> -> <lvalueIDStmt> | <lvalueARRStmt>
-<lvalueIDStmt> -> TK_ASSIGNOP <expression> TK_SEMICOL
-<lvalueARRStmt> -> TK_SQBO <arrIndex> TK_SQBC TK_ASSIGNOP <expression> TK_SEMICOL
-<arrIndex> -> TK_NUM | TK_ID
-<moduleReuseStmt> -> <optional> TK_USE TK_MODULE TK_ID TK_WITH TK_PARAMETERS <idList> TK_SEMICOL
-<optional> -> TK_SQBO <idList> TK_SQBC TK_ASSIGNOP | E
-<idList> -> TK_ID <IDL>
-<IDL> -> TK_COMMA TK_ID <IDL> | E
-<Unary> ->  TK_MINUS <UX> | TK_PLUS <UX> 
-<UX> -> <var> | TK_BO <AorBExpr> TK_BC
-<expression> -> <AorBExpr> <NX> | <Unary>
-<NX> -> <logicalOp> <AorBExpr> <NX> | E
-<AorBExpr> -> <arithmeticExpr> <NY>
-<NY> -> <relationalOp> <arithmeticExpr> <NY> | E
-<arithmeticExpr> -> <termExpr> <ARE>
-<ARE> -> <AOP> <termExpr> <ARE> | E
-<AOP> -> TK_PLUS | TK_MINUS
-<termExpr> -> <factor> <FAC>
-<FAC> -> <MOP> <factor> <FAC> | E
-<MOP> -> TK_MUL | TK_DIV
-<factor> -> TK_BO <expression> TK_BC | <var>
-<logicalOp> -> TK_AND | TK_OR
-<relationalOp> -> TK_LT | TK_LE | TK_GT | TK_GE | TK_EQ | TK_NE
-<declareStmt> -> TK_DECLARE <idList> TK_COLON <dataType> TK_SEMICOL
-<conditionalStmt> -> TK_SWITCH TK_BO TK_ID TK_BC TK_START <caseStmts> <defaultRule> TK_END
-<caseStmts> -> TK_CASE <value> TK_COLON <statements> TK_BREAK TK_SEMICOL <cStmt>
-<cStmt> -> TK_CASE <value> TK_COLON <statements> TK_BREAK TK_SEMICOL <cStmt> | E
-<value> -> TK_NUM | TK_TRUE | TK_FALSE
-<defaultRule> -> TK_DEFAULT TK_COLON <statements> TK_BREAK TK_SEMICOL | E
-<iterativeStmt> -> TK_FOR TK_BO TK_ID TK_IN <range> TK_BC TK_START <statements> TK_END | TK_WHILE TK_BO <AorBExpr> TK_BC TK_START <statements> TK_END
-<range> -> TK_NUM TK_RANGEOP TK_NUM
+$ <program> <moduleDeclarations> <otherModules> <driverModule> <otherModules>
+$ <moduleDeclarations> <moduleDeclaration> <moduleDeclarations>
+$ <moduleDeclarations> E   
+$ <moduleDeclaration> TK_DECLARE TK_MODULE TK_ID TK_SEMICOL
+$ <otherModules> <module> <otherModules> 
+$ <otherModules> E
+$ <driverModule> TK_DRIVERDEF TK_DRIVER TK_PROGRAM TK_DRIVERENDDEF <moduleDef>
+$ <module> TK_DEF TK_MODULE TK_ID TK_ENDDEF TK_TAKES TK_INPUT TK_SQBO <input_plist> TK_SQBC TK_SEMICOL <ret> <moduleDef>
+$ <ret> TK_RETURNS TK_SQBO <output_plist> TK_SQBC TK_SEMICOL 
+$ <ret> E
+$ <input_plist> TK_ID TK_COLON <dataType> <N1>
+$ <N1> TK_COMMA TK_ID TK_COLON <dataType> <N1> 
+$ <N1> E
+$ <output_plist> TK_ID TK_COLON <type> <N2>
+$ <N2> TK_COMMA TK_ID TK_COLON <type> <N2> 
+$ <N2> E
+$ <dataType> TK_INTEGER 
+$ <dataType> TK_REAL  
+$ <dataType> TK_BOOLEAN  
+$ <dataType> TK_ARRAY TK_SQBO <range_arrays> TK_SQBC TK_OF <type>
+$ <range_arrays> <g_index> TK_RANGEOP <g_index>
+$ <type> TK_INTEGER 
+$ <type> TK_REAL 
+$ <type> TK_BOOLEAN
+$ <moduleDef> TK_START <statements> TK_END
+$ <statements> <statement> <statements> 
+$ <statements> E
+$ <statement> <ioStmt> 
+$ <statement> <simpleStmt> 
+$ <statement> <declareStmt> 
+$ <statement> <condionalStmt> 
+$ <statement> <iterativeStmt>
+$ <ioStmt> TK_GET_VALUE TK_BO TK_ID TK_BC TK_SEMICOL 
+$ <ioStmt> TK_PRINT TK_BO <var> TK_BC TK_SEMICOL
+$ <var> <var_id_num> 
+$ <var> <boolConstt>
+$ <boolConstt> TK_TRUE 
+$ <boolConstt> TK_FALSE
+$ <var_id_num> TK_ID <whichId> 
+$ <var_id_num> TK_NUM 
+$ <var_id_num> TK_RNUM
+$ <whichId> TK_SQBO <g_index> TK_SQBC 
+$ <whichId> E
+$ <simpleStmt> <assignmentStmt> 
+$ <simpleStmt> <moduleReuseStmt>
+$ <assignmentStmt> TK_ID <whichStmt>
+$ <whichStmt> <lvalueIDStmt> 
+$ <whichStmt> <lvalueARRStmt>
+$ <lvalueIDStmt> TK_ASSIGNOP <expression> TK_SEMICOL
+$ <lvalueARRStmt> TK_SQBO <g_index> TK_SQBC TK_ASSIGNOP <expression> TK_SEMICOL
+$ <g_index> TK_NUM 
+$ <g_index> TK_ID
+$ <moduleReuseStmt> <optional> TK_USE TK_MODULE TK_ID TK_WITH TK_PARAMETERS <idList> TK_SEMICOL
+$ <optional> TK_SQBO <idList> TK_SQBC TK_ASSIGNOP 
+$ <optional> E
+$ <idList> TK_ID <N3>
+$ <N3> TK_COMMA TK_ID <N3> 
+$ <N3> E
+$ <expression> <arithmeticOrBooleanExpr> 
+$ <expression> <U>
+$ <U> <unary_op> <new_NT>
+$ <new_NT> TK_BO <arithmeticExpr> TK_BC 
+$ <new_NT> <var_id_num>
+$ <unary_op> TK_PLUS 
+$ <unary_op> TK_MINUS
+$ <arithmeticOrBooleanExpr> <AnyTerm> <N7>
+$ <N7> <logicalOp> <AnyTerm> <N7> 
+$ <N7> E
+$ <AnyTerm> <arithmeticExpr> <N8> 
+$ <AnyTerm> <boolConstt>
+$ <N8> <relationalOp> <arithmeticExpr> 
+$ <N8> E
+$ <arithmeticExpr> <g_term> <N4>
+$ <N4> <op1> <g_term> <N4>  
+$ <N4> E
+$ <g_term> <factor> <N5>
+$ <N5> <op2> <factor> <N5> 
+$ <N5> E
+$ <factor> TK_BO <arithmeticOrBooleanExpr> TK_BC 
+$ <factor> <var_id_num>
+$ <op1> TK_PLUS 
+$ <op1> TK_MINUS
+$ <op2> TK_MUL 
+$ <op2> TK_DIV
+$ <logicalOp> TK_AND 
+$ <logicalOp> TK_OR
+$ <relationalOp> TK_LT 
+$ <relationalOp> TK_LE
+$ <relationalOp> TK_GT
+$ <relationalOp> TK_GE
+$ <relationalOp> TK_EQ
+$ <relationalOp> TK_NE
+$ <declareStmt> TK_DECLARE <idList> TK_COLON <dataType> TK_SEMICOL
+$ <condionalStmt> TK_SWITCH TK_BO TK_ID TK_BC TK_START <caseStmts> <g_default> TK_END
+$ <caseStmts> TK_CASE <value> TK_COLON <statements> TK_BREAK TK_SEMICOL <N9>
+$ <N9> TK_CASE <value> TK_COLON <statements> TK_BREAK TK_SEMICOL <N9>
+$ <N9> E
+$ <value> TK_NUM 
+$ <value> TK_TRUE 
+$ <value> TK_FALSE
+$ <g_default> TK_DEFAULT TK_COLON <statements> TK_BREAK TK_SEMICOL 
+$ <g_default> E
+$ <iterativeStmt> TK_FOR TK_BO TK_ID TK_IN <range> TK_BC TK_START <statements> TK_END 
+$ <iterativeStmt> TK_WHILE TK_BO <arithmeticOrBooleanExpr> TK_BC TK_START <statements> TK_END
+$ <range> TK_NUM TK_RANGEOP TK_NUM
