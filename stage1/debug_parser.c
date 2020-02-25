@@ -1751,16 +1751,16 @@ TreeNode* generateParseTree (char* filename, ParseTable p, Grammar g, FirstAndFo
 	t = get_next_token();
 	
 	bool is_complete = false;
-    	
+    
+    printf("Looping..\n");
+	
 	while (!is_empty(stack)) {
-        if (t.token_type == TK_ERROR) {
-            printf("Unsuccessful parsing. Stack not empty\n");
-            break;
-        }
+        printf("Stack has: %s\n", get_string_from_term(stack->data->token.token_type));
 		if (stack->data->check_term == false) {
 			// Non terminal
 			TreeNode* curr = stack->data;
 			// Look at the parse table
+            fprintf(stderr, "Looking up Token %s, \n", get_string_from_term(t.token_type));
 			int rule_no = p.matrix[curr->token.token_type][t.token_type];
 			if (rule_no == -1) {
 				fprintf(stderr, "Syntax Error: At Token: %s at line number: %d\n", get_string_from_term(t.token_type), t.line_no);
@@ -1773,6 +1773,7 @@ TreeNode* generateParseTree (char* filename, ParseTable p, Grammar g, FirstAndFo
 			Rule rule = g.rules[rule_no];
 			curr->children = (TreeNode**) calloc (rule.num_right, sizeof(TreeNode*));
 			curr->rule_no = rule_no;
+            printf("Rule Number %d:\t", rule_no);
             print_rule(rule); 
 			curr->num_children = rule.num_right;
 			
@@ -1787,21 +1788,27 @@ TreeNode* generateParseTree (char* filename, ParseTable p, Grammar g, FirstAndFo
 			continue;
 		}
 		else {
+            printf("Encountered Terminal\n");
 			TreeNode* curr = stack->data;
+            printf("curr has %s\n", get_string_from_term(curr->token.token_type));
             if (curr->token.token_type == TK_EPSILON) {
                 // Pop from the stack and add to curr
+                printf("Popping %s from the stack\n", get_string_from_term(stack->data->token.token_type));
                 stack = pop(stack);
                 curr->token.lexeme = NULL;
                 curr->token.line_no = -1;
                 continue;
             }
             if (curr->token.token_type == t.token_type) {
+                printf("Matched!\n");
 				if (t.token_type == TK_DOLLAR) {
 					// End of stack
+					printf("Successfully Parsed!\n");
 					is_complete = true;
 					break;
 				}
 				// Pop the stack and then go to the next token
+                printf("Popping %s from the stack\n", get_string_from_term(stack->data->token.token_type));
 				stack = pop(stack);
 				//memcpy(&curr->token.lexeme, &t.lexeme);
 				curr->token.lexeme = t.lexeme;
@@ -1809,7 +1816,7 @@ TreeNode* generateParseTree (char* filename, ParseTable p, Grammar g, FirstAndFo
 				t = get_next_token();
 			}
 			else {
-				fprintf(stderr, "Should never happen!\n");
+				fprintf(stderr, "Should never happen! Token %s, \n", get_string_from_term(t.token_type));
                 return root;
 			}
 		}
@@ -1879,11 +1886,7 @@ void printParseTree(TreeNode* root) {
     }
 }
 
-int main(int argc, char* argv[]) {
-    if (argc != 2) {
-        fprintf(stderr, "Format: %s %s\n", argv[0], argv[1]);
-        exit(EXIT_FAILURE);
-    }
+int main() {
     FILE* fp = fopen("grammar_rules.txt", "r");
     if (!fp) {
         perror("File does not exist\n");
@@ -1896,7 +1899,7 @@ int main(int argc, char* argv[]) {
     ParseTable p = createParseTable(f, g);
     printParseTable(p);
     
-    char* filename = argv[1];
+    char* filename = "test/testcase2.txt";
     /*
     init_tokenizer(filename);
     TreeNode* root = NULL;

@@ -1,3 +1,7 @@
+// Group 42:
+// R Vijay Krishna 2017A7PS0183P
+// Rohit K 2017A7PS0177P
+
 #include "lexerDef.h"
 #include "lexer.h"
 #include "parserDef.h"
@@ -1594,10 +1598,6 @@ FirstAndFollow ComputeFirstAndFollowSets(Grammar G){
             F.first[nt_idx][0] = 1;
         }
     }
-    
-    #ifdef DEBUG
-    printf("Base cases done!\n");
-    #endif
 
     do{
         change=0;
@@ -1737,7 +1737,7 @@ ParseTable createParseTable(FirstAndFollow F, Grammar G){
     return P;
 }
 
-TreeNode* generateParseTree (char* filename, ParseTable p, Grammar g, FirstAndFollow f) {
+TreeNode* generateParseTree (char* filename, ParseTable p, Grammar g) {
 	Token t = {TK_DOLLAR, NULL, -1};
 	TreeNode* dollar = make_tree_node(NULL, t);
 	StackNode* stack = make_stack_node(dollar);
@@ -1763,7 +1763,8 @@ TreeNode* generateParseTree (char* filename, ParseTable p, Grammar g, FirstAndFo
 			// Look at the parse table
 			int rule_no = p.matrix[curr->token.token_type][t.token_type];
 			if (rule_no == -1) {
-				fprintf(stderr, "Syntax Error: At Token: %s at line number: %d\n", get_string_from_term(t.token_type), t.line_no);
+                if (t.token_type != TK_COMMENTMARK)
+                    fprintf(stderr, "Syntax Error: At Token: %s at line number: %d\n", get_string_from_term(t.token_type), t.line_no);
 				t = get_next_token();
 				continue;
 			}
@@ -1803,7 +1804,6 @@ TreeNode* generateParseTree (char* filename, ParseTable p, Grammar g, FirstAndFo
 				}
 				// Pop the stack and then go to the next token
 				stack = pop(stack);
-				//memcpy(&curr->token.lexeme, &t.lexeme);
 				curr->token.lexeme = t.lexeme;
 				curr->token.line_no = t.line_no;
 				t = get_next_token();
@@ -1886,7 +1886,7 @@ int main(int argc, char* argv[]) {
     }
     FILE* fp = fopen("grammar_rules.txt", "r");
     if (!fp) {
-        perror("File does not exist\n");
+        perror("File 'grammar_rules.txt' does not exist\n");
         exit(EXIT_FAILURE);
     }
     Grammar g = populate_grammar(fp);
@@ -1897,26 +1897,9 @@ int main(int argc, char* argv[]) {
     printParseTable(p);
     
     char* filename = argv[1];
-    /*
-    init_tokenizer(filename);
-    TreeNode* root = NULL;
-    // Process the tokens using get_next_token()
-    for (;;) {
-        Token t = get_next_token();
-        if (t.token_type == TK_EOF)
-            break;
-        // Process token only if the lexeme exists.
-        // This means that any TK_COMMENTMARK is avoided
-        if (t.lexeme) {
-            root = add_tree_node(root, t); 
-        }
-    }
-    close_tokenizer();
-    */
     printf("Generating Parse Tree...\n");
-    TreeNode* root = generateParseTree(filename, p, g, f);
+    TreeNode* root = generateParseTree(filename, p, g);
     printParseTree(root);
-    // Close the tokenizer
     printTreeNode(root);
     free_first_and_follow(f);
     free_parse_table(p);
