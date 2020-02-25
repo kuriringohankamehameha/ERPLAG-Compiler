@@ -1,5 +1,10 @@
+// Group #42:
+// R.VIJAY KRISHNA -> 2017A7PS0183P
+// ROHIT K -> 2017A7PS0177P
+
 #ifndef PARSER_H
 #define PARSER_H
+#include "common.h"
 #include "lexer.h"
 
 typedef struct Rule Rule;
@@ -33,7 +38,6 @@ struct Grammar{
     // set for each rule. Since we encode the grammar to integer numbers,
     // we can also have the first and follow sets as a 2d-array of integers
     Rule* rules;
-    FirstAndFollow F;
     int num_rules; // Number of distinct rules (Nonterminals on the left)
     int num_symbols; // Number of distinct Non Terminals
     int num_tokens; // Number of Terminals
@@ -55,10 +59,14 @@ struct TreeNode {
     struct Token token; // Token from the lexer
     TreeNode* parent; // Pointer to it's parent
     TreeNode** children; // as well as to it's children
-    TreeNode* right_sibling; // Pointer to it's right sibling for moving across the tree
+    TreeNode* right_sibling;
     int rule_no; // Store rule number for debugging
     int num_children;
+<<<<<<< HEAD
 	bool check_term;
+=======
+    bool check_term;
+>>>>>>> 172150c017f494ea73a248efc68d21603f26fbf1
 };
 
 typedef struct StackNode StackNode;

@@ -124,9 +124,15 @@ TreeNode* generateParseTree (char* filename, ParseTable t, Grammar g, FirstAndFo
 		if (is_complete)
 			break;
 	}
+<<<<<<< HEAD
 	
 	close_tokenizer();
 	return root;
+=======
+	free_stack()
+	close_tokenizer();
+	return curr;
+>>>>>>> 172150c017f494ea73a248efc68d21603f26fbf1
 }
 
 /*
@@ -185,4 +191,8 @@ void printParseTree(TreeNode* root) {
 	for (int i=0; i<root->num_children; i++) {
         printParseTree(root->children[i]);
     }
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> 172150c017f494ea73a248efc68d21603f26fbf1
