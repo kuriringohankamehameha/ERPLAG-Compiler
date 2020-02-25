@@ -1,6 +1,8 @@
 // Group #42:
 // R.VIJAY KRISHNA -> 2017A7PS0183P
 // ROHIT K -> 2017A7PS0177P
+#ifndef LEXER_H
+#define LEXER_H
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -32,3 +34,4 @@ term is_keyword(char*);
 void remove_comments(char*, char*);
 void run_tokenizer(char*);
 HashTable* populate_hash_table(HashTable*, Keyword*, unsigned long (*) (char*));
+#endif

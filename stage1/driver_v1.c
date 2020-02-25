@@ -1,8 +1,13 @@
-#include "lexerDef.h"
-#include "lexer.h"
-#include "parserDef.h"
-#include "parser.h"
+// Group 42:
+// R Vijay Krishna 2017A7PS0183P
+// Rohit K 2017A7PS0177P
 
+#include "common.h"
+#include "hash_table.h"
+#include "lexer.h"
+#include "parser.h"
+#include "parserDef.h"
+#include <time.h>
 
 unsigned long hash_func (char* str) {
     unsigned long i = 0;
@@ -314,36 +319,6 @@ char* get_lexeme() {
     return lexeme;
 }
 
-term is_keyword_binary_search(char* lexeme) {
-    // Checks if the lexeme is a keyword or not
-    // by performing a Binary Search on the Keyword Table
-    if (!lexeme) {
-        fprintf(stderr, "ERPLAG Error: Lexeme Corrupted\n");
-        exit(EXIT_FAILURE);
-    }
-
-    int start = 0;
-    int mid = NUM_KEYWORDS / 2;
-    int end = NUM_KEYWORDS - 1;
-
-    while (start <= end) {
-        int val = strcmp(lexeme, keywords[mid].key);
-        if (val < 0) {
-            end = mid-1;
-            mid = (start + end) / 2;
-        }
-        else if (val > 0) {
-            start = mid+1;
-            mid = (start + end) / 2;
-        }
-        else {
-            return keywords[mid].tid;
-        }
-    }
-
-    return TK_ID;
-}
-
 term is_keyword(char* lexeme) {
     // Checks if the lexeme is a keyword or not
     // by performing a Lookup on the Keyword Hash Table
@@ -599,6 +574,7 @@ Token get_next_token() {
                     state = 14;
                 break;
             case 14:
+                unget_char(1);
                 token.lexeme = get_lexeme();
                 token.token_type = TK_MUL;
                 token.line_no = line_no;
@@ -867,6 +843,7 @@ Token get_next_token() {
 
     print_lexical_error(ch, err);
     token.token_type = TK_ERROR;
+    token.line_no = line_no;
     dfa_signal();
     return token;
 }
@@ -1152,6 +1129,79 @@ void remove_comments(char* testcase_file, char* clean_file) {
     fclose(op);
 }
 
+void remove_comments_stdout(char* testcase_file) {
+    // Processes a testcase file and rewrites it
+    // into stdout
+    
+    FILE* ip = fopen(testcase_file, "r");
+    if (!ip) {
+        fprintf(stderr, "Error opening %s\n", testcase_file);
+        exit(EXIT_FAILURE);
+    }
+
+    // Use a separate buffer for this function
+    char* buffer = (char*) calloc (BUF_SIZE, sizeof(char));
+    
+    // Are we under a comment?
+    bool under_comment = false;
+    
+    do {
+        // Keep reading until EOF or empty buffer
+        size_t bytes_read = fread(buffer, sizeof(char), BUF_SIZE, ip);
+        if (bytes_read == 0)
+            break;
+        buffer[bytes_read] = '\0';
+
+        // Maintain index of current character in the buffer
+        size_t curr = 0;
+        
+
+        while (curr < bytes_read) {
+            // Traverse the buffer and remove comments
+            if (under_comment) {
+                // Ignore all characters until the next **
+                for ( ; curr < bytes_read; curr++) {
+                    
+                    if (buffer[curr] == '\n') {
+                        fprintf(stdout, "\n");
+                    }
+
+                    if (buffer[curr] == '*' && buffer[curr+1] == '*') {
+                        // Encountered a comment. Increment the position
+                        // by 2 and invert the flag
+                        under_comment = ~(under_comment);
+                        curr += 2;
+                        break;
+                    }
+                }
+            }
+
+            for ( ; curr < bytes_read; curr++) {
+                if (buffer[curr] == '*' && buffer[curr+1] == '*') {
+                    // Encountered a comment. Increment the position
+                    // by 2 and invert the flag
+                    under_comment = ~(under_comment);
+                    curr += 2;
+                    break;
+                }
+
+                else {
+                    // Don't print any character under a comment
+                    // provided that it's not a newline character
+                    if (under_comment && buffer[curr] != '\n')
+                        continue;
+                    else
+                        fprintf(stdout, "%c", buffer[curr]);
+                }
+            }
+        }
+    } while (!feof(ip) && buffer[0] != '\0');
+
+    // Close stuff
+    free(buffer);
+    fclose(ip);
+}
+
 void run_tokenizer(char* filename) {
     // Runs the tokenizer on the input file
     init_tokenizer(filename);
@@ -1182,13 +1232,12 @@ void run_tokenizer(char* filename) {
     close_tokenizer();
 }
 
-
 Rule make_rule(int left, int* right, int num_right) {
-	Rule grule;
-	grule.left = left;
-	grule.right = right;
-	grule.num_right = num_right;
-	return grule;
+    Rule grule;
+    grule.left = left;
+    grule.right = right;
+    grule.num_right = num_right;
+    return grule;
 }
 
 TreeNode* make_tree_node(TreeNode* parent, Token token) {
@@ -1198,8 +1247,8 @@ TreeNode* make_tree_node(TreeNode* parent, Token token) {
     node->children = NULL;
     node->right_sibling = NULL;
     node->num_children = 0;
-	node->rule_no = -1;
-	node->check_term = is_terminal(token.token_type);
+    node->rule_no = -1;
+    node->check_term = is_terminal(token.token_type);
     return node;
 }
 
@@ -1435,6 +1484,110 @@ void printParseTable(ParseTable p) {
     printf("-----------------------------------------------------\n");
 }
 
+char* syntax_error_message(Token t) {
+    switch(t.token_type) {
+        case TK_NUM:
+        return "Integer";
+        break;
+        case TK_RNUM:
+        return "Floating point number";
+        break;
+        case TK_BOOLEAN:
+        return "Boolean";
+        break;
+        case TK_OF:
+        return "Of";
+        break;
+        case TK_ARRAY:
+        return "Array";
+        break;
+        case TK_START:
+        return "start";
+        break;
+        case TK_END:
+        return "end";
+        break;
+        case TK_DECLARE:
+        return "declare";
+        break;
+        case TK_MODULE:
+        return "module";
+        break;
+        case TK_DRIVER:
+        return "driver";
+        break;
+        case TK_PROGRAM:
+        return "program";
+        break;
+        case TK_GET_VALUE:
+        return "get_value";
+        break;
+        case TK_PRINT:
+        return "print()";
+        break;
+        case TK_USE:
+        return "use";
+        break;
+        case TK_TRUE:
+        return "true";
+        break;
+        case TK_FALSE:
+        return "false";
+        break;
+        case TK_TAKES:
+        return "takes";
+        break;
+        case TK_SWITCH:
+        return "switch";
+        break;
+        case TK_CASE:
+        return "case";
+        break;
+        case TK_BREAK:
+        return "break";
+        break;
+        case TK_DEFAULT:
+        return "default";
+        break;
+        case TK_WHILE:
+        return "while";
+        break;
+        case TK_COLON:
+        return "colon";
+        break;
+        case TK_RANGEOP:
+        return "range operator";
+        break;
+        case TK_SEMICOL:
+        return ";";
+        break;
+        case TK_COMMA:
+        return ",";
+        break;
+        case TK_ASSIGNOP:
+        return ":=";
+        break;
+        case TK_SQBO:
+        return "[";
+        break;
+        case TK_SQBC:
+        return "]";
+        break;
+        case TK_BO:
+        return "(";
+        break;
+        case TK_BC:
+        return ")";
+        break;
+        case TK_ID:
+        return "Identifier";
+        break;
+        default:
+        break;
+    }
+    return get_string_from_term(t.token_type);
+}
+
 Grammar populate_grammar(FILE* fp) {
     Grammar G;
     G.rules = (Rule*) calloc (1, sizeof(Rule));
@@ -1467,69 +1620,69 @@ Grammar populate_grammar(FILE* fp) {
     int total = 0;
     
     do {
-	while (fscanf(fp, " %s", buffer) == 1) {
-	    //printf("Buffer = %s\n", buffer);
-	    if (strcmp(buffer, "$") == 0) {
-		is_lhs = true;
-		curr_rule++;
-		G.num_rules++;
-		curr_right = 0;
-		continue;
-	    }
-	    else if (strcmp(buffer, "->") == 0) {
-		is_lhs = false;
-		continue;
-	    }
-	    else {
-		num = ht_search(hash_table, buffer);
-		if ((term)num == TK_NONE) {
-		    fprintf(stderr, "Symbol %s not in hash table\n", buffer);
-		    exit(EXIT_FAILURE);
-		}
-		
-		bool flag = false;
-		for (int i=0; i<total; i++) {
-		    if (temp[i] == num) {
-			flag = true;
-			break;
-		    }
-		}
-		if (!flag) {
-		    temp = (int*) realloc (temp, (total + 2) * sizeof(int));
-		    temp[total] = num;
-		    total++;
-		}
-				
-		if (is_lhs) {
-		    // Belongs to the lhs
-		    //printf("LHS: curr_rule = %d, curr_right = %d\n", curr_rule, curr_right);
-		    G.rules = (Rule*) realloc (G.rules, (curr_rule + 1) * sizeof(Rule));
-		    G.rules[curr_rule].right = (int*) calloc ((curr_right + 2),  sizeof(int));
-		    //G.rules[curr_rule].right[curr_right + 1] = num;
-		    G.rules[curr_rule].rule_no = curr_rule; // Useless variable
-		    G.rules[curr_rule].left = num;
-		}
-		else {
-		    // Go to RHS
-		    //printf("RHS: curr_left = %d, curr_right = %d\n", curr_left, curr_right);
-		    G.rules = (Rule*) realloc (G.rules, (curr_rule + 1) * sizeof(Rule));
-		    G.rules[curr_rule].right = (int*) realloc (G.rules[curr_rule].right, (curr_right + 2) * sizeof(int));
-		    G.rules[curr_rule].num_right++;
-		    G.rules[curr_rule].right[curr_right] = num;
-		    curr_right++;
-		}
-		// Update the number of terminals / non-terminals
-		if (!flag) {
-		    if (is_terminal(num)) {
-			G.num_tokens++;
-		    }
-		    else {
-			G.num_symbols++;
-		    }
-		}
-	    }
-	    is_lhs = false;
-	}
+    while (fscanf(fp, " %s", buffer) == 1) {
+        //printf("Buffer = %s\n", buffer);
+        if (strcmp(buffer, "$") == 0) {
+        is_lhs = true;
+        curr_rule++;
+        G.num_rules++;
+        curr_right = 0;
+        continue;
+        }
+        else if (strcmp(buffer, "->") == 0) {
+        is_lhs = false;
+        continue;
+        }
+        else {
+        num = ht_search(hash_table, buffer);
+        if ((term)num == TK_NONE) {
+            fprintf(stderr, "Symbol %s not in hash table\n", buffer);
+            exit(EXIT_FAILURE);
+        }
+        
+        bool flag = false;
+        for (int i=0; i<total; i++) {
+            if (temp[i] == num) {
+            flag = true;
+            break;
+            }
+        }
+        if (!flag) {
+            temp = (int*) realloc (temp, (total + 2) * sizeof(int));
+            temp[total] = num;
+            total++;
+        }
+                
+        if (is_lhs) {
+            // Belongs to the lhs
+            //printf("LHS: curr_rule = %d, curr_right = %d\n", curr_rule, curr_right);
+            G.rules = (Rule*) realloc (G.rules, (curr_rule + 1) * sizeof(Rule));
+            G.rules[curr_rule].right = (int*) calloc ((curr_right + 2),  sizeof(int));
+            //G.rules[curr_rule].right[curr_right + 1] = num;
+            G.rules[curr_rule].rule_no = curr_rule; // Useless variable
+            G.rules[curr_rule].left = num;
+        }
+        else {
+            // Go to RHS
+            //printf("RHS: curr_left = %d, curr_right = %d\n", curr_left, curr_right);
+            G.rules = (Rule*) realloc (G.rules, (curr_rule + 1) * sizeof(Rule));
+            G.rules[curr_rule].right = (int*) realloc (G.rules[curr_rule].right, (curr_right + 2) * sizeof(int));
+            G.rules[curr_rule].num_right++;
+            G.rules[curr_rule].right[curr_right] = num;
+            curr_right++;
+        }
+        // Update the number of terminals / non-terminals
+        if (!flag) {
+            if (is_terminal(num)) {
+            G.num_tokens++;
+            }
+            else {
+            G.num_symbols++;
+            }
+        }
+        }
+        is_lhs = false;
+    }
     } while (fscanf(fp, " %c", &ch) == 1);
 
 
@@ -1571,12 +1724,12 @@ FirstAndFollow ComputeFirstAndFollowSets(Grammar G){
          F.first[i] = (int *)calloc(G.num_symbols + G.num_tokens + 2, sizeof(int));
     F.num_symbols = G.num_symbols;
     F.num_tokens = G.num_tokens;
-	
+    
     // Keep an extra index for $ (TK_DOLLAR)
     F.follow = (int **)calloc(G.num_symbols + G.num_tokens + 2, sizeof(int *)); 
     for (int i=0; i<G.num_symbols+G.num_tokens+2; i++) 
          F.follow[i] = (int *)calloc(G.num_symbols + G.num_tokens + 2, sizeof(int));
-	
+    
     
     // F.first
     int change;
@@ -1594,10 +1747,6 @@ FirstAndFollow ComputeFirstAndFollowSets(Grammar G){
             F.first[nt_idx][0] = 1;
         }
     }
-    
-    #ifdef DEBUG
-    printf("Base cases done!\n");
-    #endif
 
     do{
         change=0;
@@ -1611,7 +1760,7 @@ FirstAndFollow ComputeFirstAndFollowSets(Grammar G){
                     F.first[G.rules[i].left][t_index] = 1; 
                     // We don't update change, since we reached a terminal.
                     // This belongs to a base case, so this is acceptable
-                    //change = 1;	
+                    //change = 1;   
                     break;
                 }
 
@@ -1629,7 +1778,7 @@ FirstAndFollow ComputeFirstAndFollowSets(Grammar G){
                         // Then Epsilon must also belong to first(left symbol)
                         F.first[G.rules[i].left][0] = 1;
                         change = 1;
-                        break;	
+                        break;  
                     }
                 }
                 
@@ -1665,7 +1814,7 @@ FirstAndFollow ComputeFirstAndFollowSets(Grammar G){
                         change = temp;
                     }
                     break;
-                }	
+                }   
                 
                 // Otherwise, the follow of the current right symbol will be ORed with the first of the next right symbol
                 int temp = Union(F.follow[G.rules[i].right[j]] , F.first[G.rules[i].right[j+1]], G.num_tokens);
@@ -1680,7 +1829,7 @@ FirstAndFollow ComputeFirstAndFollowSets(Grammar G){
                         change = temp;
                 }
             }
-        }		
+        }       
     } while(change==1);
     
     for (int i=0; i<G.num_tokens; i++)
@@ -1707,7 +1856,7 @@ ParseTable createParseTable(FirstAndFollow F, Grammar G){
     
     for(int i=0; i<G.num_rules; i++) {
         int A = G.rules[i].left;
-        int B =	G.rules[i].right[0];
+        int B = G.rules[i].right[0];
         
         if (B == TK_EPSILON) {
             for(int j=1; j<G.num_tokens; j++) {
@@ -1731,108 +1880,123 @@ ParseTable createParseTable(FirstAndFollow F, Grammar G){
             for(int j=1; j<G.num_tokens; j++) {
                 if(F.follow[B][j] == 1)
                     P.matrix[A][j] = i;
-            }	
+            }   
         }
     }
     return P;
 }
 
-TreeNode* generateParseTree (char* filename, ParseTable p, Grammar g, FirstAndFollow f) {
-	Token t = {TK_DOLLAR, NULL, -1};
-	TreeNode* dollar = make_tree_node(NULL, t);
-	StackNode* stack = make_stack_node(dollar);
-	
-	t.token_type = program;
-	TreeNode* root = make_tree_node(NULL, t);
-	stack = push(stack, root);
-
-	init_tokenizer(filename);
-	
-	t = get_next_token();
-	
-	bool is_complete = false;
+TreeNode* generateParseTree (char* filename, ParseTable p, Grammar g) {
+    Token t = {TK_DOLLAR, NULL, -1};
+    TreeNode* dollar = make_tree_node(NULL, t);
+    StackNode* stack = make_stack_node(dollar);
     
-    printf("Looping..\n");
-	
-	while (!is_empty(stack)) {
-        printf("Stack has: %s\n", get_string_from_term(stack->data->token.token_type));
-		if (stack->data->check_term == false) {
-			// Non terminal
-			TreeNode* curr = stack->data;
-			// Look at the parse table
-            fprintf(stderr, "Looking up Token %s, \n", get_string_from_term(t.token_type));
-			int rule_no = p.matrix[curr->token.token_type][t.token_type];
-			if (rule_no == -1) {
-				fprintf(stderr, "Syntax Error: At Token: %s at line number: %d\n", get_string_from_term(t.token_type), t.line_no);
-				t = get_next_token();
-				continue;
-			}
-			// Pop the stack
-			stack = pop(stack);
-			
-			Rule rule = g.rules[rule_no];
-			curr->children = (TreeNode**) calloc (rule.num_right, sizeof(TreeNode*));
-			curr->rule_no = rule_no;
-            printf("Rule Number %d:\t", rule_no);
-            print_rule(rule); 
-			curr->num_children = rule.num_right;
-			
-			for (int i=0; i<rule.num_right; i++) {
-				Token temp = {rule.right[i], NULL, -1};
-				curr->children[i] = make_tree_node(curr, temp);
-			}
-			
-			for (int i=rule.num_right-1; i>=0; i--) {
-				stack = push(stack, curr->children[i]);
-			}
-			continue;
-		}
-		else {
-            printf("Encountered Terminal\n");
-			TreeNode* curr = stack->data;
-            printf("curr has %s\n", get_string_from_term(curr->token.token_type));
+    t.token_type = program;
+    TreeNode* root = make_tree_node(NULL, t);
+    stack = push(stack, root);
+
+    init_tokenizer(filename);
+    
+    t = get_next_token();
+    
+    bool is_complete = false;
+    
+    bool is_correct = true;
+        
+    while (!is_empty(stack)) {
+        if (t.token_type == TK_ERROR) {
+            fprintf(stderr, "Syntax Error: At line number: %d\n", t.line_no);
+            t = get_next_token();
+            continue;
+        }
+        else if (t.token_type == TK_DOLLAR) {
+            if (is_correct) {
+                printf("Parsed successfully!\n");
+                break;
+            }
+            else {
+                printf("Finished parsing with errors\n");
+                break;
+            }
+        }
+        else if (t.token_type == TK_COMMENTMARK) {
+            t = get_next_token();
+            continue;
+        }
+        if (stack->data->check_term == false) {
+            // Non terminal
+            TreeNode* curr = stack->data;
+            // Look at the parse table
+            int rule_no = p.matrix[curr->token.token_type][t.token_type];
+            if (rule_no == -1) {
+                if (t.token_type != TK_COMMENTMARK) {
+                    fprintf(stderr, "Syntax Error at Line %d: Got Token: %s\n", t.line_no, get_string_from_term(t.token_type));
+                    is_correct = false;
+                }
+                t = get_next_token();
+                continue;
+            }
+            // Pop the stack
+            stack = pop(stack);
+            
+            Rule rule = g.rules[rule_no];
+            curr->children = (TreeNode**) calloc (rule.num_right, sizeof(TreeNode*));
+            curr->rule_no = rule_no;
+            curr->num_children = rule.num_right;
+            
+            for (int i=0; i<rule.num_right; i++) {
+                Token temp = {rule.right[i], NULL, -1};
+                curr->children[i] = make_tree_node(curr, temp);
+            }
+            
+            for (int i=rule.num_right-1; i>=0; i--) {
+                stack = push(stack, curr->children[i]);
+            }
+            continue;
+        }
+        else {
+            TreeNode* curr = stack->data;
             if (curr->token.token_type == TK_EPSILON) {
                 // Pop from the stack and add to curr
-                printf("Popping %s from the stack\n", get_string_from_term(stack->data->token.token_type));
                 stack = pop(stack);
                 curr->token.lexeme = NULL;
                 curr->token.line_no = -1;
                 continue;
             }
             if (curr->token.token_type == t.token_type) {
-                printf("Matched!\n");
-				if (t.token_type == TK_DOLLAR) {
-					// End of stack
-					printf("Successfully Parsed!\n");
-					is_complete = true;
-					break;
-				}
-				// Pop the stack and then go to the next token
-                printf("Popping %s from the stack\n", get_string_from_term(stack->data->token.token_type));
-				stack = pop(stack);
-				//memcpy(&curr->token.lexeme, &t.lexeme);
-				curr->token.lexeme = t.lexeme;
-				curr->token.line_no = t.line_no;
-				t = get_next_token();
-			}
-			else {
-				fprintf(stderr, "Should never happen! Token %s, \n", get_string_from_term(t.token_type));
-                return root;
-			}
-		}
-		if (is_complete)
-			break;
-	}
-	//free_stack(stack);
-	close_tokenizer();
-	return root;
+                if (t.token_type == TK_DOLLAR) {
+                    // End of stack
+                    is_complete = true;
+                    break;
+                }
+                // Pop the stack and then go to the next token
+                stack = pop(stack);
+                curr->token.lexeme = t.lexeme;
+                curr->token.line_no = t.line_no;
+                t = get_next_token();
+            }
+            else {
+                //continue;
+                fprintf(stderr, "Syntax Error at Line %d: Expected: %s, but got: %s\n", t.line_no, get_string_from_term(stack->data->token.token_type), get_string_from_term(t.token_type));
+                // Pop from the stack
+                stack = pop(stack);
+                t = get_next_token();
+                continue;
+            }
+        }
+        if (is_complete)
+            break;
+    }
+    //free_stack(stack);
+    close_tokenizer();
+    return root;
 }
 
 void pretty_print(TreeNode* node) {
-	// Prints only one node
-	if (node->check_term == true) {
-		// Terminal
-		Token t = node->token;
+    // Prints only one node
+    if (node->check_term == true) {
+        // Terminal
+        Token t = node->token;
         if (t.token_type == TK_EPSILON) {
             printf("-----\t");
             printf("-----\t");
@@ -1841,90 +2005,107 @@ void pretty_print(TreeNode* node) {
             printf("%s\t", node->token.lexeme);
             printf("%d\t", node->token.line_no);
         }
-		printf("%s\t", get_string_from_term(node->token.token_type));
-		if (t.token_type == TK_NUM)
-			printf("%d\t", atoi(t.lexeme));
-		else if (t.token_type == TK_RNUM) {
-			for (int i=0; t.lexeme[i] != '\0'; i++)
-				if (t.lexeme[i] == 'E')
-					t.lexeme[i] = 'e';
-			printf("%.4f\t", atof(t.lexeme));
-		}
-		else
-			printf("-----\t");
-		printf("%s\t", get_string_from_term(node->parent->token.token_type));
-		if (node->check_term)
-			printf("Yes\t");
-		else
-			printf("No\t");
-		printf("-----\t");
-		printf("\n");
-	}
-	else {
-		// Non Terminal
-		printf("-----\t");
-		printf("-----\t");
-		printf("-----\t");
-		printf("-----\t");
-		printf("%s\t", get_string_from_term(node->parent->token.token_type));
-		if (node->check_term)
-			printf("Yes\t");
-		else
-			printf("No\t");
-		printf("%s\t", get_string_from_term(node->token.token_type));
-		printf("\n");
-	}
+        printf("%s\t", get_string_from_term(node->token.token_type));
+        if (t.token_type == TK_NUM)
+            printf("%d\t", atoi(t.lexeme));
+        else if (t.token_type == TK_RNUM) {
+            for (int i=0; t.lexeme[i] != '\0'; i++)
+                if (t.lexeme[i] == 'E')
+                    t.lexeme[i] = 'e';
+            printf("%.4f\t", atof(t.lexeme));
+        }
+        else
+            printf("-----\t");
+        printf("%s\t", get_string_from_term(node->parent->token.token_type));
+        if (node->check_term)
+            printf("Yes\t");
+        else
+            printf("No\t");
+        printf("-----\t");
+        printf("\n");
+    }
+    else {
+        // Non Terminal
+        printf("-----\t");
+        printf("-----\t");
+        printf("-----\t");
+        printf("-----\t");
+        printf("%s\t", get_string_from_term(node->parent->token.token_type));
+        if (node->check_term)
+            printf("Yes\t");
+        else
+            printf("No\t");
+        printf("%s\t", get_string_from_term(node->token.token_type));
+        printf("\n");
+    }
 }
 
 void printParseTree(TreeNode* root) {
-	if (root->num_children == 0) {
-		pretty_print(root);
-		return;
-	}
-	for (int i=0; i<root->num_children; i++) {
+    if (root->num_children == 0) {
+        pretty_print(root);
+        return;
+    }
+    for (int i=0; i<root->num_children; i++) {
         printParseTree(root->children[i]);
     }
 }
 
-int main() {
-    FILE* fp = fopen("grammar_rules.txt", "r");
-    if (!fp) {
-        perror("File does not exist\n");
+int main(int argc, char* argv[]) {
+    if (argc != 2 && argc != 3) {
+        fprintf(stderr, "Format: %s <input> <output>\n", argv[0]);
         exit(EXIT_FAILURE);
     }
-    Grammar g = populate_grammar(fp);
-    print_grammar(g);
-    FirstAndFollow f = ComputeFirstAndFollowSets(g);
-    printFirstAndFollowSets(f);
-    ParseTable p = createParseTable(f, g);
-    printParseTable(p);
     
-    char* filename = "test/testcase2.txt";
-    /*
-    init_tokenizer(filename);
-    TreeNode* root = NULL;
-    // Process the tokens using get_next_token()
-    for (;;) {
-        Token t = get_next_token();
-        if (t.token_type == TK_EOF)
-            break;
-        // Process token only if the lexeme exists.
-        // This means that any TK_COMMENTMARK is avoided
-        if (t.lexeme) {
-            root = add_tree_node(root, t); 
-        }
-    }
-    close_tokenizer();
-    */
-    printf("Generating Parse Tree...\n");
-    TreeNode* root = generateParseTree(filename, p, g, f);
-    printParseTree(root);
-    // Close the tokenizer
-    printTreeNode(root);
-    free_first_and_follow(f);
-    free_parse_table(p);
+    FILE* fp = fopen("grammar_rules.txt", "r");
+    Grammar g = populate_grammar(fp);
     fclose(fp);
+    
+    FirstAndFollow f = ComputeFirstAndFollowSets(g);
+    ParseTable p = createParseTable(f, g);
+    
+    while(1) {
+	printf("\nERPLAG COMPILER MENU OPTIONS:\n");
+	printf("0: To exit.\n");
+	printf("1: For producing clean code by removal of comments on the console.\n");
+	printf("2: For printing the token list generated by the lexer.\n");
+	printf("3: For parsing to verify the syntactic correctness of the input source code and printing the Parse Tree in an Inorder Traversal\n");
+	printf("4: For printing (on the console) the total time taken by your stage 1 code of lexer and parser to verify the syntactic correctness\n");
+
+
+	int option;
+	scanf("%d",&option);
+    
+	if (option == 0)
+	    break;
+
+	else if(option == 1) {
+	    printf("-------------------------------------------------------------\n");
+	    remove_comments_stdout(argv[1]);
+	    printf("-------------------------------------------------------------\n");
+	    printf("Cleaned comments!\n");
+	}
+	else if(option == 2) {
+	    printf("-------------------------------------------------------------\n");
+	    run_tokenizer(argv[1]);
+	    printf("-------------------------------------------------------------\n");
+	}
+	else if(option == 3) {
+	    TreeNode* parseTree = generateParseTree(argv[1], p, g);
+	    printf("-------------------------------------------------------------\n");
+	    printf("Parse Tree:\n");
+	    printf("Token\tLine No\tLexeme\t\tNum. Value\t\tParent\t\tIs Leaf\t\tSymbol Type\n");
+	    printParseTree(parseTree);
+	    printf("-------------------------------------------------------------\n");
+	}
+	else if (option == 4) {
+	    printf("\n");
+	}
+	else {
+	    printf("\nInvalid Option\n");
+	}
+    }
+    free_parse_table(p);
+    free_first_and_follow(f);
     free_grammar(g);
-    free_tree(root);
     return 0;
 }

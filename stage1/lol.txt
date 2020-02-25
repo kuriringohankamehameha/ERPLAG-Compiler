@@ -56,7 +56,7 @@ LHS : lvalueIDStmt , RHS : TK_ASSIGNOP , expression , TK_SEMICOL ,
 LHS : lvalueARRStmt , RHS : TK_SQBO , g_index , TK_SQBC , TK_ASSIGNOP , expression , TK_SEMICOL , 
 LHS : g_index , RHS : TK_NUM , 
 LHS : g_index , RHS : TK_ID , 
-LHS : moduleReuseStmt , RHS : optional , TK_USE , TK_ID , TK_WITH , TK_PARAMETERS , idList , TK_SEMICOL , 
+LHS : moduleReuseStmt , RHS : optional , TK_USE , TK_MODULE , TK_ID , TK_WITH , TK_PARAMETERS , idList , TK_SEMICOL , 
 LHS : optional , RHS : TK_SQBO , idList , TK_SQBC , TK_ASSIGNOP , 
 LHS : optional , RHS : TK_EPSILON , 
 LHS : idList , RHS : TK_ID , N3 , 
@@ -110,7 +110,6 @@ LHS : iterativeStmt , RHS : TK_FOR , TK_BO , TK_ID , TK_IN , range , TK_BC , TK_
 LHS : iterativeStmt , RHS : TK_WHILE , TK_BO , arithmeticOrBooleanExpr , TK_BC , TK_START , statements , TK_END , 
 LHS : range , RHS : TK_NUM , TK_RANGEOP , TK_NUM , 
 -----------------------------
-Base cases done!
 -----------------------------------------------------
 First Sets
 Symbols: TK_EPSILON => ,TK_EPSILON: 1 ,TK_DECLARE: 0 ,TK_MODULE: 0 ,TK_ID: 0 ,TK_SEMICOL: 0 ,TK_DRIVERDEF: 0 ,TK_DRIVER: 0 ,TK_PROGRAM: 0 ,TK_DRIVERENDDEF: 0 ,TK_DEF: 0 ,TK_ENDDEF: 0 ,TK_TAKES: 0 ,TK_INPUT: 0 ,TK_SQBO: 0 ,TK_SQBC: 0 ,TK_RETURNS: 0 ,TK_COLON: 0 ,TK_COMMA: 0 ,TK_INTEGER: 0 ,TK_REAL: 0 ,TK_BOOLEAN: 0 ,TK_ARRAY: 0 ,TK_OF: 0 ,TK_START: 0 ,TK_END: 0 ,TK_GET_VALUE: 0 ,TK_BO: 0 ,TK_BC: 0 ,TK_PRINT: 0 ,TK_NUM: 0 ,TK_RNUM: 0 ,TK_TRUE: 0 ,TK_FALSE: 0 ,TK_ASSIGNOP: 0 ,TK_USE: 0 ,TK_WITH: 0 ,TK_PARAMETERS: 0 ,TK_MINUS: 0 ,TK_PLUS: 0 ,TK_MUL: 0 ,TK_DIV: 0 ,TK_AND: 0 ,TK_OR: 0 ,TK_LT: 0 ,TK_LE: 0 ,TK_GT: 0 ,TK_GE: 0 ,TK_EQ: 0 ,TK_NE: 0 ,TK_SWITCH: 0 ,TK_CASE: 0 ,TK_BREAK: 0 ,TK_DEFAULT: 0 ,TK_FOR: 0 ,TK_IN: 0 ,TK_WHILE: 0 ,TK_RANGEOP: 0 ,TK_DOLLAR: 0 
@@ -694,1189 +693,535 @@ Symbol : range=>	<TK_EPSILON, 0> |<TK_DECLARE, 0> |<TK_MODULE, 0> |<TK_ID, 0> |<
 
 -----------------------------------------------------
 Generating Parse Tree...
-Looping..
-Stack has: program
-Rule Number 0:	LHS : program , RHS : moduleDeclarations , otherModules , driverModule , otherModules , 
-Stack has: moduleDeclarations
-Rule Number 1:	LHS : moduleDeclarations , RHS : moduleDeclaration , moduleDeclarations , 
-Stack has: moduleDeclaration
-Rule Number 3:	LHS : moduleDeclaration , RHS : TK_DECLARE , TK_MODULE , TK_ID , TK_SEMICOL , 
-Stack has: TK_DECLARE
-Encountered Terminal
-curr has TK_DECLARE
-Matched!
-Popping TK_DECLARE from the stack
-Stack has: TK_MODULE
-Encountered Terminal
-curr has TK_MODULE
-Matched!
-Popping TK_MODULE from the stack
-Stack has: TK_ID
-Encountered Terminal
-curr has TK_ID
-Matched!
-Popping TK_ID from the stack
-Stack has: TK_SEMICOL
-Encountered Terminal
-curr has TK_SEMICOL
-Matched!
-Popping TK_SEMICOL from the stack
-Stack has: moduleDeclarations
-Rule Number 2:	LHS : moduleDeclarations , RHS : TK_EPSILON , 
-Stack has: TK_EPSILON
-Encountered Terminal
-curr has TK_EPSILON
-Popping TK_EPSILON from the stack
-Stack has: otherModules
-Rule Number 5:	LHS : otherModules , RHS : TK_EPSILON , 
-Stack has: TK_EPSILON
-Encountered Terminal
-curr has TK_EPSILON
-Popping TK_EPSILON from the stack
-Stack has: driverModule
-Rule Number 6:	LHS : driverModule , RHS : TK_DRIVERDEF , TK_DRIVER , TK_PROGRAM , TK_DRIVERENDDEF , moduleDef , 
-Stack has: TK_DRIVERDEF
-Encountered Terminal
-curr has TK_DRIVERDEF
-Matched!
-Popping TK_DRIVERDEF from the stack
-Stack has: TK_DRIVER
-Encountered Terminal
-curr has TK_DRIVER
-Matched!
-Popping TK_DRIVER from the stack
-Stack has: TK_PROGRAM
-Encountered Terminal
-curr has TK_PROGRAM
-Matched!
-Popping TK_PROGRAM from the stack
-Stack has: TK_DRIVERENDDEF
-Encountered Terminal
-curr has TK_DRIVERENDDEF
-Matched!
-Popping TK_DRIVERENDDEF from the stack
-Stack has: moduleDef
-Rule Number 24:	LHS : moduleDef , RHS : TK_START , statements , TK_END , 
-Stack has: TK_START
-Encountered Terminal
-curr has TK_START
-Matched!
-Popping TK_START from the stack
-Stack has: statements
-Rule Number 25:	LHS : statements , RHS : statement , statements , 
-Stack has: statement
-Rule Number 29:	LHS : statement , RHS : declareStmt , 
-Stack has: declareStmt
-Rule Number 92:	LHS : declareStmt , RHS : TK_DECLARE , idList , TK_COLON , dataType , TK_SEMICOL , 
-Stack has: TK_DECLARE
-Encountered Terminal
-curr has TK_DECLARE
-Matched!
-Popping TK_DECLARE from the stack
-Stack has: idList
-Rule Number 55:	LHS : idList , RHS : TK_ID , N3 , 
-Stack has: TK_ID
-Encountered Terminal
-curr has TK_ID
-Matched!
-Popping TK_ID from the stack
-Stack has: N3
-Rule Number 56:	LHS : N3 , RHS : TK_COMMA , TK_ID , N3 , 
-Stack has: TK_COMMA
-Encountered Terminal
-curr has TK_COMMA
-Matched!
-Popping TK_COMMA from the stack
-Stack has: TK_ID
-Encountered Terminal
-curr has TK_ID
-Matched!
-Popping TK_ID from the stack
-Stack has: N3
-Rule Number 56:	LHS : N3 , RHS : TK_COMMA , TK_ID , N3 , 
-Stack has: TK_COMMA
-Encountered Terminal
-curr has TK_COMMA
-Matched!
-Popping TK_COMMA from the stack
-Stack has: TK_ID
-Encountered Terminal
-curr has TK_ID
-Matched!
-Popping TK_ID from the stack
-Stack has: N3
-Rule Number 57:	LHS : N3 , RHS : TK_EPSILON , 
-Stack has: TK_EPSILON
-Encountered Terminal
-curr has TK_EPSILON
-Popping TK_EPSILON from the stack
-Stack has: TK_COLON
-Encountered Terminal
-curr has TK_COLON
-Matched!
-Popping TK_COLON from the stack
-Stack has: dataType
-Rule Number 16:	LHS : dataType , RHS : TK_INTEGER , 
-Stack has: TK_INTEGER
-Encountered Terminal
-curr has TK_INTEGER
-Matched!
-Popping TK_INTEGER from the stack
-Stack has: TK_SEMICOL
-Encountered Terminal
-curr has TK_SEMICOL
-Matched!
-Popping TK_SEMICOL from the stack
-Stack has: statements
-Rule Number 25:	LHS : statements , RHS : statement , statements , 
-Stack has: statement
-Rule Number 27:	LHS : statement , RHS : ioStmt , 
-Stack has: ioStmt
-Rule Number 32:	LHS : ioStmt , RHS : TK_GET_VALUE , TK_BO , TK_ID , TK_BC , TK_SEMICOL , 
-Stack has: TK_GET_VALUE
-Encountered Terminal
-curr has TK_GET_VALUE
-Matched!
-Popping TK_GET_VALUE from the stack
-Stack has: TK_BO
-Encountered Terminal
-curr has TK_BO
-Matched!
-Popping TK_BO from the stack
-Stack has: TK_ID
-Encountered Terminal
-curr has TK_ID
-Matched!
-Popping TK_ID from the stack
-Stack has: TK_BC
-Encountered Terminal
-curr has TK_BC
-Matched!
-Popping TK_BC from the stack
-Stack has: TK_SEMICOL
-Encountered Terminal
-curr has TK_SEMICOL
-Matched!
-Popping TK_SEMICOL from the stack
-Stack has: statements
-Rule Number 25:	LHS : statements , RHS : statement , statements , 
-Stack has: statement
-Rule Number 28:	LHS : statement , RHS : simpleStmt , 
-Stack has: simpleStmt
-Rule Number 43:	LHS : simpleStmt , RHS : assignmentStmt , 
-Stack has: assignmentStmt
-Rule Number 45:	LHS : assignmentStmt , RHS : TK_ID , whichStmt , 
-Stack has: TK_ID
-Encountered Terminal
-curr has TK_ID
-Matched!
-Popping TK_ID from the stack
-Stack has: whichStmt
-Rule Number 46:	LHS : whichStmt , RHS : lvalueIDStmt , 
-Stack has: lvalueIDStmt
-Rule Number 48:	LHS : lvalueIDStmt , RHS : TK_ASSIGNOP , expression , TK_SEMICOL , 
-Stack has: TK_ASSIGNOP
-Encountered Terminal
-curr has TK_ASSIGNOP
-Matched!
-Popping TK_ASSIGNOP from the stack
-Stack has: expression
-Rule Number 58:	LHS : expression , RHS : arithmeticOrBooleanExpr , 
-Stack has: arithmeticOrBooleanExpr
-Rule Number 65:	LHS : arithmeticOrBooleanExpr , RHS : AnyTerm , N7 , 
-Stack has: AnyTerm
-Rule Number 68:	LHS : AnyTerm , RHS : arithmeticExpr , N8 , 
-Stack has: arithmeticExpr
-Rule Number 72:	LHS : arithmeticExpr , RHS : g_term , N4 , 
-Stack has: g_term
-Rule Number 75:	LHS : g_term , RHS : factor , N5 , 
-Stack has: factor
-Rule Number 79:	LHS : factor , RHS : var_id_num , 
-Stack has: var_id_num
-Rule Number 39:	LHS : var_id_num , RHS : TK_NUM , 
-Stack has: TK_NUM
-Encountered Terminal
-curr has TK_NUM
-Matched!
-Popping TK_NUM from the stack
-Stack has: N5
-Rule Number 77:	LHS : N5 , RHS : TK_EPSILON , 
-Stack has: TK_EPSILON
-Encountered Terminal
-curr has TK_EPSILON
-Popping TK_EPSILON from the stack
-Stack has: N4
-Rule Number 74:	LHS : N4 , RHS : TK_EPSILON , 
-Stack has: TK_EPSILON
-Encountered Terminal
-curr has TK_EPSILON
-Popping TK_EPSILON from the stack
-Stack has: N8
-Rule Number 71:	LHS : N8 , RHS : TK_EPSILON , 
-Stack has: TK_EPSILON
-Encountered Terminal
-curr has TK_EPSILON
-Popping TK_EPSILON from the stack
-Stack has: N7
-Rule Number 67:	LHS : N7 , RHS : TK_EPSILON , 
-Stack has: TK_EPSILON
-Encountered Terminal
-curr has TK_EPSILON
-Popping TK_EPSILON from the stack
-Stack has: TK_SEMICOL
-Encountered Terminal
-curr has TK_SEMICOL
-Matched!
-Popping TK_SEMICOL from the stack
-Stack has: statements
-Rule Number 25:	LHS : statements , RHS : statement , statements , 
-Stack has: statement
-Rule Number 29:	LHS : statement , RHS : declareStmt , 
-Stack has: declareStmt
-Rule Number 92:	LHS : declareStmt , RHS : TK_DECLARE , idList , TK_COLON , dataType , TK_SEMICOL , 
-Stack has: TK_DECLARE
-Encountered Terminal
-curr has TK_DECLARE
-Matched!
-Popping TK_DECLARE from the stack
-Stack has: idList
-Rule Number 55:	LHS : idList , RHS : TK_ID , N3 , 
-Stack has: TK_ID
-Encountered Terminal
-curr has TK_ID
-Matched!
-Popping TK_ID from the stack
-Stack has: N3
-Rule Number 57:	LHS : N3 , RHS : TK_EPSILON , 
-Stack has: TK_EPSILON
-Encountered Terminal
-curr has TK_EPSILON
-Popping TK_EPSILON from the stack
-Stack has: TK_COLON
-Encountered Terminal
-curr has TK_COLON
-Matched!
-Popping TK_COLON from the stack
-Stack has: dataType
-Rule Number 17:	LHS : dataType , RHS : TK_REAL , 
-Stack has: TK_REAL
-Encountered Terminal
-curr has TK_REAL
-Matched!
-Popping TK_REAL from the stack
-Stack has: TK_SEMICOL
-Encountered Terminal
-curr has TK_SEMICOL
-Matched!
-Popping TK_SEMICOL from the stack
-Stack has: statements
-Rule Number 25:	LHS : statements , RHS : statement , statements , 
-Stack has: statement
-Rule Number 28:	LHS : statement , RHS : simpleStmt , 
-Stack has: simpleStmt
-Rule Number 44:	LHS : simpleStmt , RHS : moduleReuseStmt , 
-Stack has: moduleReuseStmt
-Rule Number 52:	LHS : moduleReuseStmt , RHS : optional , TK_USE , TK_ID , TK_WITH , TK_PARAMETERS , idList , TK_SEMICOL , 
-Stack has: optional
-Rule Number 53:	LHS : optional , RHS : TK_SQBO , idList , TK_SQBC , TK_ASSIGNOP , 
-Stack has: TK_SQBO
-Encountered Terminal
-curr has TK_SQBO
-Matched!
-Popping TK_SQBO from the stack
-Stack has: idList
-Rule Number 55:	LHS : idList , RHS : TK_ID , N3 , 
-Stack has: TK_ID
-Encountered Terminal
-curr has TK_ID
-Matched!
-Popping TK_ID from the stack
-Stack has: N3
-Rule Number 56:	LHS : N3 , RHS : TK_COMMA , TK_ID , N3 , 
-Stack has: TK_COMMA
-Encountered Terminal
-curr has TK_COMMA
-Matched!
-Popping TK_COMMA from the stack
-Stack has: TK_ID
-Encountered Terminal
-curr has TK_ID
-Matched!
-Popping TK_ID from the stack
-Stack has: N3
-Rule Number 57:	LHS : N3 , RHS : TK_EPSILON , 
-Stack has: TK_EPSILON
-Encountered Terminal
-curr has TK_EPSILON
-Popping TK_EPSILON from the stack
-Stack has: TK_SQBC
-Encountered Terminal
-curr has TK_SQBC
-Matched!
-Popping TK_SQBC from the stack
-Stack has: TK_ASSIGNOP
-Encountered Terminal
-curr has TK_ASSIGNOP
-Matched!
-Popping TK_ASSIGNOP from the stack
-Stack has: TK_USE
-Encountered Terminal
-curr has TK_USE
-Matched!
-Popping TK_USE from the stack
-Stack has: TK_ID
-Encountered Terminal
-curr has TK_ID
-Matched!
-Popping TK_ID from the stack
-Stack has: TK_WITH
-Encountered Terminal
-curr has TK_WITH
-Matched!
-Popping TK_WITH from the stack
-Stack has: TK_PARAMETERS
-Encountered Terminal
-curr has TK_PARAMETERS
-Matched!
-Popping TK_PARAMETERS from the stack
-Stack has: idList
-Rule Number 55:	LHS : idList , RHS : TK_ID , N3 , 
-Stack has: TK_ID
-Encountered Terminal
-curr has TK_ID
-Matched!
-Popping TK_ID from the stack
-Stack has: N3
-Rule Number 56:	LHS : N3 , RHS : TK_COMMA , TK_ID , N3 , 
-Stack has: TK_COMMA
-Encountered Terminal
-curr has TK_COMMA
-Matched!
-Popping TK_COMMA from the stack
-Stack has: TK_ID
-Encountered Terminal
-curr has TK_ID
-Matched!
-Popping TK_ID from the stack
-Stack has: N3
-Rule Number 57:	LHS : N3 , RHS : TK_EPSILON , 
-Stack has: TK_EPSILON
-Encountered Terminal
-curr has TK_EPSILON
-Popping TK_EPSILON from the stack
-Stack has: TK_SEMICOL
-Encountered Terminal
-curr has TK_SEMICOL
-Matched!
-Popping TK_SEMICOL from the stack
-Stack has: statements
-Rule Number 25:	LHS : statements , RHS : statement , statements , 
-Stack has: statement
-Rule Number 27:	LHS : statement , RHS : ioStmt , 
-Stack has: ioStmt
-Rule Number 33:	LHS : ioStmt , RHS : TK_PRINT , TK_BO , var , TK_BC , TK_SEMICOL , 
-Stack has: TK_PRINT
-Encountered Terminal
-curr has TK_PRINT
-Matched!
-Popping TK_PRINT from the stack
-Stack has: TK_BO
-Encountered Terminal
-curr has TK_BO
-Matched!
-Popping TK_BO from the stack
-Stack has: var
-Rule Number 34:	LHS : var , RHS : var_id_num , 
-Stack has: var_id_num
-Rule Number 38:	LHS : var_id_num , RHS : TK_ID , whichId , 
-Stack has: TK_ID
-Encountered Terminal
-curr has TK_ID
-Matched!
-Popping TK_ID from the stack
-Stack has: whichId
-Rule Number 42:	LHS : whichId , RHS : TK_EPSILON , 
-Stack has: TK_EPSILON
-Encountered Terminal
-curr has TK_EPSILON
-Popping TK_EPSILON from the stack
-Stack has: TK_BC
-Encountered Terminal
-curr has TK_BC
-Matched!
-Popping TK_BC from the stack
-Stack has: TK_SEMICOL
-Encountered Terminal
-curr has TK_SEMICOL
-Matched!
-Popping TK_SEMICOL from the stack
-Stack has: statements
-Rule Number 25:	LHS : statements , RHS : statement , statements , 
-Stack has: statement
-Rule Number 27:	LHS : statement , RHS : ioStmt , 
-Stack has: ioStmt
-Rule Number 33:	LHS : ioStmt , RHS : TK_PRINT , TK_BO , var , TK_BC , TK_SEMICOL , 
-Stack has: TK_PRINT
-Encountered Terminal
-curr has TK_PRINT
-Matched!
-Popping TK_PRINT from the stack
-Stack has: TK_BO
-Encountered Terminal
-curr has TK_BO
-Matched!
-Popping TK_BO from the stack
-Stack has: var
-Rule Number 34:	LHS : var , RHS : var_id_num , 
-Stack has: var_id_num
-Rule Number 38:	LHS : var_id_num , RHS : TK_ID , whichId , 
-Stack has: TK_ID
-Encountered Terminal
-curr has TK_ID
-Matched!
-Popping TK_ID from the stack
-Stack has: whichId
-Rule Number 42:	LHS : whichId , RHS : TK_EPSILON , 
-Stack has: TK_EPSILON
-Encountered Terminal
-curr has TK_EPSILON
-Popping TK_EPSILON from the stack
-Stack has: TK_BC
-Encountered Terminal
-curr has TK_BC
-Matched!
-Popping TK_BC from the stack
-Stack has: TK_SEMICOL
-Encountered Terminal
-curr has TK_SEMICOL
-Matched!
-Popping TK_SEMICOL from the stack
-Stack has: statements
-Rule Number 26:	LHS : statements , RHS : TK_EPSILON , 
-Stack has: TK_EPSILON
-Encountered Terminal
-curr has TK_EPSILON
-Popping TK_EPSILON from the stack
-Stack has: TK_END
-Encountered Terminal
-curr has TK_END
-Matched!
-Popping TK_END from the stack
-Stack has: otherModules
-Rule Number 4:	LHS : otherModules , RHS : module , otherModules , 
-Stack has: module
-Rule Number 7:	LHS : module , RHS : TK_DEF , TK_MODULE , TK_ID , TK_ENDDEF , TK_TAKES , TK_INPUT , TK_SQBO , input_plist , TK_SQBC , TK_SEMICOL , ret , moduleDef , 
-Stack has: TK_DEF
-Encountered Terminal
-curr has TK_DEF
-Matched!
-Popping TK_DEF from the stack
-Stack has: TK_MODULE
-Encountered Terminal
-curr has TK_MODULE
-Matched!
-Popping TK_MODULE from the stack
-Stack has: TK_ID
-Encountered Terminal
-curr has TK_ID
-Matched!
-Popping TK_ID from the stack
-Stack has: TK_ENDDEF
-Encountered Terminal
-curr has TK_ENDDEF
-Matched!
-Popping TK_ENDDEF from the stack
-Stack has: TK_TAKES
-Encountered Terminal
-curr has TK_TAKES
-Matched!
-Popping TK_TAKES from the stack
-Stack has: TK_INPUT
-Encountered Terminal
-curr has TK_INPUT
-Matched!
-Popping TK_INPUT from the stack
-Stack has: TK_SQBO
-Encountered Terminal
-curr has TK_SQBO
-Matched!
-Popping TK_SQBO from the stack
-Stack has: input_plist
-Rule Number 10:	LHS : input_plist , RHS : TK_ID , TK_COLON , dataType , N1 , 
-Stack has: TK_ID
-Encountered Terminal
-curr has TK_ID
-Matched!
-Popping TK_ID from the stack
-Stack has: TK_COLON
-Encountered Terminal
-curr has TK_COLON
-Matched!
-Popping TK_COLON from the stack
-Stack has: dataType
-Rule Number 16:	LHS : dataType , RHS : TK_INTEGER , 
-Stack has: TK_INTEGER
-Encountered Terminal
-curr has TK_INTEGER
-Matched!
-Popping TK_INTEGER from the stack
-Stack has: N1
-Rule Number 11:	LHS : N1 , RHS : TK_COMMA , TK_ID , TK_COLON , dataType , N1 , 
-Stack has: TK_COMMA
-Encountered Terminal
-curr has TK_COMMA
-Matched!
-Popping TK_COMMA from the stack
-Stack has: TK_ID
-Encountered Terminal
-curr has TK_ID
-Matched!
-Popping TK_ID from the stack
-Stack has: TK_COLON
-Encountered Terminal
-curr has TK_COLON
-Matched!
-Popping TK_COLON from the stack
-Stack has: dataType
-Rule Number 16:	LHS : dataType , RHS : TK_INTEGER , 
-Stack has: TK_INTEGER
-Encountered Terminal
-curr has TK_INTEGER
-Matched!
-Popping TK_INTEGER from the stack
-Stack has: N1
-Rule Number 12:	LHS : N1 , RHS : TK_EPSILON , 
-Stack has: TK_EPSILON
-Encountered Terminal
-curr has TK_EPSILON
-Popping TK_EPSILON from the stack
-Stack has: TK_SQBC
-Encountered Terminal
-curr has TK_SQBC
-Matched!
-Popping TK_SQBC from the stack
-Stack has: TK_SEMICOL
-Encountered Terminal
-curr has TK_SEMICOL
-Matched!
-Popping TK_SEMICOL from the stack
-Stack has: ret
-Rule Number 8:	LHS : ret , RHS : TK_RETURNS , TK_SQBO , output_plist , TK_SQBC , TK_SEMICOL , 
-Stack has: TK_RETURNS
-Encountered Terminal
-curr has TK_RETURNS
-Matched!
-Popping TK_RETURNS from the stack
-Stack has: TK_SQBO
-Encountered Terminal
-curr has TK_SQBO
-Matched!
-Popping TK_SQBO from the stack
-Stack has: output_plist
-Rule Number 13:	LHS : output_plist , RHS : TK_ID , TK_COLON , type , N2 , 
-Stack has: TK_ID
-Encountered Terminal
-curr has TK_ID
-Matched!
-Popping TK_ID from the stack
-Stack has: TK_COLON
-Encountered Terminal
-curr has TK_COLON
-Matched!
-Popping TK_COLON from the stack
-Stack has: type
-Rule Number 21:	LHS : type , RHS : TK_INTEGER , 
-Stack has: TK_INTEGER
-Encountered Terminal
-curr has TK_INTEGER
-Matched!
-Popping TK_INTEGER from the stack
-Stack has: N2
-Rule Number 14:	LHS : N2 , RHS : TK_COMMA , TK_ID , TK_COLON , type , N2 , 
-Stack has: TK_COMMA
-Encountered Terminal
-curr has TK_COMMA
-Matched!
-Popping TK_COMMA from the stack
-Stack has: TK_ID
-Encountered Terminal
-curr has TK_ID
-Matched!
-Popping TK_ID from the stack
-Stack has: TK_COLON
-Encountered Terminal
-curr has TK_COLON
-Matched!
-Popping TK_COLON from the stack
-Stack has: type
-Rule Number 22:	LHS : type , RHS : TK_REAL , 
-Stack has: TK_REAL
-Encountered Terminal
-curr has TK_REAL
-Matched!
-Popping TK_REAL from the stack
-Stack has: N2
-Rule Number 15:	LHS : N2 , RHS : TK_EPSILON , 
-Stack has: TK_EPSILON
-Encountered Terminal
-curr has TK_EPSILON
-Popping TK_EPSILON from the stack
-Stack has: TK_SQBC
-Encountered Terminal
-curr has TK_SQBC
-Matched!
-Popping TK_SQBC from the stack
-Stack has: TK_SEMICOL
-Encountered Terminal
-curr has TK_SEMICOL
-Matched!
-Popping TK_SEMICOL from the stack
-Stack has: moduleDef
-Rule Number 24:	LHS : moduleDef , RHS : TK_START , statements , TK_END , 
-Stack has: TK_START
-Encountered Terminal
-curr has TK_START
-Matched!
-Popping TK_START from the stack
-Stack has: statements
-Rule Number 25:	LHS : statements , RHS : statement , statements , 
-Stack has: statement
-Rule Number 29:	LHS : statement , RHS : declareStmt , 
-Stack has: declareStmt
-Rule Number 92:	LHS : declareStmt , RHS : TK_DECLARE , idList , TK_COLON , dataType , TK_SEMICOL , 
-Stack has: TK_DECLARE
-Encountered Terminal
-curr has TK_DECLARE
-Matched!
-Popping TK_DECLARE from the stack
-Stack has: idList
-Rule Number 55:	LHS : idList , RHS : TK_ID , N3 , 
-Stack has: TK_ID
-Encountered Terminal
-curr has TK_ID
-Matched!
-Popping TK_ID from the stack
-Stack has: N3
-Rule Number 57:	LHS : N3 , RHS : TK_EPSILON , 
-Stack has: TK_EPSILON
-Encountered Terminal
-curr has TK_EPSILON
-Popping TK_EPSILON from the stack
-Stack has: TK_COLON
-Encountered Terminal
-curr has TK_COLON
-Matched!
-Popping TK_COLON from the stack
-Stack has: dataType
-Rule Number 17:	LHS : dataType , RHS : TK_REAL , 
-Stack has: TK_REAL
-Encountered Terminal
-curr has TK_REAL
-Matched!
-Popping TK_REAL from the stack
-Stack has: TK_SEMICOL
-Encountered Terminal
-curr has TK_SEMICOL
-Matched!
-Popping TK_SEMICOL from the stack
-Stack has: statements
-Rule Number 25:	LHS : statements , RHS : statement , statements , 
-Stack has: statement
-Rule Number 28:	LHS : statement , RHS : simpleStmt , 
-Stack has: simpleStmt
-Rule Number 43:	LHS : simpleStmt , RHS : assignmentStmt , 
-Stack has: assignmentStmt
-Rule Number 45:	LHS : assignmentStmt , RHS : TK_ID , whichStmt , 
-Stack has: TK_ID
-Encountered Terminal
-curr has TK_ID
-Matched!
-Popping TK_ID from the stack
-Stack has: whichStmt
-Rule Number 46:	LHS : whichStmt , RHS : lvalueIDStmt , 
-Stack has: lvalueIDStmt
-Rule Number 48:	LHS : lvalueIDStmt , RHS : TK_ASSIGNOP , expression , TK_SEMICOL , 
-Stack has: TK_ASSIGNOP
-Encountered Terminal
-curr has TK_ASSIGNOP
-Matched!
-Popping TK_ASSIGNOP from the stack
-Stack has: expression
-Rule Number 58:	LHS : expression , RHS : arithmeticOrBooleanExpr , 
-Stack has: arithmeticOrBooleanExpr
-Rule Number 65:	LHS : arithmeticOrBooleanExpr , RHS : AnyTerm , N7 , 
-Stack has: AnyTerm
-Rule Number 68:	LHS : AnyTerm , RHS : arithmeticExpr , N8 , 
-Stack has: arithmeticExpr
-Rule Number 72:	LHS : arithmeticExpr , RHS : g_term , N4 , 
-Stack has: g_term
-Rule Number 75:	LHS : g_term , RHS : factor , N5 , 
-Stack has: factor
-Rule Number 79:	LHS : factor , RHS : var_id_num , 
-Stack has: var_id_num
-Rule Number 40:	LHS : var_id_num , RHS : TK_RNUM , 
-Stack has: TK_RNUM
-Encountered Terminal
-curr has TK_RNUM
-Matched!
-Popping TK_RNUM from the stack
-Stack has: N5
-Rule Number 77:	LHS : N5 , RHS : TK_EPSILON , 
-Stack has: TK_EPSILON
-Encountered Terminal
-curr has TK_EPSILON
-Popping TK_EPSILON from the stack
-Stack has: N4
-Rule Number 74:	LHS : N4 , RHS : TK_EPSILON , 
-Stack has: TK_EPSILON
-Encountered Terminal
-curr has TK_EPSILON
-Popping TK_EPSILON from the stack
-Stack has: N8
-Rule Number 71:	LHS : N8 , RHS : TK_EPSILON , 
-Stack has: TK_EPSILON
-Encountered Terminal
-curr has TK_EPSILON
-Popping TK_EPSILON from the stack
-Stack has: N7
-Rule Number 67:	LHS : N7 , RHS : TK_EPSILON , 
-Stack has: TK_EPSILON
-Encountered Terminal
-curr has TK_EPSILON
-Popping TK_EPSILON from the stack
-Stack has: TK_SEMICOL
-Encountered Terminal
-curr has TK_SEMICOL
-Matched!
-Popping TK_SEMICOL from the stack
-Stack has: statements
-Rule Number 25:	LHS : statements , RHS : statement , statements , 
-Stack has: statement
-Rule Number 28:	LHS : statement , RHS : simpleStmt , 
-Stack has: simpleStmt
-Rule Number 43:	LHS : simpleStmt , RHS : assignmentStmt , 
-Stack has: assignmentStmt
-Rule Number 45:	LHS : assignmentStmt , RHS : TK_ID , whichStmt , 
-Stack has: TK_ID
-Encountered Terminal
-curr has TK_ID
-Matched!
-Popping TK_ID from the stack
-Stack has: whichStmt
-Rule Number 46:	LHS : whichStmt , RHS : lvalueIDStmt , 
-Stack has: lvalueIDStmt
-Rule Number 48:	LHS : lvalueIDStmt , RHS : TK_ASSIGNOP , expression , TK_SEMICOL , 
-Stack has: TK_ASSIGNOP
-Encountered Terminal
-curr has TK_ASSIGNOP
-Matched!
-Popping TK_ASSIGNOP from the stack
-Stack has: expression
-Rule Number 58:	LHS : expression , RHS : arithmeticOrBooleanExpr , 
-Stack has: arithmeticOrBooleanExpr
-Rule Number 65:	LHS : arithmeticOrBooleanExpr , RHS : AnyTerm , N7 , 
-Stack has: AnyTerm
-Rule Number 68:	LHS : AnyTerm , RHS : arithmeticExpr , N8 , 
-Stack has: arithmeticExpr
-Rule Number 72:	LHS : arithmeticExpr , RHS : g_term , N4 , 
-Stack has: g_term
-Rule Number 75:	LHS : g_term , RHS : factor , N5 , 
-Stack has: factor
-Rule Number 79:	LHS : factor , RHS : var_id_num , 
-Stack has: var_id_num
-Rule Number 38:	LHS : var_id_num , RHS : TK_ID , whichId , 
-Stack has: TK_ID
-Encountered Terminal
-curr has TK_ID
-Matched!
-Popping TK_ID from the stack
-Stack has: whichId
-Rule Number 42:	LHS : whichId , RHS : TK_EPSILON , 
-Stack has: TK_EPSILON
-Encountered Terminal
-curr has TK_EPSILON
-Popping TK_EPSILON from the stack
-Stack has: N5
-Rule Number 77:	LHS : N5 , RHS : TK_EPSILON , 
-Stack has: TK_EPSILON
-Encountered Terminal
-curr has TK_EPSILON
-Popping TK_EPSILON from the stack
-Stack has: N4
-Rule Number 73:	LHS : N4 , RHS : op1 , g_term , N4 , 
-Stack has: op1
-Rule Number 80:	LHS : op1 , RHS : TK_PLUS , 
-Stack has: TK_PLUS
-Encountered Terminal
-curr has TK_PLUS
-Matched!
-Popping TK_PLUS from the stack
-Stack has: g_term
-Rule Number 75:	LHS : g_term , RHS : factor , N5 , 
-Stack has: factor
-Rule Number 79:	LHS : factor , RHS : var_id_num , 
-Stack has: var_id_num
-Rule Number 38:	LHS : var_id_num , RHS : TK_ID , whichId , 
-Stack has: TK_ID
-Encountered Terminal
-curr has TK_ID
-Matched!
-Popping TK_ID from the stack
-Stack has: whichId
-Rule Number 42:	LHS : whichId , RHS : TK_EPSILON , 
-Stack has: TK_EPSILON
-Encountered Terminal
-curr has TK_EPSILON
-Popping TK_EPSILON from the stack
-Stack has: N5
-Rule Number 77:	LHS : N5 , RHS : TK_EPSILON , 
-Stack has: TK_EPSILON
-Encountered Terminal
-curr has TK_EPSILON
-Popping TK_EPSILON from the stack
-Stack has: N4
-Rule Number 73:	LHS : N4 , RHS : op1 , g_term , N4 , 
-Stack has: op1
-Rule Number 81:	LHS : op1 , RHS : TK_MINUS , 
-Stack has: TK_MINUS
-Encountered Terminal
-curr has TK_MINUS
-Matched!
-Popping TK_MINUS from the stack
-Stack has: g_term
-Rule Number 75:	LHS : g_term , RHS : factor , N5 , 
-Stack has: factor
-Rule Number 79:	LHS : factor , RHS : var_id_num , 
-Stack has: var_id_num
-Rule Number 39:	LHS : var_id_num , RHS : TK_NUM , 
-Stack has: TK_NUM
-Encountered Terminal
-curr has TK_NUM
-Matched!
-Popping TK_NUM from the stack
-Stack has: N5
-Rule Number 77:	LHS : N5 , RHS : TK_EPSILON , 
-Stack has: TK_EPSILON
-Encountered Terminal
-curr has TK_EPSILON
-Popping TK_EPSILON from the stack
-Stack has: N4
-Rule Number 74:	LHS : N4 , RHS : TK_EPSILON , 
-Stack has: TK_EPSILON
-Encountered Terminal
-curr has TK_EPSILON
-Popping TK_EPSILON from the stack
-Stack has: N8
-Rule Number 71:	LHS : N8 , RHS : TK_EPSILON , 
-Stack has: TK_EPSILON
-Encountered Terminal
-curr has TK_EPSILON
-Popping TK_EPSILON from the stack
-Stack has: N7
-Rule Number 67:	LHS : N7 , RHS : TK_EPSILON , 
-Stack has: TK_EPSILON
-Encountered Terminal
-curr has TK_EPSILON
-Popping TK_EPSILON from the stack
-Stack has: TK_SEMICOL
-Encountered Terminal
-curr has TK_SEMICOL
-Matched!
-Popping TK_SEMICOL from the stack
-Stack has: statements
-Rule Number 25:	LHS : statements , RHS : statement , statements , 
-Stack has: statement
-Rule Number 28:	LHS : statement , RHS : simpleStmt , 
-Stack has: simpleStmt
-Rule Number 43:	LHS : simpleStmt , RHS : assignmentStmt , 
-Stack has: assignmentStmt
-Rule Number 45:	LHS : assignmentStmt , RHS : TK_ID , whichStmt , 
-Stack has: TK_ID
-Encountered Terminal
-curr has TK_ID
-Matched!
-Popping TK_ID from the stack
-Stack has: whichStmt
-Rule Number 46:	LHS : whichStmt , RHS : lvalueIDStmt , 
-Stack has: lvalueIDStmt
-Rule Number 48:	LHS : lvalueIDStmt , RHS : TK_ASSIGNOP , expression , TK_SEMICOL , 
-Stack has: TK_ASSIGNOP
-Encountered Terminal
-curr has TK_ASSIGNOP
-Matched!
-Popping TK_ASSIGNOP from the stack
-Stack has: expression
-Rule Number 58:	LHS : expression , RHS : arithmeticOrBooleanExpr , 
-Stack has: arithmeticOrBooleanExpr
-Rule Number 65:	LHS : arithmeticOrBooleanExpr , RHS : AnyTerm , N7 , 
-Stack has: AnyTerm
-Rule Number 68:	LHS : AnyTerm , RHS : arithmeticExpr , N8 , 
-Stack has: arithmeticExpr
-Rule Number 72:	LHS : arithmeticExpr , RHS : g_term , N4 , 
-Stack has: g_term
-Rule Number 75:	LHS : g_term , RHS : factor , N5 , 
-Stack has: factor
-Rule Number 79:	LHS : factor , RHS : var_id_num , 
-Stack has: var_id_num
-Rule Number 38:	LHS : var_id_num , RHS : TK_ID , whichId , 
-Stack has: TK_ID
-Encountered Terminal
-curr has TK_ID
-Matched!
-Popping TK_ID from the stack
-Stack has: whichId
-Rule Number 42:	LHS : whichId , RHS : TK_EPSILON , 
-Stack has: TK_EPSILON
-Encountered Terminal
-curr has TK_EPSILON
-Popping TK_EPSILON from the stack
-Stack has: N5
-Rule Number 76:	LHS : N5 , RHS : op2 , factor , N5 , 
-Stack has: op2
-Rule Number 83:	LHS : op2 , RHS : TK_DIV , 
-Stack has: TK_DIV
-Encountered Terminal
-curr has TK_DIV
-Matched!
-Popping TK_DIV from the stack
-Stack has: factor
-Rule Number 79:	LHS : factor , RHS : var_id_num , 
-Stack has: var_id_num
-Rule Number 39:	LHS : var_id_num , RHS : TK_NUM , 
-Stack has: TK_NUM
-Encountered Terminal
-curr has TK_NUM
-Matched!
-Popping TK_NUM from the stack
-Stack has: N5
-Rule Number 77:	LHS : N5 , RHS : TK_EPSILON , 
-Stack has: TK_EPSILON
-Encountered Terminal
-curr has TK_EPSILON
-Popping TK_EPSILON from the stack
-Stack has: N4
-Rule Number 73:	LHS : N4 , RHS : op1 , g_term , N4 , 
-Stack has: op1
-Rule Number 80:	LHS : op1 , RHS : TK_PLUS , 
-Stack has: TK_PLUS
-Encountered Terminal
-curr has TK_PLUS
-Matched!
-Popping TK_PLUS from the stack
-Stack has: g_term
-Rule Number 75:	LHS : g_term , RHS : factor , N5 , 
-Stack has: factor
-Rule Number 79:	LHS : factor , RHS : var_id_num , 
-Stack has: var_id_num
-Rule Number 38:	LHS : var_id_num , RHS : TK_ID , whichId , 
-Stack has: TK_ID
-Encountered Terminal
-curr has TK_ID
-Matched!
-Popping TK_ID from the stack
-Stack has: whichId
-Rule Number 42:	LHS : whichId , RHS : TK_EPSILON , 
-Stack has: TK_EPSILON
-Encountered Terminal
-curr has TK_EPSILON
-Popping TK_EPSILON from the stack
-Stack has: N5
-Rule Number 77:	LHS : N5 , RHS : TK_EPSILON , 
-Stack has: TK_EPSILON
-Encountered Terminal
-curr has TK_EPSILON
-Popping TK_EPSILON from the stack
-Stack has: N4
-Rule Number 74:	LHS : N4 , RHS : TK_EPSILON , 
-Stack has: TK_EPSILON
-Encountered Terminal
-curr has TK_EPSILON
-Popping TK_EPSILON from the stack
-Stack has: N8
-Rule Number 71:	LHS : N8 , RHS : TK_EPSILON , 
-Stack has: TK_EPSILON
-Encountered Terminal
-curr has TK_EPSILON
-Popping TK_EPSILON from the stack
-Stack has: N7
-Rule Number 67:	LHS : N7 , RHS : TK_EPSILON , 
-Stack has: TK_EPSILON
-Encountered Terminal
-curr has TK_EPSILON
-Popping TK_EPSILON from the stack
-Stack has: TK_SEMICOL
-Encountered Terminal
-curr has TK_SEMICOL
-Matched!
-Popping TK_SEMICOL from the stack
-Stack has: statements
-Rule Number 26:	LHS : statements , RHS : TK_EPSILON , 
-Stack has: TK_EPSILON
-Encountered Terminal
-curr has TK_EPSILON
-Popping TK_EPSILON from the stack
-Stack has: TK_END
-Encountered Terminal
-curr has TK_END
-Matched!
-Popping TK_END from the stack
-Stack has: otherModules
-Rule Number 5:	LHS : otherModules , RHS : TK_EPSILON , 
-Stack has: TK_EPSILON
-Encountered Terminal
-curr has TK_EPSILON
-Popping TK_EPSILON from the stack
-Stack has: TK_DOLLAR
-Encountered Terminal
-curr has TK_DOLLAR
-Matched!
-Successfully Parsed!
+LHS : program , RHS : moduleDeclarations , otherModules , driverModule , otherModules , 
+LHS : moduleDeclarations , RHS : moduleDeclaration , moduleDeclarations , 
+LHS : moduleDeclaration , RHS : TK_DECLARE , TK_MODULE , TK_ID , TK_SEMICOL , 
+LHS : moduleDeclarations , RHS : TK_EPSILON , 
+LHS : otherModules , RHS : module , otherModules , 
+LHS : module , RHS : TK_DEF , TK_MODULE , TK_ID , TK_ENDDEF , TK_TAKES , TK_INPUT , TK_SQBO , input_plist , TK_SQBC , TK_SEMICOL , ret , moduleDef , 
+LHS : input_plist , RHS : TK_ID , TK_COLON , dataType , N1 , 
+LHS : dataType , RHS : TK_ARRAY , TK_SQBO , range_arrays , TK_SQBC , TK_OF , type , 
+LHS : range_arrays , RHS : g_index , TK_RANGEOP , g_index , 
+LHS : g_index , RHS : TK_NUM , 
+LHS : g_index , RHS : TK_NUM , 
+LHS : type , RHS : TK_REAL , 
+LHS : N1 , RHS : TK_COMMA , TK_ID , TK_COLON , dataType , N1 , 
+LHS : dataType , RHS : TK_REAL , 
+LHS : N1 , RHS : TK_EPSILON , 
+LHS : ret , RHS : TK_EPSILON , 
+LHS : moduleDef , RHS : TK_START , statements , TK_END , 
+LHS : statements , RHS : statement , statements , 
+LHS : statement , RHS : declareStmt , 
+LHS : declareStmt , RHS : TK_DECLARE , idList , TK_COLON , dataType , TK_SEMICOL , 
+LHS : idList , RHS : TK_ID , N3 , 
+LHS : N3 , RHS : TK_EPSILON , 
+LHS : dataType , RHS : TK_INTEGER , 
+LHS : statements , RHS : statement , statements , 
+LHS : statement , RHS : declareStmt , 
+LHS : declareStmt , RHS : TK_DECLARE , idList , TK_COLON , dataType , TK_SEMICOL , 
+LHS : idList , RHS : TK_ID , N3 , 
+LHS : N3 , RHS : TK_EPSILON , 
+LHS : dataType , RHS : TK_BOOLEAN , 
+LHS : statements , RHS : statement , statements , 
+LHS : statement , RHS : simpleStmt , 
+LHS : simpleStmt , RHS : assignmentStmt , 
+LHS : assignmentStmt , RHS : TK_ID , whichStmt , 
+LHS : whichStmt , RHS : lvalueIDStmt , 
+LHS : lvalueIDStmt , RHS : TK_ASSIGNOP , expression , TK_SEMICOL , 
+LHS : expression , RHS : arithmeticOrBooleanExpr , 
+LHS : arithmeticOrBooleanExpr , RHS : AnyTerm , N7 , 
+LHS : AnyTerm , RHS : arithmeticExpr , N8 , 
+LHS : arithmeticExpr , RHS : g_term , N4 , 
+LHS : g_term , RHS : factor , N5 , 
+LHS : factor , RHS : var_id_num , 
+LHS : var_id_num , RHS : TK_ID , whichId , 
+LHS : whichId , RHS : TK_EPSILON , 
+LHS : N5 , RHS : TK_EPSILON , 
+LHS : N4 , RHS : TK_EPSILON , 
+LHS : N8 , RHS : relationalOp , arithmeticExpr , 
+LHS : relationalOp , RHS : TK_LE , 
+LHS : arithmeticExpr , RHS : g_term , N4 , 
+LHS : g_term , RHS : factor , N5 , 
+LHS : factor , RHS : var_id_num , 
+LHS : var_id_num , RHS : TK_ID , whichId , 
+LHS : whichId , RHS : TK_EPSILON , 
+LHS : N5 , RHS : TK_EPSILON , 
+LHS : N4 , RHS : TK_EPSILON , 
+LHS : N7 , RHS : TK_EPSILON , 
+LHS : statements , RHS : statement , statements , 
+LHS : statement , RHS : condionalStmt , 
+LHS : condionalStmt , RHS : TK_SWITCH , TK_BO , TK_ID , TK_BC , TK_START , caseStmts , g_default , TK_END , 
+LHS : caseStmts , RHS : TK_CASE , value , TK_COLON , statements , TK_BREAK , TK_SEMICOL , N9 , 
+LHS : value , RHS : TK_TRUE , 
+LHS : statements , RHS : statement , statements , 
+LHS : statement , RHS : ioStmt , 
+LHS : ioStmt , RHS : TK_PRINT , TK_BO , var , TK_BC , TK_SEMICOL , 
+LHS : var , RHS : var_id_num , 
+LHS : var_id_num , RHS : TK_ID , whichId , 
+LHS : whichId , RHS : TK_SQBO , g_index , TK_SQBC , 
+LHS : g_index , RHS : TK_ID , 
+LHS : statements , RHS : statement , statements , 
+LHS : statement , RHS : simpleStmt , 
+LHS : simpleStmt , RHS : assignmentStmt , 
+LHS : assignmentStmt , RHS : TK_ID , whichStmt , 
+LHS : whichStmt , RHS : lvalueIDStmt , 
+LHS : lvalueIDStmt , RHS : TK_ASSIGNOP , expression , TK_SEMICOL , 
+LHS : expression , RHS : arithmeticOrBooleanExpr , 
+LHS : arithmeticOrBooleanExpr , RHS : AnyTerm , N7 , 
+LHS : AnyTerm , RHS : arithmeticExpr , N8 , 
+LHS : arithmeticExpr , RHS : g_term , N4 , 
+LHS : g_term , RHS : factor , N5 , 
+LHS : factor , RHS : var_id_num , 
+LHS : var_id_num , RHS : TK_ID , whichId , 
+LHS : whichId , RHS : TK_SQBO , g_index , TK_SQBC , 
+LHS : g_index , RHS : TK_ID , 
+LHS : N5 , RHS : TK_EPSILON , 
+LHS : N4 , RHS : TK_EPSILON , 
+LHS : N8 , RHS : TK_EPSILON , 
+LHS : N7 , RHS : TK_EPSILON , 
+LHS : statements , RHS : TK_EPSILON , 
+LHS : N9 , RHS : TK_CASE , value , TK_COLON , statements , TK_BREAK , TK_SEMICOL , N9 , 
+LHS : value , RHS : TK_FALSE , 
+LHS : statements , RHS : statement , statements , 
+LHS : statement , RHS : ioStmt , 
+LHS : ioStmt , RHS : TK_PRINT , TK_BO , var , TK_BC , TK_SEMICOL , 
+LHS : var , RHS : var_id_num , 
+LHS : var_id_num , RHS : TK_ID , whichId , 
+LHS : whichId , RHS : TK_EPSILON , 
+LHS : statements , RHS : statement , statements , 
+LHS : statement , RHS : ioStmt , 
+LHS : ioStmt , RHS : TK_PRINT , TK_BO , var , TK_BC , TK_SEMICOL , 
+LHS : var , RHS : var_id_num , 
+LHS : var_id_num , RHS : TK_ID , whichId , 
+LHS : whichId , RHS : TK_EPSILON , 
+LHS : statements , RHS : TK_EPSILON , 
+LHS : N9 , RHS : TK_EPSILON , 
+LHS : g_default , RHS : TK_EPSILON , 
+LHS : statements , RHS : TK_EPSILON , 
+LHS : otherModules , RHS : TK_EPSILON , 
+LHS : driverModule , RHS : TK_DRIVERDEF , TK_DRIVER , TK_PROGRAM , TK_DRIVERENDDEF , moduleDef , 
+LHS : moduleDef , RHS : TK_START , statements , TK_END , 
+LHS : statements , RHS : statement , statements , 
+LHS : statement , RHS : declareStmt , 
+LHS : declareStmt , RHS : TK_DECLARE , idList , TK_COLON , dataType , TK_SEMICOL , 
+LHS : idList , RHS : TK_ID , N3 , 
+LHS : N3 , RHS : TK_EPSILON , 
+LHS : dataType , RHS : TK_ARRAY , TK_SQBO , range_arrays , TK_SQBC , TK_OF , type , 
+LHS : range_arrays , RHS : g_index , TK_RANGEOP , g_index , 
+LHS : g_index , RHS : TK_NUM , 
+LHS : g_index , RHS : TK_NUM , 
+LHS : type , RHS : TK_REAL , 
+LHS : statements , RHS : statement , statements , 
+LHS : statement , RHS : declareStmt , 
+LHS : declareStmt , RHS : TK_DECLARE , idList , TK_COLON , dataType , TK_SEMICOL , 
+LHS : idList , RHS : TK_ID , N3 , 
+LHS : N3 , RHS : TK_EPSILON , 
+LHS : dataType , RHS : TK_INTEGER , 
+LHS : statements , RHS : statement , statements , 
+LHS : statement , RHS : declareStmt , 
+LHS : declareStmt , RHS : TK_DECLARE , idList , TK_COLON , dataType , TK_SEMICOL , 
+LHS : idList , RHS : TK_ID , N3 , 
+LHS : N3 , RHS : TK_EPSILON , 
+LHS : dataType , RHS : TK_REAL , 
+LHS : statements , RHS : statement , statements , 
+LHS : statement , RHS : ioStmt , 
+LHS : ioStmt , RHS : TK_GET_VALUE , TK_BO , TK_ID , TK_BC , TK_SEMICOL , 
+LHS : statements , RHS : statement , statements , 
+LHS : statement , RHS : simpleStmt , 
+LHS : simpleStmt , RHS : moduleReuseStmt , 
+LHS : moduleReuseStmt , RHS : optional , TK_USE , TK_MODULE , TK_ID , TK_WITH , TK_PARAMETERS , idList , TK_SEMICOL , 
+LHS : optional , RHS : TK_EPSILON , 
+LHS : idList , RHS : TK_ID , N3 , 
+LHS : N3 , RHS : TK_COMMA , TK_ID , N3 , 
+LHS : N3 , RHS : TK_EPSILON , 
+LHS : statements , RHS : statement , statements , 
+LHS : statement , RHS : simpleStmt , 
+LHS : simpleStmt , RHS : moduleReuseStmt , 
+LHS : moduleReuseStmt , RHS : optional , TK_USE , TK_MODULE , TK_ID , TK_WITH , TK_PARAMETERS , idList , TK_SEMICOL , 
+LHS : optional , RHS : TK_SQBO , idList , TK_SQBC , TK_ASSIGNOP , 
+LHS : idList , RHS : TK_ID , N3 , 
+LHS : N3 , RHS : TK_EPSILON , 
+LHS : idList , RHS : TK_ID , N3 , 
+LHS : N3 , RHS : TK_COMMA , TK_ID , N3 , 
+LHS : N3 , RHS : TK_EPSILON , 
+LHS : statements , RHS : statement , statements , 
+LHS : statement , RHS : simpleStmt , 
+LHS : simpleStmt , RHS : assignmentStmt , 
+LHS : assignmentStmt , RHS : TK_ID , whichStmt , 
+LHS : whichStmt , RHS : lvalueIDStmt , 
+LHS : lvalueIDStmt , RHS : TK_ASSIGNOP , expression , TK_SEMICOL , 
+LHS : expression , RHS : arithmeticOrBooleanExpr , 
+LHS : arithmeticOrBooleanExpr , RHS : AnyTerm , N7 , 
+LHS : AnyTerm , RHS : arithmeticExpr , N8 , 
+LHS : arithmeticExpr , RHS : g_term , N4 , 
+LHS : g_term , RHS : factor , N5 , 
+LHS : factor , RHS : var_id_num , 
+LHS : var_id_num , RHS : TK_ID , whichId , 
+LHS : whichId , RHS : TK_EPSILON , 
+LHS : N5 , RHS : TK_EPSILON , 
+LHS : N4 , RHS : TK_EPSILON , 
+LHS : N8 , RHS : relationalOp , arithmeticExpr , 
+LHS : relationalOp , RHS : TK_LE , 
+LHS : arithmeticExpr , RHS : g_term , N4 , 
+LHS : g_term , RHS : factor , N5 , 
+LHS : factor , RHS : var_id_num , 
+LHS : var_id_num , RHS : TK_ID , whichId , 
+LHS : whichId , RHS : TK_EPSILON , 
+LHS : N5 , RHS : TK_EPSILON , 
+LHS : N4 , RHS : TK_EPSILON , 
+LHS : N7 , RHS : TK_EPSILON , 
+LHS : statements , RHS : statement , statements , 
+LHS : statement , RHS : ioStmt , 
+LHS : ioStmt , RHS : TK_PRINT , TK_BO , var , TK_BC , TK_SEMICOL , 
+LHS : var , RHS : var_id_num , 
+LHS : var_id_num , RHS : TK_ID , whichId , 
+LHS : whichId , RHS : TK_EPSILON , 
+LHS : statements , RHS : statement , statements , 
+LHS : statement , RHS : simpleStmt , 
+LHS : simpleStmt , RHS : assignmentStmt , 
+LHS : assignmentStmt , RHS : TK_ID , whichStmt , 
+LHS : whichStmt , RHS : lvalueARRStmt , 
+LHS : lvalueARRStmt , RHS : TK_SQBO , g_index , TK_SQBC , TK_ASSIGNOP , expression , TK_SEMICOL , 
+LHS : g_index , RHS : TK_ID , 
+LHS : expression , RHS : arithmeticOrBooleanExpr , 
+LHS : arithmeticOrBooleanExpr , RHS : AnyTerm , N7 , 
+LHS : AnyTerm , RHS : arithmeticExpr , N8 , 
+LHS : arithmeticExpr , RHS : g_term , N4 , 
+LHS : g_term , RHS : factor , N5 , 
+LHS : factor , RHS : var_id_num , 
+LHS : var_id_num , RHS : TK_NUM , 
+LHS : N5 , RHS : TK_EPSILON , 
+LHS : N4 , RHS : TK_EPSILON , 
+LHS : N8 , RHS : TK_EPSILON , 
+LHS : N7 , RHS : TK_EPSILON , 
+LHS : statements , RHS : statement , statements , 
+LHS : statement , RHS : declareStmt , 
+LHS : declareStmt , RHS : TK_DECLARE , idList , TK_COLON , dataType , TK_SEMICOL , 
+LHS : idList , RHS : TK_ID , N3 , 
+LHS : N3 , RHS : TK_EPSILON , 
+LHS : dataType , RHS : TK_INTEGER , 
+LHS : statements , RHS : statement , statements , 
+LHS : statement , RHS : simpleStmt , 
+LHS : simpleStmt , RHS : assignmentStmt , 
+LHS : assignmentStmt , RHS : TK_ID , whichStmt , 
+LHS : whichStmt , RHS : lvalueIDStmt , 
+LHS : lvalueIDStmt , RHS : TK_ASSIGNOP , expression , TK_SEMICOL , 
+LHS : expression , RHS : arithmeticOrBooleanExpr , 
+LHS : arithmeticOrBooleanExpr , RHS : AnyTerm , N7 , 
+LHS : AnyTerm , RHS : arithmeticExpr , N8 , 
+LHS : arithmeticExpr , RHS : g_term , N4 , 
+LHS : g_term , RHS : factor , N5 , 
+LHS : factor , RHS : var_id_num , 
+LHS : var_id_num , RHS : TK_NUM , 
+LHS : N5 , RHS : TK_EPSILON , 
+LHS : N4 , RHS : TK_EPSILON , 
+LHS : N8 , RHS : TK_EPSILON , 
+LHS : N7 , RHS : TK_EPSILON , 
+LHS : statements , RHS : statement , statements , 
+LHS : statement , RHS : iterativeStmt , 
+LHS : iterativeStmt , RHS : TK_WHILE , TK_BO , arithmeticOrBooleanExpr , TK_BC , TK_START , statements , TK_END , 
+LHS : arithmeticOrBooleanExpr , RHS : AnyTerm , N7 , 
+LHS : AnyTerm , RHS : arithmeticExpr , N8 , 
+LHS : arithmeticExpr , RHS : g_term , N4 , 
+LHS : g_term , RHS : factor , N5 , 
+LHS : factor , RHS : var_id_num , 
+LHS : var_id_num , RHS : TK_ID , whichId , 
+LHS : whichId , RHS : TK_EPSILON , 
+LHS : N5 , RHS : TK_EPSILON , 
+LHS : N4 , RHS : TK_EPSILON , 
+LHS : N8 , RHS : relationalOp , arithmeticExpr , 
+LHS : relationalOp , RHS : TK_LE , 
+LHS : arithmeticExpr , RHS : g_term , N4 , 
+LHS : g_term , RHS : factor , N5 , 
+LHS : factor , RHS : var_id_num , 
+LHS : var_id_num , RHS : TK_ID , whichId , 
+LHS : whichId , RHS : TK_EPSILON , 
+LHS : N5 , RHS : TK_EPSILON , 
+LHS : N4 , RHS : TK_EPSILON , 
+LHS : N7 , RHS : TK_EPSILON , 
+LHS : statements , RHS : statement , statements , 
+LHS : statement , RHS : ioStmt , 
+LHS : ioStmt , RHS : TK_GET_VALUE , TK_BO , TK_ID , TK_BC , TK_SEMICOL , 
+LHS : statements , RHS : statement , statements , 
+LHS : statement , RHS : simpleStmt , 
+LHS : simpleStmt , RHS : assignmentStmt , 
+LHS : assignmentStmt , RHS : TK_ID , whichStmt , 
+LHS : whichStmt , RHS : lvalueARRStmt , 
+LHS : lvalueARRStmt , RHS : TK_SQBO , g_index , TK_SQBC , TK_ASSIGNOP , expression , TK_SEMICOL , 
+LHS : g_index , RHS : TK_ID , 
+LHS : expression , RHS : arithmeticOrBooleanExpr , 
+LHS : arithmeticOrBooleanExpr , RHS : AnyTerm , N7 , 
+LHS : AnyTerm , RHS : arithmeticExpr , N8 , 
+LHS : arithmeticExpr , RHS : g_term , N4 , 
+LHS : g_term , RHS : factor , N5 , 
+LHS : factor , RHS : var_id_num , 
+LHS : var_id_num , RHS : TK_ID , whichId , 
+LHS : whichId , RHS : TK_EPSILON , 
+LHS : N5 , RHS : TK_EPSILON , 
+LHS : N4 , RHS : op1 , g_term , N4 , 
+LHS : op1 , RHS : TK_PLUS , 
+LHS : g_term , RHS : factor , N5 , 
+LHS : factor , RHS : var_id_num , 
+LHS : var_id_num , RHS : TK_NUM , 
+LHS : N5 , RHS : TK_EPSILON , 
+LHS : N4 , RHS : TK_EPSILON , 
+LHS : N8 , RHS : TK_EPSILON , 
+LHS : N7 , RHS : TK_EPSILON , 
+LHS : statements , RHS : TK_EPSILON , 
+LHS : statements , RHS : TK_EPSILON , 
+Finished parsing with errors
 declare	1	TK_DECLARE	-----	moduleDeclaration	Yes	-----	
 module	1	TK_MODULE	-----	moduleDeclaration	Yes	-----	
-mod1	1	TK_ID	-----	moduleDeclaration	Yes	-----	
+readArr	1	TK_ID	-----	moduleDeclaration	Yes	-----	
 ;	1	TK_SEMICOL	-----	moduleDeclaration	Yes	-----	
 -----	-----	TK_EPSILON	-----	moduleDeclarations	Yes	-----	
------	-----	TK_EPSILON	-----	otherModules	Yes	-----	
-<<<	2	TK_DRIVERDEF	-----	driverModule	Yes	-----	
-driver	2	TK_DRIVER	-----	driverModule	Yes	-----	
-program	2	TK_PROGRAM	-----	driverModule	Yes	-----	
->>>	2	TK_DRIVERENDDEF	-----	driverModule	Yes	-----	
-start	3	TK_START	-----	moduleDef	Yes	-----	
-declare	5	TK_DECLARE	-----	declareStmt	Yes	-----	
-v	5	TK_ID	-----	idList	Yes	-----	
-,	5	TK_COMMA	-----	N3	Yes	-----	
-w	5	TK_ID	-----	N3	Yes	-----	
-,	5	TK_COMMA	-----	N3	Yes	-----	
-r	5	TK_ID	-----	N3	Yes	-----	
+<<	3	TK_DEF	-----	module	Yes	-----	
+module	3	TK_MODULE	-----	module	Yes	-----	
+arraySum	3	TK_ID	-----	module	Yes	-----	
+>>	3	TK_ENDDEF	-----	module	Yes	-----	
+takes	4	TK_TAKES	-----	module	Yes	-----	
+input	4	TK_INPUT	-----	module	Yes	-----	
+[	4	TK_SQBO	-----	module	Yes	-----	
+list	4	TK_ID	-----	input_plist	Yes	-----	
+:	4	TK_COLON	-----	input_plist	Yes	-----	
+array	4	TK_ARRAY	-----	dataType	Yes	-----	
+[	4	TK_SQBO	-----	dataType	Yes	-----	
+1	4	TK_NUM	1	g_index	Yes	-----	
+..	4	TK_RANGEOP	-----	range_arrays	Yes	-----	
+15	4	TK_NUM	15	g_index	Yes	-----	
+]	4	TK_SQBC	-----	dataType	Yes	-----	
+of	4	TK_OF	-----	dataType	Yes	-----	
+real	4	TK_REAL	-----	type	Yes	-----	
+,	4	TK_COMMA	-----	N1	Yes	-----	
+n	4	TK_ID	-----	N1	Yes	-----	
+(null)	-1	TK_COLON	-----	N1	Yes	-----	
+real	5	TK_REAL	-----	dataType	Yes	-----	
+-----	-----	TK_EPSILON	-----	N1	Yes	-----	
+]	5	TK_SQBC	-----	module	Yes	-----	
+;	5	TK_SEMICOL	-----	module	Yes	-----	
+-----	-----	TK_EPSILON	-----	ret	Yes	-----	
+start	6	TK_START	-----	moduleDef	Yes	-----	
+declare	7	TK_DECLARE	-----	declareStmt	Yes	-----	
+index	7	TK_ID	-----	idList	Yes	-----	
 -----	-----	TK_EPSILON	-----	N3	Yes	-----	
-:	5	TK_COLON	-----	declareStmt	Yes	-----	
-integer	5	TK_INTEGER	-----	dataType	Yes	-----	
-;	5	TK_SEMICOL	-----	declareStmt	Yes	-----	
-get_value	7	TK_GET_VALUE	-----	ioStmt	Yes	-----	
-(	7	TK_BO	-----	ioStmt	Yes	-----	
-v	7	TK_ID	-----	ioStmt	Yes	-----	
-)	7	TK_BC	-----	ioStmt	Yes	-----	
-;	7	TK_SEMICOL	-----	ioStmt	Yes	-----	
-w	9	TK_ID	-----	assignmentStmt	Yes	-----	
-:=	9	TK_ASSIGNOP	-----	lvalueIDStmt	Yes	-----	
-5	9	TK_NUM	5	var_id_num	Yes	-----	
+:	7	TK_COLON	-----	declareStmt	Yes	-----	
+integer	7	TK_INTEGER	-----	dataType	Yes	-----	
+;	7	TK_SEMICOL	-----	declareStmt	Yes	-----	
+declare	8	TK_DECLARE	-----	declareStmt	Yes	-----	
+t	8	TK_ID	-----	idList	Yes	-----	
+-----	-----	TK_EPSILON	-----	N3	Yes	-----	
+:	8	TK_COLON	-----	declareStmt	Yes	-----	
+boolean	8	TK_BOOLEAN	-----	dataType	Yes	-----	
+;	8	TK_SEMICOL	-----	declareStmt	Yes	-----	
+sum	9	TK_ID	-----	assignmentStmt	Yes	-----	
+:=	12	TK_ASSIGNOP	-----	lvalueIDStmt	Yes	-----	
+index	12	TK_ID	-----	var_id_num	Yes	-----	
+-----	-----	TK_EPSILON	-----	whichId	Yes	-----	
 -----	-----	TK_EPSILON	-----	N5	Yes	-----	
 -----	-----	TK_EPSILON	-----	N4	Yes	-----	
------	-----	TK_EPSILON	-----	N8	Yes	-----	
+<=	12	TK_LE	-----	relationalOp	Yes	-----	
+n	12	TK_ID	-----	var_id_num	Yes	-----	
+-----	-----	TK_EPSILON	-----	whichId	Yes	-----	
+-----	-----	TK_EPSILON	-----	N5	Yes	-----	
+-----	-----	TK_EPSILON	-----	N4	Yes	-----	
 -----	-----	TK_EPSILON	-----	N7	Yes	-----	
-;	9	TK_SEMICOL	-----	lvalueIDStmt	Yes	-----	
-declare	11	TK_DECLARE	-----	declareStmt	Yes	-----	
-m	11	TK_ID	-----	idList	Yes	-----	
------	-----	TK_EPSILON	-----	N3	Yes	-----	
-:	11	TK_COLON	-----	declareStmt	Yes	-----	
-real	11	TK_REAL	-----	dataType	Yes	-----	
-;	11	TK_SEMICOL	-----	declareStmt	Yes	-----	
-[	13	TK_SQBO	-----	optional	Yes	-----	
-r	13	TK_ID	-----	idList	Yes	-----	
-,	13	TK_COMMA	-----	N3	Yes	-----	
-m	13	TK_ID	-----	N3	Yes	-----	
------	-----	TK_EPSILON	-----	N3	Yes	-----	
-]	13	TK_SQBC	-----	optional	Yes	-----	
-:=	13	TK_ASSIGNOP	-----	optional	Yes	-----	
-use	13	TK_USE	-----	moduleReuseStmt	Yes	-----	
-mod1	13	TK_ID	-----	moduleReuseStmt	Yes	-----	
-with	13	TK_WITH	-----	moduleReuseStmt	Yes	-----	
-parameters	13	TK_PARAMETERS	-----	moduleReuseStmt	Yes	-----	
-v	13	TK_ID	-----	idList	Yes	-----	
-,	13	TK_COMMA	-----	N3	Yes	-----	
-w	13	TK_ID	-----	N3	Yes	-----	
------	-----	TK_EPSILON	-----	N3	Yes	-----	
-;	13	TK_SEMICOL	-----	moduleReuseStmt	Yes	-----	
+;	12	TK_SEMICOL	-----	lvalueIDStmt	Yes	-----	
+switch	13	TK_SWITCH	-----	condionalStmt	Yes	-----	
+(	13	TK_BO	-----	condionalStmt	Yes	-----	
+t	13	TK_ID	-----	condionalStmt	Yes	-----	
+)	13	TK_BC	-----	condionalStmt	Yes	-----	
+start	14	TK_START	-----	condionalStmt	Yes	-----	
+case	15	TK_CASE	-----	caseStmts	Yes	-----	
+true	15	TK_TRUE	-----	value	Yes	-----	
+:	15	TK_COLON	-----	caseStmts	Yes	-----	
 print	15	TK_PRINT	-----	ioStmt	Yes	-----	
 (	15	TK_BO	-----	ioStmt	Yes	-----	
-r	15	TK_ID	-----	var_id_num	Yes	-----	
------	-----	TK_EPSILON	-----	whichId	Yes	-----	
+list	15	TK_ID	-----	var_id_num	Yes	-----	
+[	15	TK_SQBO	-----	whichId	Yes	-----	
+index	15	TK_ID	-----	g_index	Yes	-----	
+]	15	TK_SQBC	-----	whichId	Yes	-----	
 )	15	TK_BC	-----	ioStmt	Yes	-----	
 ;	15	TK_SEMICOL	-----	ioStmt	Yes	-----	
-print	17	TK_PRINT	-----	ioStmt	Yes	-----	
-(	17	TK_BO	-----	ioStmt	Yes	-----	
-m	17	TK_ID	-----	var_id_num	Yes	-----	
------	-----	TK_EPSILON	-----	whichId	Yes	-----	
-)	17	TK_BC	-----	ioStmt	Yes	-----	
-;	17	TK_SEMICOL	-----	ioStmt	Yes	-----	
+sum	16	TK_ID	-----	assignmentStmt	Yes	-----	
+:=	16	TK_ASSIGNOP	-----	lvalueIDStmt	Yes	-----	
+sum	16	TK_ID	-----	var_id_num	Yes	-----	
+[	16	TK_SQBO	-----	whichId	Yes	-----	
+index	16	TK_ID	-----	g_index	Yes	-----	
+]	16	TK_SQBC	-----	whichId	Yes	-----	
+-----	-----	TK_EPSILON	-----	N5	Yes	-----	
+-----	-----	TK_EPSILON	-----	N4	Yes	-----	
+-----	-----	TK_EPSILON	-----	N8	Yes	-----	
+-----	-----	TK_EPSILON	-----	N7	Yes	-----	
+;	16	TK_SEMICOL	-----	lvalueIDStmt	Yes	-----	
 -----	-----	TK_EPSILON	-----	statements	Yes	-----	
-end	18	TK_END	-----	moduleDef	Yes	-----	
-<<	20	TK_DEF	-----	module	Yes	-----	
-module	20	TK_MODULE	-----	module	Yes	-----	
-mod1	20	TK_ID	-----	module	Yes	-----	
->>	20	TK_ENDDEF	-----	module	Yes	-----	
-takes	21	TK_TAKES	-----	module	Yes	-----	
-input	21	TK_INPUT	-----	module	Yes	-----	
-[	21	TK_SQBO	-----	module	Yes	-----	
-a	21	TK_ID	-----	input_plist	Yes	-----	
-:	21	TK_COLON	-----	input_plist	Yes	-----	
-integer	21	TK_INTEGER	-----	dataType	Yes	-----	
-,	21	TK_COMMA	-----	N1	Yes	-----	
-b	21	TK_ID	-----	N1	Yes	-----	
-:	21	TK_COLON	-----	N1	Yes	-----	
-integer	21	TK_INTEGER	-----	dataType	Yes	-----	
------	-----	TK_EPSILON	-----	N1	Yes	-----	
-]	21	TK_SQBC	-----	module	Yes	-----	
-;	21	TK_SEMICOL	-----	module	Yes	-----	
-returns	22	TK_RETURNS	-----	ret	Yes	-----	
-[	22	TK_SQBO	-----	ret	Yes	-----	
-x	22	TK_ID	-----	output_plist	Yes	-----	
-:	22	TK_COLON	-----	output_plist	Yes	-----	
-integer	22	TK_INTEGER	-----	type	Yes	-----	
-,	22	TK_COMMA	-----	N2	Yes	-----	
-abc	22	TK_ID	-----	N2	Yes	-----	
-:	22	TK_COLON	-----	N2	Yes	-----	
-real	22	TK_REAL	-----	type	Yes	-----	
------	-----	TK_EPSILON	-----	N2	Yes	-----	
-]	22	TK_SQBC	-----	ret	Yes	-----	
-;	22	TK_SEMICOL	-----	ret	Yes	-----	
-start	23	TK_START	-----	moduleDef	Yes	-----	
-declare	25	TK_DECLARE	-----	declareStmt	Yes	-----	
-c	25	TK_ID	-----	idList	Yes	-----	
------	-----	TK_EPSILON	-----	N3	Yes	-----	
-:	25	TK_COLON	-----	declareStmt	Yes	-----	
-real	25	TK_REAL	-----	dataType	Yes	-----	
-;	25	TK_SEMICOL	-----	declareStmt	Yes	-----	
-c	27	TK_ID	-----	assignmentStmt	Yes	-----	
-:=	27	TK_ASSIGNOP	-----	lvalueIDStmt	Yes	-----	
-10.4	27	TK_RNUM	10.4000	var_id_num	Yes	-----	
------	-----	TK_EPSILON	-----	N5	Yes	-----	
------	-----	TK_EPSILON	-----	N4	Yes	-----	
------	-----	TK_EPSILON	-----	N8	Yes	-----	
------	-----	TK_EPSILON	-----	N7	Yes	-----	
-;	27	TK_SEMICOL	-----	lvalueIDStmt	Yes	-----	
-x	29	TK_ID	-----	assignmentStmt	Yes	-----	
-:=	29	TK_ASSIGNOP	-----	lvalueIDStmt	Yes	-----	
-a	29	TK_ID	-----	var_id_num	Yes	-----	
+break	17	TK_BREAK	-----	caseStmts	Yes	-----	
+;	17	TK_SEMICOL	-----	caseStmts	Yes	-----	
+case	18	TK_CASE	-----	N9	Yes	-----	
+false	18	TK_FALSE	-----	value	Yes	-----	
+:	18	TK_COLON	-----	N9	Yes	-----	
+print	18	TK_PRINT	-----	ioStmt	Yes	-----	
+(	18	TK_BO	-----	ioStmt	Yes	-----	
+sum	18	TK_ID	-----	var_id_num	Yes	-----	
 -----	-----	TK_EPSILON	-----	whichId	Yes	-----	
------	-----	TK_EPSILON	-----	N5	Yes	-----	
-+	29	TK_PLUS	-----	op1	Yes	-----	
-b	29	TK_ID	-----	var_id_num	Yes	-----	
+)	18	TK_BC	-----	ioStmt	Yes	-----	
+;	18	TK_SEMICOL	-----	ioStmt	Yes	-----	
+print	19	TK_PRINT	-----	ioStmt	Yes	-----	
+(	19	TK_BO	-----	ioStmt	Yes	-----	
+index	19	TK_ID	-----	var_id_num	Yes	-----	
 -----	-----	TK_EPSILON	-----	whichId	Yes	-----	
------	-----	TK_EPSILON	-----	N5	Yes	-----	
--	29	TK_MINUS	-----	op1	Yes	-----	
-10	29	TK_NUM	10	var_id_num	Yes	-----	
------	-----	TK_EPSILON	-----	N5	Yes	-----	
------	-----	TK_EPSILON	-----	N4	Yes	-----	
------	-----	TK_EPSILON	-----	N8	Yes	-----	
------	-----	TK_EPSILON	-----	N7	Yes	-----	
-;	29	TK_SEMICOL	-----	lvalueIDStmt	Yes	-----	
-abc	31	TK_ID	-----	assignmentStmt	Yes	-----	
-:=	31	TK_ASSIGNOP	-----	lvalueIDStmt	Yes	-----	
-b	31	TK_ID	-----	var_id_num	Yes	-----	
------	-----	TK_EPSILON	-----	whichId	Yes	-----	
-/	31	TK_DIV	-----	op2	Yes	-----	
-5	31	TK_NUM	5	var_id_num	Yes	-----	
------	-----	TK_EPSILON	-----	N5	Yes	-----	
-+	31	TK_PLUS	-----	op1	Yes	-----	
-c	31	TK_ID	-----	var_id_num	Yes	-----	
------	-----	TK_EPSILON	-----	whichId	Yes	-----	
------	-----	TK_EPSILON	-----	N5	Yes	-----	
------	-----	TK_EPSILON	-----	N4	Yes	-----	
------	-----	TK_EPSILON	-----	N8	Yes	-----	
------	-----	TK_EPSILON	-----	N7	Yes	-----	
-;	31	TK_SEMICOL	-----	lvalueIDStmt	Yes	-----	
+)	19	TK_BC	-----	ioStmt	Yes	-----	
+;	19	TK_SEMICOL	-----	ioStmt	Yes	-----	
 -----	-----	TK_EPSILON	-----	statements	Yes	-----	
-end	32	TK_END	-----	moduleDef	Yes	-----	
+break	21	TK_BREAK	-----	N9	Yes	-----	
+;	21	TK_SEMICOL	-----	N9	Yes	-----	
+-----	-----	TK_EPSILON	-----	N9	Yes	-----	
+-----	-----	TK_EPSILON	-----	g_default	Yes	-----	
+end	22	TK_END	-----	condionalStmt	Yes	-----	
+-----	-----	TK_EPSILON	-----	statements	Yes	-----	
+end	24	TK_END	-----	moduleDef	Yes	-----	
 -----	-----	TK_EPSILON	-----	otherModules	Yes	-----	
-Node: TK_DECLARE => Node: TK_MODULE => Node: TK_ID => Node: TK_SEMICOL => Node: moduleDeclaration => Node: TK_EPSILON => Node: moduleDeclarations => Node: moduleDeclarations => Node: TK_EPSILON => Node: otherModules => Node: TK_DRIVERDEF => Node: TK_DRIVER => Node: TK_PROGRAM => Node: TK_DRIVERENDDEF => Node: TK_START => Node: TK_DECLARE => Node: TK_ID => Node: TK_COMMA => Node: TK_ID => Node: TK_COMMA => Node: TK_ID => Node: TK_EPSILON => Node: N3 => Node: N3 => Node: N3 => Node: idList => Node: TK_COLON => Node: TK_INTEGER => Node: dataType => Node: TK_SEMICOL => Node: declareStmt => Node: statement => Node: TK_GET_VALUE => Node: TK_BO => Node: TK_ID => Node: TK_BC => Node: TK_SEMICOL => Node: ioStmt => Node: statement => Node: TK_ID => Node: TK_ASSIGNOP => Node: TK_NUM => Node: var_id_num => Node: factor => Node: TK_EPSILON => Node: N5 => Node: g_term => Node: TK_EPSILON => Node: N4 => Node: arithmeticExpr => Node: TK_EPSILON => Node: N8 => Node: AnyTerm => Node: TK_EPSILON => Node: N7 => Node: arithmeticOrBooleanExpr => Node: expression => Node: TK_SEMICOL => Node: lvalueIDStmt => Node: whichStmt => Node: assignmentStmt => Node: simpleStmt => Node: statement => Node: TK_DECLARE => Node: TK_ID => Node: TK_EPSILON => Node: N3 => Node: idList => Node: TK_COLON => Node: TK_REAL => Node: dataType => Node: TK_SEMICOL => Node: declareStmt => Node: statement => Node: TK_SQBO => Node: TK_ID => Node: TK_COMMA => Node: TK_ID => Node: TK_EPSILON => Node: N3 => Node: N3 => Node: idList => Node: TK_SQBC => Node: TK_ASSIGNOP => Node: optional => Node: TK_USE => Node: TK_ID => Node: TK_WITH => Node: TK_PARAMETERS => Node: TK_ID => Node: TK_COMMA => Node: TK_ID => Node: TK_EPSILON => Node: N3 => Node: N3 => Node: idList => Node: TK_SEMICOL => Node: moduleReuseStmt => Node: simpleStmt => Node: statement => Node: TK_PRINT => Node: TK_BO => Node: TK_ID => Node: TK_EPSILON => Node: whichId => Node: var_id_num => Node: var => Node: TK_BC => Node: TK_SEMICOL => Node: ioStmt => Node: statement => Node: TK_PRINT => Node: TK_BO => Node: TK_ID => Node: TK_EPSILON => Node: whichId => Node: var_id_num => Node: var => Node: TK_BC => Node: TK_SEMICOL => Node: ioStmt => Node: statement => Node: TK_EPSILON => Node: statements => Node: statements => Node: statements => Node: statements => Node: statements => Node: statements => Node: statements => Node: statements => Node: TK_END => Node: moduleDef => Node: driverModule => Node: TK_DEF => Node: TK_MODULE => Node: TK_ID => Node: TK_ENDDEF => Node: TK_TAKES => Node: TK_INPUT => Node: TK_SQBO => Node: TK_ID => Node: TK_COLON => Node: TK_INTEGER => Node: dataType => Node: TK_COMMA => Node: TK_ID => Node: TK_COLON => Node: TK_INTEGER => Node: dataType => Node: TK_EPSILON => Node: N1 => Node: N1 => Node: input_plist => Node: TK_SQBC => Node: TK_SEMICOL => Node: TK_RETURNS => Node: TK_SQBO => Node: TK_ID => Node: TK_COLON => Node: TK_INTEGER => Node: type => Node: TK_COMMA => Node: TK_ID => Node: TK_COLON => Node: TK_REAL => Node: type => Node: TK_EPSILON => Node: N2 => Node: N2 => Node: output_plist => Node: TK_SQBC => Node: TK_SEMICOL => Node: ret => Node: TK_START => Node: TK_DECLARE => Node: TK_ID => Node: TK_EPSILON => Node: N3 => Node: idList => Node: TK_COLON => Node: TK_REAL => Node: dataType => Node: TK_SEMICOL => Node: declareStmt => Node: statement => Node: TK_ID => Node: TK_ASSIGNOP => Node: TK_RNUM => Node: var_id_num => Node: factor => Node: TK_EPSILON => Node: N5 => Node: g_term => Node: TK_EPSILON => Node: N4 => Node: arithmeticExpr => Node: TK_EPSILON => Node: N8 => Node: AnyTerm => Node: TK_EPSILON => Node: N7 => Node: arithmeticOrBooleanExpr => Node: expression => Node: TK_SEMICOL => Node: lvalueIDStmt => Node: whichStmt => Node: assignmentStmt => Node: simpleStmt => Node: statement => Node: TK_ID => Node: TK_ASSIGNOP => Node: TK_ID => Node: TK_EPSILON => Node: whichId => Node: var_id_num => Node: factor => Node: TK_EPSILON => Node: N5 => Node: g_term => Node: TK_PLUS => Node: op1 => Node: TK_ID => Node: TK_EPSILON => Node: whichId => Node: var_id_num => Node: factor => Node: TK_EPSILON => Node: N5 => Node: g_term => Node: TK_MINUS => Node: op1 => Node: TK_NUM => Node: var_id_num => Node: factor => Node: TK_EPSILON => Node: N5 => Node: g_term => Node: TK_EPSILON => Node: N4 => Node: N4 => Node: N4 => Node: arithmeticExpr => Node: TK_EPSILON => Node: N8 => Node: AnyTerm => Node: TK_EPSILON => Node: N7 => Node: arithmeticOrBooleanExpr => Node: expression => Node: TK_SEMICOL => Node: lvalueIDStmt => Node: whichStmt => Node: assignmentStmt => Node: simpleStmt => Node: statement => Node: TK_ID => Node: TK_ASSIGNOP => Node: TK_ID => Node: TK_EPSILON => Node: whichId => Node: var_id_num => Node: factor => Node: TK_DIV => Node: op2 => Node: TK_NUM => Node: var_id_num => Node: factor => Node: TK_EPSILON => Node: N5 => Node: N5 => Node: g_term => Node: TK_PLUS => Node: op1 => Node: TK_ID => Node: TK_EPSILON => Node: whichId => Node: var_id_num => Node: factor => Node: TK_EPSILON => Node: N5 => Node: g_term => Node: TK_EPSILON => Node: N4 => Node: N4 => Node: arithmeticExpr => Node: TK_EPSILON => Node: N8 => Node: AnyTerm => Node: TK_EPSILON => Node: N7 => Node: arithmeticOrBooleanExpr => Node: expression => Node: TK_SEMICOL => Node: lvalueIDStmt => Node: whichStmt => Node: assignmentStmt => Node: simpleStmt => Node: statement => Node: TK_EPSILON => Node: statements => Node: statements => Node: statements => Node: statements => Node: statements => Node: TK_END => Node: moduleDef => Node: module => Node: TK_EPSILON => Node: otherModules => Node: otherModules => Node: program => 
+<<<	27	TK_DRIVERDEF	-----	driverModule	Yes	-----	
+driver	27	TK_DRIVER	-----	driverModule	Yes	-----	
+program	27	TK_PROGRAM	-----	driverModule	Yes	-----	
+>>>	27	TK_DRIVERENDDEF	-----	driverModule	Yes	-----	
+start	28	TK_START	-----	moduleDef	Yes	-----	
+declare	29	TK_DECLARE	-----	declareStmt	Yes	-----	
+A	29	TK_ID	-----	idList	Yes	-----	
+-----	-----	TK_EPSILON	-----	N3	Yes	-----	
+:	29	TK_COLON	-----	declareStmt	Yes	-----	
+array	29	TK_ARRAY	-----	dataType	Yes	-----	
+[	29	TK_SQBO	-----	dataType	Yes	-----	
+1	29	TK_NUM	1	g_index	Yes	-----	
+..	29	TK_RANGEOP	-----	range_arrays	Yes	-----	
+5	29	TK_NUM	5	g_index	Yes	-----	
+]	29	TK_SQBC	-----	dataType	Yes	-----	
+of	29	TK_OF	-----	dataType	Yes	-----	
+real	29	TK_REAL	-----	type	Yes	-----	
+;	29	TK_SEMICOL	-----	declareStmt	Yes	-----	
+declare	30	TK_DECLARE	-----	declareStmt	Yes	-----	
+k	30	TK_ID	-----	idList	Yes	-----	
+-----	-----	TK_EPSILON	-----	N3	Yes	-----	
+:	30	TK_COLON	-----	declareStmt	Yes	-----	
+integer	30	TK_INTEGER	-----	dataType	Yes	-----	
+;	30	TK_SEMICOL	-----	declareStmt	Yes	-----	
+declare	31	TK_DECLARE	-----	declareStmt	Yes	-----	
+s	31	TK_ID	-----	idList	Yes	-----	
+-----	-----	TK_EPSILON	-----	N3	Yes	-----	
+:	31	TK_COLON	-----	declareStmt	Yes	-----	
+real	31	TK_REAL	-----	dataType	Yes	-----	
+;	31	TK_SEMICOL	-----	declareStmt	Yes	-----	
+get_value	32	TK_GET_VALUE	-----	ioStmt	Yes	-----	
+(	32	TK_BO	-----	ioStmt	Yes	-----	
+k	32	TK_ID	-----	ioStmt	Yes	-----	
+)	32	TK_BC	-----	ioStmt	Yes	-----	
+;	32	TK_SEMICOL	-----	ioStmt	Yes	-----	
+-----	-----	TK_EPSILON	-----	optional	Yes	-----	
+use	33	TK_USE	-----	moduleReuseStmt	Yes	-----	
+module	33	TK_MODULE	-----	moduleReuseStmt	Yes	-----	
+readArr	33	TK_ID	-----	moduleReuseStmt	Yes	-----	
+(null)	-1	TK_WITH	-----	moduleReuseStmt	Yes	-----	
+parameters	33	TK_PARAMETERS	-----	moduleReuseStmt	Yes	-----	
+A	33	TK_ID	-----	idList	Yes	-----	
+,	33	TK_COMMA	-----	N3	Yes	-----	
+k	33	TK_ID	-----	N3	Yes	-----	
+-----	-----	TK_EPSILON	-----	N3	Yes	-----	
+;	33	TK_SEMICOL	-----	moduleReuseStmt	Yes	-----	
+[	34	TK_SQBO	-----	optional	Yes	-----	
+s	34	TK_ID	-----	idList	Yes	-----	
+-----	-----	TK_EPSILON	-----	N3	Yes	-----	
+]	34	TK_SQBC	-----	optional	Yes	-----	
+:=	34	TK_ASSIGNOP	-----	optional	Yes	-----	
+use	34	TK_USE	-----	moduleReuseStmt	Yes	-----	
+module	34	TK_MODULE	-----	moduleReuseStmt	Yes	-----	
+arraySum	34	TK_ID	-----	moduleReuseStmt	Yes	-----	
+with	34	TK_WITH	-----	moduleReuseStmt	Yes	-----	
+parameters	34	TK_PARAMETERS	-----	moduleReuseStmt	Yes	-----	
+A	34	TK_ID	-----	idList	Yes	-----	
+,	34	TK_COMMA	-----	N3	Yes	-----	
+k	34	TK_ID	-----	N3	Yes	-----	
+-----	-----	TK_EPSILON	-----	N3	Yes	-----	
+;	34	TK_SEMICOL	-----	moduleReuseStmt	Yes	-----	
+s	35	TK_ID	-----	assignmentStmt	Yes	-----	
+:=	35	TK_ASSIGNOP	-----	lvalueIDStmt	Yes	-----	
+s	35	TK_ID	-----	var_id_num	Yes	-----	
+-----	-----	TK_EPSILON	-----	whichId	Yes	-----	
+-----	-----	TK_EPSILON	-----	N5	Yes	-----	
+-----	-----	TK_EPSILON	-----	N4	Yes	-----	
+<=	35	TK_LE	-----	relationalOp	Yes	-----	
+n	35	TK_ID	-----	var_id_num	Yes	-----	
+-----	-----	TK_EPSILON	-----	whichId	Yes	-----	
+-----	-----	TK_EPSILON	-----	N5	Yes	-----	
+-----	-----	TK_EPSILON	-----	N4	Yes	-----	
+-----	-----	TK_EPSILON	-----	N7	Yes	-----	
+;	35	TK_SEMICOL	-----	lvalueIDStmt	Yes	-----	
+print	36	TK_PRINT	-----	ioStmt	Yes	-----	
+(	36	TK_BO	-----	ioStmt	Yes	-----	
+s	36	TK_ID	-----	var_id_num	Yes	-----	
+-----	-----	TK_EPSILON	-----	whichId	Yes	-----	
+)	36	TK_BC	-----	ioStmt	Yes	-----	
+(null)	-1	TK_SEMICOL	-----	ioStmt	Yes	-----	
+readArr	44	TK_ID	-----	assignmentStmt	Yes	-----	
+[	45	TK_SQBO	-----	lvalueARRStmt	Yes	-----	
+arr1	45	TK_ID	-----	g_index	Yes	-----	
+(null)	-1	TK_SQBC	-----	lvalueARRStmt	Yes	-----	
+(null)	-1	TK_ASSIGNOP	-----	lvalueARRStmt	Yes	-----	
+1	45	TK_NUM	1	var_id_num	Yes	-----	
+-----	-----	TK_EPSILON	-----	N5	Yes	-----	
+-----	-----	TK_EPSILON	-----	N4	Yes	-----	
+-----	-----	TK_EPSILON	-----	N8	Yes	-----	
+-----	-----	TK_EPSILON	-----	N7	Yes	-----	
+;	45	TK_SEMICOL	-----	lvalueARRStmt	Yes	-----	
+declare	47	TK_DECLARE	-----	declareStmt	Yes	-----	
+tempvar	47	TK_ID	-----	idList	Yes	-----	
+-----	-----	TK_EPSILON	-----	N3	Yes	-----	
+:	47	TK_COLON	-----	declareStmt	Yes	-----	
+integer	48	TK_INTEGER	-----	dataType	Yes	-----	
+;	48	TK_SEMICOL	-----	declareStmt	Yes	-----	
+i	49	TK_ID	-----	assignmentStmt	Yes	-----	
+:=	49	TK_ASSIGNOP	-----	lvalueIDStmt	Yes	-----	
+1	49	TK_NUM	1	var_id_num	Yes	-----	
+-----	-----	TK_EPSILON	-----	N5	Yes	-----	
+-----	-----	TK_EPSILON	-----	N4	Yes	-----	
+-----	-----	TK_EPSILON	-----	N8	Yes	-----	
+-----	-----	TK_EPSILON	-----	N7	Yes	-----	
+;	49	TK_SEMICOL	-----	lvalueIDStmt	Yes	-----	
+while	50	TK_WHILE	-----	iterativeStmt	Yes	-----	
+(	50	TK_BO	-----	iterativeStmt	Yes	-----	
+i	50	TK_ID	-----	var_id_num	Yes	-----	
+-----	-----	TK_EPSILON	-----	whichId	Yes	-----	
+-----	-----	TK_EPSILON	-----	N5	Yes	-----	
+-----	-----	TK_EPSILON	-----	N4	Yes	-----	
+<=	50	TK_LE	-----	relationalOp	Yes	-----	
+k	50	TK_ID	-----	var_id_num	Yes	-----	
+-----	-----	TK_EPSILON	-----	whichId	Yes	-----	
+-----	-----	TK_EPSILON	-----	N5	Yes	-----	
+-----	-----	TK_EPSILON	-----	N4	Yes	-----	
+-----	-----	TK_EPSILON	-----	N7	Yes	-----	
+)	50	TK_BC	-----	iterativeStmt	Yes	-----	
+start	51	TK_START	-----	iterativeStmt	Yes	-----	
+get_value	52	TK_GET_VALUE	-----	ioStmt	Yes	-----	
+(	52	TK_BO	-----	ioStmt	Yes	-----	
+tempvar	52	TK_ID	-----	ioStmt	Yes	-----	
+)	52	TK_BC	-----	ioStmt	Yes	-----	
+;	52	TK_SEMICOL	-----	ioStmt	Yes	-----	
+arr1	53	TK_ID	-----	assignmentStmt	Yes	-----	
+[	53	TK_SQBO	-----	lvalueARRStmt	Yes	-----	
+i	53	TK_ID	-----	g_index	Yes	-----	
+]	53	TK_SQBC	-----	lvalueARRStmt	Yes	-----	
+:=	53	TK_ASSIGNOP	-----	lvalueARRStmt	Yes	-----	
+i	54	TK_ID	-----	var_id_num	Yes	-----	
+-----	-----	TK_EPSILON	-----	whichId	Yes	-----	
+-----	-----	TK_EPSILON	-----	N5	Yes	-----	
++	54	TK_PLUS	-----	op1	Yes	-----	
+1	54	TK_NUM	1	var_id_num	Yes	-----	
+-----	-----	TK_EPSILON	-----	N5	Yes	-----	
+-----	-----	TK_EPSILON	-----	N4	Yes	-----	
+-----	-----	TK_EPSILON	-----	N8	Yes	-----	
+-----	-----	TK_EPSILON	-----	N7	Yes	-----	
+;	54	TK_SEMICOL	-----	lvalueARRStmt	Yes	-----	
+-----	-----	TK_EPSILON	-----	statements	Yes	-----	
+end	56	TK_END	-----	iterativeStmt	Yes	-----	
+-----	-----	TK_EPSILON	-----	statements	Yes	-----	
+end	57	TK_END	-----	moduleDef	Yes	-----	
+-----	-----	-----	-----	program	No	otherModules	
+Node: TK_DECLARE => Node: TK_MODULE => Node: TK_ID => Node: TK_SEMICOL => Node: moduleDeclaration => Node: TK_EPSILON => Node: moduleDeclarations => Node: moduleDeclarations => Node: TK_DEF => Node: TK_MODULE => Node: TK_ID => Node: TK_ENDDEF => Node: TK_TAKES => Node: TK_INPUT => Node: TK_SQBO => Node: TK_ID => Node: TK_COLON => Node: TK_ARRAY => Node: TK_SQBO => Node: TK_NUM => Node: g_index => Node: TK_RANGEOP => Node: TK_NUM => Node: g_index => Node: range_arrays => Node: TK_SQBC => Node: TK_OF => Node: TK_REAL => Node: type => Node: dataType => Node: TK_COMMA => Node: TK_ID => Node: TK_COLON => Node: TK_REAL => Node: dataType => Node: TK_EPSILON => Node: N1 => Node: N1 => Node: input_plist => Node: TK_SQBC => Node: TK_SEMICOL => Node: TK_EPSILON => Node: ret => Node: TK_START => Node: TK_DECLARE => Node: TK_ID => Node: TK_EPSILON => Node: N3 => Node: idList => Node: TK_COLON => Node: TK_INTEGER => Node: dataType => Node: TK_SEMICOL => Node: declareStmt => Node: statement => Node: TK_DECLARE => Node: TK_ID => Node: TK_EPSILON => Node: N3 => Node: idList => Node: TK_COLON => Node: TK_BOOLEAN => Node: dataType => Node: TK_SEMICOL => Node: declareStmt => Node: statement => Node: TK_ID => Node: TK_ASSIGNOP => Node: TK_ID => Node: TK_EPSILON => Node: whichId => Node: var_id_num => Node: factor => Node: TK_EPSILON => Node: N5 => Node: g_term => Node: TK_EPSILON => Node: N4 => Node: arithmeticExpr => Node: TK_LE => Node: relationalOp => Node: TK_ID => Node: TK_EPSILON => Node: whichId => Node: var_id_num => Node: factor => Node: TK_EPSILON => Node: N5 => Node: g_term => Node: TK_EPSILON => Node: N4 => Node: arithmeticExpr => Node: N8 => Node: AnyTerm => Node: TK_EPSILON => Node: N7 => Node: arithmeticOrBooleanExpr => Node: expression => Node: TK_SEMICOL => Node: lvalueIDStmt => Node: whichStmt => Node: assignmentStmt => Node: simpleStmt => Node: statement => Node: TK_SWITCH => Node: TK_BO => Node: TK_ID => Node: TK_BC => Node: TK_START => Node: TK_CASE => Node: TK_TRUE => Node: value => Node: TK_COLON => Node: TK_PRINT => Node: TK_BO => Node: TK_ID => Node: TK_SQBO => Node: TK_ID => Node: g_index => Node: TK_SQBC => Node: whichId => Node: var_id_num => Node: var => Node: TK_BC => Node: TK_SEMICOL => Node: ioStmt => Node: statement => Node: TK_ID => Node: TK_ASSIGNOP => Node: TK_ID => Node: TK_SQBO => Node: TK_ID => Node: g_index => Node: TK_SQBC => Node: whichId => Node: var_id_num => Node: factor => Node: TK_EPSILON => Node: N5 => Node: g_term => Node: TK_EPSILON => Node: N4 => Node: arithmeticExpr => Node: TK_EPSILON => Node: N8 => Node: AnyTerm => Node: TK_EPSILON => Node: N7 => Node: arithmeticOrBooleanExpr => Node: expression => Node: TK_SEMICOL => Node: lvalueIDStmt => Node: whichStmt => Node: assignmentStmt => Node: simpleStmt => Node: statement => Node: TK_EPSILON => Node: statements => Node: statements => Node: statements => Node: TK_BREAK => Node: TK_SEMICOL => Node: TK_CASE => Node: TK_FALSE => Node: value => Node: TK_COLON => Node: TK_PRINT => Node: TK_BO => Node: TK_ID => Node: TK_EPSILON => Node: whichId => Node: var_id_num => Node: var => Node: TK_BC => Node: TK_SEMICOL => Node: ioStmt => Node: statement => Node: TK_PRINT => Node: TK_BO => Node: TK_ID => Node: TK_EPSILON => Node: whichId => Node: var_id_num => Node: var => Node: TK_BC => Node: TK_SEMICOL => Node: ioStmt => Node: statement => Node: TK_EPSILON => Node: statements => Node: statements => Node: statements => Node: TK_BREAK => Node: TK_SEMICOL => Node: TK_EPSILON => Node: N9 => Node: N9 => Node: caseStmts => Node: TK_EPSILON => Node: g_default => Node: TK_END => Node: condionalStmt => Node: statement => Node: TK_EPSILON => Node: statements => Node: statements => Node: statements => Node: statements => Node: statements => Node: TK_END => Node: moduleDef => Node: module => Node: TK_EPSILON => Node: otherModules => Node: otherModules => Node: TK_DRIVERDEF => Node: TK_DRIVER => Node: TK_PROGRAM => Node: TK_DRIVERENDDEF => Node: TK_START => Node: TK_DECLARE => Node: TK_ID => Node: TK_EPSILON => Node: N3 => Node: idList => Node: TK_COLON => Node: TK_ARRAY => Node: TK_SQBO => Node: TK_NUM => Node: g_index => Node: TK_RANGEOP => Node: TK_NUM => Node: g_index => Node: range_arrays => Node: TK_SQBC => Node: TK_OF => Node: TK_REAL => Node: type => Node: dataType => Node: TK_SEMICOL => Node: declareStmt => Node: statement => Node: TK_DECLARE => Node: TK_ID => Node: TK_EPSILON => Node: N3 => Node: idList => Node: TK_COLON => Node: TK_INTEGER => Node: dataType => Node: TK_SEMICOL => Node: declareStmt => Node: statement => Node: TK_DECLARE => Node: TK_ID => Node: TK_EPSILON => Node: N3 => Node: idList => Node: TK_COLON => Node: TK_REAL => Node: dataType => Node: TK_SEMICOL => Node: declareStmt => Node: statement => Node: TK_GET_VALUE => Node: TK_BO => Node: TK_ID => Node: TK_BC => Node: TK_SEMICOL => Node: ioStmt => Node: statement => Node: TK_EPSILON => Node: optional => Node: TK_USE => Node: TK_MODULE => Node: TK_ID => Node: TK_WITH => Node: TK_PARAMETERS => Node: TK_ID => Node: TK_COMMA => Node: TK_ID => Node: TK_EPSILON => Node: N3 => Node: N3 => Node: idList => Node: TK_SEMICOL => Node: moduleReuseStmt => Node: simpleStmt => Node: statement => Node: TK_SQBO => Node: TK_ID => Node: TK_EPSILON => Node: N3 => Node: idList => Node: TK_SQBC => Node: TK_ASSIGNOP => Node: optional => Node: TK_USE => Node: TK_MODULE => Node: TK_ID => Node: TK_WITH => Node: TK_PARAMETERS => Node: TK_ID => Node: TK_COMMA => Node: TK_ID => Node: TK_EPSILON => Node: N3 => Node: N3 => Node: idList => Node: TK_SEMICOL => Node: moduleReuseStmt => Node: simpleStmt => Node: statement => Node: TK_ID => Node: TK_ASSIGNOP => Node: TK_ID => Node: TK_EPSILON => Node: whichId => Node: var_id_num => Node: factor => Node: TK_EPSILON => Node: N5 => Node: g_term => Node: TK_EPSILON => Node: N4 => Node: arithmeticExpr => Node: TK_LE => Node: relationalOp => Node: TK_ID => Node: TK_EPSILON => Node: whichId => Node: var_id_num => Node: factor => Node: TK_EPSILON => Node: N5 => Node: g_term => Node: TK_EPSILON => Node: N4 => Node: arithmeticExpr => Node: N8 => Node: AnyTerm => Node: TK_EPSILON => Node: N7 => Node: arithmeticOrBooleanExpr => Node: expression => Node: TK_SEMICOL => Node: lvalueIDStmt => Node: whichStmt => Node: assignmentStmt => Node: simpleStmt => Node: statement => Node: TK_PRINT => Node: TK_BO => Node: TK_ID => Node: TK_EPSILON => Node: whichId => Node: var_id_num => Node: var => Node: TK_BC => Node: TK_SEMICOL => Node: ioStmt => Node: statement => Node: TK_ID => Node: TK_SQBO => Node: TK_ID => Node: g_index => Node: TK_SQBC => Node: TK_ASSIGNOP => Node: TK_NUM => Node: var_id_num => Node: factor => Node: TK_EPSILON => Node: N5 => Node: g_term => Node: TK_EPSILON => Node: N4 => Node: arithmeticExpr => Node: TK_EPSILON => Node: N8 => Node: AnyTerm => Node: TK_EPSILON => Node: N7 => Node: arithmeticOrBooleanExpr => Node: expression => Node: TK_SEMICOL => Node: lvalueARRStmt => Node: whichStmt => Node: assignmentStmt => Node: simpleStmt => Node: statement => Node: TK_DECLARE => Node: TK_ID => Node: TK_EPSILON => Node: N3 => Node: idList => Node: TK_COLON => Node: TK_INTEGER => Node: dataType => Node: TK_SEMICOL => Node: declareStmt => Node: statement => Node: TK_ID => Node: TK_ASSIGNOP => Node: TK_NUM => Node: var_id_num => Node: factor => Node: TK_EPSILON => Node: N5 => Node: g_term => Node: TK_EPSILON => Node: N4 => Node: arithmeticExpr => Node: TK_EPSILON => Node: N8 => Node: AnyTerm => Node: TK_EPSILON => Node: N7 => Node: arithmeticOrBooleanExpr => Node: expression => Node: TK_SEMICOL => Node: lvalueIDStmt => Node: whichStmt => Node: assignmentStmt => Node: simpleStmt => Node: statement => Node: TK_WHILE => Node: TK_BO => Node: TK_ID => Node: TK_EPSILON => Node: whichId => Node: var_id_num => Node: factor => Node: TK_EPSILON => Node: N5 => Node: g_term => Node: TK_EPSILON => Node: N4 => Node: arithmeticExpr => Node: TK_LE => Node: relationalOp => Node: TK_ID => Node: TK_EPSILON => Node: whichId => Node: var_id_num => Node: factor => Node: TK_EPSILON => Node: N5 => Node: g_term => Node: TK_EPSILON => Node: N4 => Node: arithmeticExpr => Node: N8 => Node: AnyTerm => Node: TK_EPSILON => Node: N7 => Node: arithmeticOrBooleanExpr => Node: TK_BC => Node: TK_START => Node: TK_GET_VALUE => Node: TK_BO => Node: TK_ID => Node: TK_BC => Node: TK_SEMICOL => Node: ioStmt => Node: statement => Node: TK_ID => Node: TK_SQBO => Node: TK_ID => Node: g_index => Node: TK_SQBC => Node: TK_ASSIGNOP => Node: TK_ID => Node: TK_EPSILON => Node: whichId => Node: var_id_num => Node: factor => Node: TK_EPSILON => Node: N5 => Node: g_term => Node: TK_PLUS => Node: op1 => Node: TK_NUM => Node: var_id_num => Node: factor => Node: TK_EPSILON => Node: N5 => Node: g_term => Node: TK_EPSILON => Node: N4 => Node: N4 => Node: arithmeticExpr => Node: TK_EPSILON => Node: N8 => Node: AnyTerm => Node: TK_EPSILON => Node: N7 => Node: arithmeticOrBooleanExpr => Node: expression => Node: TK_SEMICOL => Node: lvalueARRStmt => Node: whichStmt => Node: assignmentStmt => Node: simpleStmt => Node: statement => Node: TK_EPSILON => Node: statements => Node: statements => Node: statements => Node: TK_END => Node: iterativeStmt => Node: statement => Node: TK_EPSILON => Node: statements => Node: statements => Node: statements => Node: statements => Node: statements => Node: statements => Node: statements => Node: statements => Node: statements => Node: statements => Node: statements => Node: statements => Node: statements => Node: TK_END => Node: moduleDef => Node: driverModule => Node: otherModules => Node: program => 

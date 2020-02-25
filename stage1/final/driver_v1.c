@@ -7,6 +7,7 @@
 #include "lexer.h"
 #include "parser.h"
 #include "parserDef.h"
+#include <time.h>
 
 unsigned long hash_func (char* str) {
     unsigned long i = 0;
@@ -345,6 +346,7 @@ void dfa_signal() {
     curr_lexeme = look_ahead;
     lexeme_size = 0;
 }
+
 
 Token get_next_token() {
     // DFA to capture the tokenizer states
@@ -1205,8 +1207,6 @@ void run_tokenizer(char* filename) {
     init_tokenizer(filename);
 
     // Process the tokens using get_next_token()
-    printf("----------------------------------------------\n");
-    printf("Line No\tLexeme\tToken Name\n");
     for (;;) {
         Token t = get_next_token();
         if (t.token_type == TK_EOF)
@@ -1214,24 +1214,20 @@ void run_tokenizer(char* filename) {
         // Process token only if the lexeme exists.
         // This means that any TK_COMMENTMARK is avoided
         if (t.lexeme) {
-            printf("%d\t", t.line_no);
-            printf("%s\t\t", (char*)t.lexeme);
+            /*
+            printf("Line no: %d\n", t.line_no);
+            printf("Token: %s\n", (char*)t.lexeme);
+            printf("Type: ");
             print_token_type(t);
-            printf("\n");
+            */
+
             // Insert the token into the token stream
-            // insert_token_stream(t);
-        }
-        else {
-            printf("%d\t", t.line_no);
-            printf("NULL\t\t");
-            print_token_type(t);
-            printf("\n");
+            insert_token_stream(t);
         }
     }
-    printf("----------------------------------------------\n");
 
     // Prints the token stream
-    // print_token_stream();
+    print_token_stream();
     // Close the tokenizer
     close_tokenizer();
 }
@@ -1254,16 +1250,6 @@ TreeNode* make_tree_node(TreeNode* parent, Token token) {
     node->rule_no = -1;
     node->check_term = is_terminal(token.token_type);
     return node;
-}
-
-void free_parse_tree(TreeNode* root) {
-    if (!root)
-        return;
-    for (int i=0; i<root->num_children; i++) {
-        free_parse_tree(root->children[i]);
-    }
-    free(root->token.lexeme);
-    free(root);
 }
 
 TreeNode* add_tree_node(TreeNode* parent, Token token) {
@@ -1379,6 +1365,26 @@ void free_grammar(Grammar g) {
     }
     free(g.rules);
 
+    if (g.F.first) {
+        for (int i=0; i<g.num_tokens + g.num_symbols + 2; i++) {
+            // IF YOU GET A SEGFAULT LATER, BLAME ME FOR TRYING
+            // TO FREE TK_DOLLAR
+            if (g.F.first[i])
+                free(g.F.first[i]);
+        }
+        free(g.F.first);
+    }
+    
+    if (g.F.follow) {
+        for (int i=0; i<g.num_symbols + g.num_tokens + 2; i++) {
+            // IF YOU GET A SEGFAULT LATER, BLAME ME FOR TRYING
+            // TO FREE TK_DOLLAR
+            if (g.F.follow[i])
+                free(g.F.follow[i]);
+        }
+        free(g.F.follow);
+    }
+    
     // Free the HashTable
     if (hash_table)
         free_table(hash_table);
@@ -1478,7 +1484,7 @@ void printParseTable(ParseTable p) {
     printf("-----------------------------------------------------\n");
 }
 
-char* get_parser_token(Token t) {
+char* syntax_error_message(Token t) {
     switch(t.token_type) {
         case TK_NUM:
         return "Integer";
@@ -1517,7 +1523,7 @@ char* get_parser_token(Token t) {
         return "get_value";
         break;
         case TK_PRINT:
-        return "print";
+        return "print()";
         break;
         case TK_USE:
         return "use";
@@ -1586,6 +1592,7 @@ Grammar populate_grammar(FILE* fp) {
     Grammar G;
     G.rules = (Rule*) calloc (1, sizeof(Rule));
     G.rules[0].right = NULL;
+    G.F.first = G.F.follow = NULL;
     G.num_rules = G.num_symbols = G.num_tokens = 0;
     
     int num;
@@ -1923,7 +1930,7 @@ TreeNode* generateParseTree (char* filename, ParseTable p, Grammar g) {
             int rule_no = p.matrix[curr->token.token_type][t.token_type];
             if (rule_no == -1) {
                 if (t.token_type != TK_COMMENTMARK) {
-                    fprintf(stderr, "Syntax Error at Line %d: Got Token: %s\n", t.line_no, get_parser_token(t));
+                    fprintf(stderr, "Syntax Error at Line %d: Got Token: %s\n", t.line_no, get_string_from_term(t.token_type));
                     is_correct = false;
                 }
                 t = get_next_token();
@@ -1970,8 +1977,7 @@ TreeNode* generateParseTree (char* filename, ParseTable p, Grammar g) {
             }
             else {
                 //continue;
-                fprintf(stderr, "Syntax Error at Line %d: Expected: %s, but got: %s\n", t.line_no, get_parser_token(stack->data->token), get_parser_token(t));
-                //fprintf(stderr, "Syntax Error at Line %d: Expected: %s, but got: %s\n", t.line_no, get_string_from_term(stack->data->token.token_type), get_string_from_term(t.token_type));
+                fprintf(stderr, "Syntax Error at Line %d: Expected: %s, but got: %s\n", t.line_no, get_string_from_term(stack->data->token.token_type), get_string_from_term(t.token_type));
                 // Pop from the stack
                 stack = pop(stack);
                 t = get_next_token();
@@ -2045,31 +2051,61 @@ void printParseTree(TreeNode* root) {
 }
 
 int main(int argc, char* argv[]) {
-    if (argc != 2) {
-        fprintf(stderr, "Format: %s %s\n", argv[0], argv[1]);
+    if (argc != 2 && argc != 3) {
+        fprintf(stderr, "Format: %s <input> <output>\n", argv[0]);
         exit(EXIT_FAILURE);
     }
-    FILE* fp = fopen("grammar_rules.txt", "r");
-    if (!fp) {
-        perror("File 'grammar_rules.txt' does not exist\n");
-        exit(EXIT_FAILURE);
-    }
-    Grammar g = populate_grammar(fp);
-    print_grammar(g);
-    FirstAndFollow f = ComputeFirstAndFollowSets(g);
-    printFirstAndFollowSets(f);
-    ParseTable p = createParseTable(f, g);
-    printParseTable(p);
     
-    char* filename = argv[1];
-    printf("Generating Parse Tree...\n");
-    TreeNode* root = generateParseTree(filename, p, g);
-    printParseTree(root);
-    printTreeNode(root);
-    free_first_and_follow(f);
-    free_parse_table(p);
+    FILE* fp = fopen("grammar_rules.txt", "r");
+    Grammar g = populate_grammar(fp);
     fclose(fp);
+    
+    FirstAndFollow f = ComputeFirstAndFollowSets(g);
+    ParseTable p = createParseTable(f, g);
+    
+    while(1) {
+	printf("\nERPLAG COMPILER MENU OPTIONS:\n");
+	printf("0: To exit.\n");
+	printf("1: For producing clean code by removal of comments on the console.\n");
+	printf("2: For printing the token list generated by the lexer.\n");
+	printf("3: For parsing to verify the syntactic correctness of the input source code and printing the Parse Tree in an Inorder Traversal\n");
+	printf("4: For printing (on the console) the total time taken by your stage 1 code of lexer and parser to verify the syntactic correctness\n");
+
+
+	int option;
+	scanf("%d",&option);
+    
+	if (option == 0)
+	    break;
+
+	else if(option == 1) {
+	    printf("-------------------------------------------------------------\n");
+	    remove_comments_stdout(argv[1]);
+	    printf("-------------------------------------------------------------\n");
+	    printf("Cleaned comments!\n");
+	}
+	else if(option == 2) {
+	    printf("-------------------------------------------------------------\n");
+	    run_tokenizer(argv[1]);
+	    printf("-------------------------------------------------------------\n");
+	}
+	else if(option == 3) {
+	    TreeNode* parseTree = generateParseTree(argv[1], p, g);
+	    printf("-------------------------------------------------------------\n");
+	    printf("Parse Tree:\n");
+	    printf("Token\tLine No\tLexeme\t\tNum. Value\t\tParent\t\tIs Leaf\t\tSymbol Type\n");
+	    printParseTree(parseTree);
+	    printf("-------------------------------------------------------------\n");
+	}
+	else if (option == 4) {
+	    printf("\n");
+	}
+	else {
+	    printf("\nInvalid Option\n");
+	}
+    }
+    free_parse_table(p);
+    free_first_and_follow(f);
     free_grammar(g);
-    free_tree(root);
     return 0;
 }

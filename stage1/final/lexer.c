@@ -1,7 +1,8 @@
 // Group #42:
 // R.VIJAY KRISHNA -> 2017A7PS0183P
 // ROHIT K -> 2017A7PS0177P
-
+#include "common.h"
+#include "hash_table.h"
 #include "lexer.h"
 
 // Define all function definitions here
@@ -602,6 +603,7 @@ Token get_next_token() {
                     state = 14;
                 break;
             case 14:
+                unget_char(1);
                 token.lexeme = get_lexeme();
                 token.token_type = TK_MUL;
                 token.line_no = line_no;
@@ -870,6 +872,7 @@ Token get_next_token() {
 
     print_lexical_error(ch, err);
     token.token_type = TK_ERROR;
+    token.line_no = line_no;
     dfa_signal();
     return token;
 }

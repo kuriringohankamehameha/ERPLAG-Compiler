@@ -4,11 +4,11 @@
 
 #ifndef LEXERDEF_H
 #define LEXERDEF_H
-
+#include "common.h"
 #include "hash_table.h"
 
 #define BUF_SIZE 4096
-#define NUM_KEYWORDS 33
+#define NUM_KEYWORDS 35
 
 // Define the Keyword here
 typedef struct Keyword Keyword;
@@ -23,8 +23,10 @@ struct Keyword {
 Keyword keywords[] = {
     {"AND", TK_AND},
     {"FALSE", TK_FALSE},
+    {"false", TK_FALSE},
     {"OR", TK_OR},
     {"TRUE", TK_TRUE},
+    {"true", TK_TRUE},
     {"array", TK_ARRAY},
     {"boolean", TK_BOOLEAN},
     {"break", TK_BREAK},

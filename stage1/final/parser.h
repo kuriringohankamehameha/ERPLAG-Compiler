@@ -1,5 +1,10 @@
+// Group #42:
+// R.VIJAY KRISHNA -> 2017A7PS0183P
+// ROHIT K -> 2017A7PS0177P
+
 #ifndef PARSER_H
 #define PARSER_H
+#include "common.h"
 #include "lexer.h"
 
 typedef struct Rule Rule;
@@ -33,7 +38,6 @@ struct Grammar{
     // set for each rule. Since we encode the grammar to integer numbers,
     // we can also have the first and follow sets as a 2d-array of integers
     Rule* rules;
-    FirstAndFollow F;
     int num_rules; // Number of distinct rules (Nonterminals on the left)
     int num_symbols; // Number of distinct Non Terminals
     int num_tokens; // Number of Terminals

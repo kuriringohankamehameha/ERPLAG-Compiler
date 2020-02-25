@@ -50,7 +50,7 @@ $ <lvalueIDStmt> TK_ASSIGNOP <expression> TK_SEMICOL
 $ <lvalueARRStmt> TK_SQBO <g_index> TK_SQBC TK_ASSIGNOP <expression> TK_SEMICOL
 $ <g_index> TK_NUM 
 $ <g_index> TK_ID
-$ <moduleReuseStmt> <optional> TK_USE TK_ID TK_WITH TK_PARAMETERS <idList> TK_SEMICOL
+$ <moduleReuseStmt> <optional> TK_USE TK_MODULE TK_ID TK_WITH TK_PARAMETERS <idList> TK_SEMICOL
 $ <optional> TK_SQBO <idList> TK_SQBC TK_ASSIGNOP 
 $ <optional> E
 $ <idList> TK_ID <N3>
