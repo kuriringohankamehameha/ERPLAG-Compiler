@@ -15,7 +15,7 @@ char* look_ahead; // Pointers to look at the lexemes
 bool reload_buffer1 = false; // To signal reloading the buffer1
 bool reload_buffer2 = false; // To signal reloadiing the buffer2
 TokenStream* first_tk, *last_tk; // Pointers for the first and last tokenstream elements
-HashTable* ht; // Pointer to the Keyword Hashtable
+HashTable* keyword_table; // Pointer to the Keyword Hashtable
 unsigned long (*hash_fun)(char*); // Function Pointer to the Hash Function
 unsigned long hash_func (char* str);
 // Complete list of keywords here
@@ -167,7 +167,8 @@ void init_tokenizer(char* filename) {
     first_tk = last_tk = NULL;
     hash_fun = hash_func;
     // Hash Table of Keywords
-    ht = populate_hash_table(ht, keywords, hash_fun); 
+    // ht = populate_hash_table(ht, keywords, hash_fun); 
+    keyword_table = populate_hash_table(keyword_table, keywords, hash_fun); 
     //print_hashtable(ht);
 }
 
@@ -178,7 +179,7 @@ void close_tokenizer() {
     free_token_stream();
     free(buffer1);
     free(buffer2);
-    free_table(ht);
+    //free_table(ht);
     fclose(fp);
 }
 
@@ -413,7 +414,8 @@ term is_keyword(char* lexeme) {
     }
 
     // Search the Hashtable
-    term tok = ht_search(ht, lexeme);
+    term tok = ht_search(keyword_table, lexeme);
+    //term tok = ht_search(ht, lexeme);
 
     // Return an identifier if it is not a keyword
     if (tok == TK_NONE)
