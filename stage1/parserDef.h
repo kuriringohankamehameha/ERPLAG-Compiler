@@ -5,6 +5,7 @@
 #ifndef PARSERDEF_H
 #define PARSERDEF_H
 
+#include "common.h"
 #include "hash_table.h"
 
 // Global variables here

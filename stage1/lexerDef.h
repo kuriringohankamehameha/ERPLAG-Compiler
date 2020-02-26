@@ -18,47 +18,6 @@ struct Keyword {
     term tid;
 };
 
-// Complete list of keywords here
-// ASSUMPTION: No Keyword has a length exceeding 20 characters
-Keyword keywords[] = {
-    {"AND", TK_AND},
-    {"FALSE", TK_FALSE},
-    {"false", TK_FALSE},
-    {"OR", TK_OR},
-    {"TRUE", TK_TRUE},
-    {"true", TK_TRUE},
-    {"array", TK_ARRAY},
-    {"boolean", TK_BOOLEAN},
-    {"break", TK_BREAK},
-    {"case", TK_CASE},
-    {"declare", TK_DECLARE},
-    {"default", TK_DEFAULT},
-    {"driver", TK_DRIVER},
-    {"end", TK_END},
-    {"for", TK_FOR},
-    {"get_value", TK_GET_VALUE},
-    {"in", TK_IN},
-    {"input", TK_INPUT},
-    {"integer", TK_INTEGER},
-    {"module", TK_MODULE},
-    {"of", TK_OF},
-    {"parameters", TK_PARAMETERS},
-    {"print", TK_PRINT},
-    {"program", TK_PROGRAM},
-    {"real", TK_REAL},
-    {"record", TK_RECORD},
-    {"returns", TK_RETURNS},
-    {"start", TK_START},
-    {"switch", TK_SWITCH},
-    {"tagged", TK_TAGGED},
-    {"takes", TK_TAKES},
-    {"union", TK_UNION},
-    {"use", TK_USE},
-    {"while", TK_WHILE},
-    {"with", TK_WITH},
-};
-
-
 typedef enum {
     LEX_UNRECOGNISED_CHAR,
     LEX_ID_OVERFLOW,
@@ -92,18 +51,4 @@ struct TokenStream {
     Token token;
     TokenStream* prev, *next;
 };
-
-// Declare all Global Variables here
-FILE* fp; // The file pointer to the source code file
-int line_no; // For Detecting errors
-int num_tokens; // To keep track of the number of tokens tokenized
-char* buffer1, *buffer2; // A Double Buffer scheme
-int lexeme_size; // Keep track of the lexeme size
-char* curr_lexeme; // Current lexeme
-char* look_ahead; // Pointers to look at the lexemes
-bool reload_buffer1 = false; // To signal reloading the buffer1
-bool reload_buffer2 = false; // To signal reloadiing the buffer2
-TokenStream* first_tk, *last_tk; // Pointers for the first and last tokenstream elements
-HashTable* ht; // Pointer to the Keyword Hashtable
-unsigned long (*hash_fun)(char*); // Function Pointer to the Hash Function
 #endif
