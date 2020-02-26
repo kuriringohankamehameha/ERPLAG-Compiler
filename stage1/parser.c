@@ -3,7 +3,9 @@
 // Rohit K 2017A7PS0177P
 
 #include "parser.h"
-#include "parserDef.h"
+
+// Define all Global Variables here
+HashTable* hash_table = NULL;
 
 // Complete list of Grammar Symbols here
 Symbol symbols[] = {
