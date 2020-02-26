@@ -16,9 +16,13 @@ Build a compiler for a custom language **ERPLAG**, that is a strongly typed lang
 - [x] DFA
 - [x] Lexer / Tokenizer
 - [x] Grammar Rules
-- &#9744; First and Follow Set Implementation
-- &#9744; Parse Table Generation
-- &#9744; Parser
+- [x] First and Follow Set Implementation
+- [x] Parse Table Generation
+- [x] Parse Tree Generation
+
+Stage 1 is complete.
+
+## Stage 2
 - &#9744; Symbol Table Operations
 - &#9744; Code Optimizer
 - &#9744; Intermediate Code Generation

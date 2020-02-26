@@ -2081,11 +2081,11 @@ int main(int argc, char* argv[]) {
 	}
 	else if(option == 2) {
 	    printf("-------------------------------------------------------------\n");
-	    run_tokenizer(argv[1]);
+	    run_tokenizer(argv[2]);
 	    printf("-------------------------------------------------------------\n");
 	}
 	else if(option == 3) {
-	    TreeNode* parseTree = generateParseTree(argv[1], p, g);
+	    TreeNode* parseTree = generateParseTree(argv[2], p, g);
 	    printf("-------------------------------------------------------------\n");
 	    printf("Parse Tree:\n");
 	    printf("Token\tLine No\tLexeme\t\tNum. Value\t\tParent\t\tIs Leaf\t\tSymbol Type\n");
@@ -2098,13 +2098,13 @@ int main(int argc, char* argv[]) {
         double total_CPU_time_lexer, total_CPU_time_parser, total_CPU_time_in_seconds_lexer, total_CPU_time_in_seconds_parser;
 
         start_time = clock();
-        run_tokenizer(argv[1]);
+        run_tokenizer(argv[2]);
         end_time = clock();
         total_CPU_time_lexer  =  (double) (end_time - start_time);
         total_CPU_time_in_seconds_lexer =   total_CPU_time_lexer / CLOCKS_PER_SEC;
 
         start_time = clock();
-	    TreeNode* parseTree = generateParseTree(argv[1], p, g);
+	    TreeNode* parseTree = generateParseTree(argv[2], p, g);
         end_time = clock();
         total_CPU_time_parser  =  (double) (end_time - start_time);
         total_CPU_time_in_seconds_parser =   total_CPU_time_parser / CLOCKS_PER_SEC;
