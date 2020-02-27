@@ -134,6 +134,7 @@ unsigned long hash_func (char* str) {
 }
 
 Rule make_rule(int left, int* right, int num_right) {
+    // Construct a grammar rule
     Rule grule;
     grule.left = left;
     grule.right = right;
@@ -142,6 +143,7 @@ Rule make_rule(int left, int* right, int num_right) {
 }
 
 TreeNode* make_tree_node(TreeNode* parent, Token token) {
+    // Allocate memory for a TreeNode
     TreeNode* node = (TreeNode*) calloc (1, sizeof(TreeNode));
     node->token = token;
     node->parent = parent;
@@ -154,6 +156,7 @@ TreeNode* make_tree_node(TreeNode* parent, Token token) {
 }
 
 void free_parse_tree(TreeNode* root) {
+    // Free memory for the complete Parse Tree
     if (!root)
         return;
     for (int i=0; i<root->num_children; i++) {
@@ -187,6 +190,7 @@ TreeNode* add_tree_node(TreeNode* parent, Token token) {
 }
 
 void printTreeNode(TreeNode* root) {
+    // Prints a single tree node
     if (!root)
         return;
     for (int i=0; i<root->num_children; i++) {
@@ -196,6 +200,7 @@ void printTreeNode(TreeNode* root) {
 }
 
 StackNode* make_stack_node(TreeNode* data) {
+    // Make a stack node using the TreeNode pointer
     StackNode* node = (StackNode*) calloc (1, sizeof(StackNode));
     node->data = data;
     node->is_dollar = (data->token.token_type == TK_DOLLAR);
@@ -589,7 +594,6 @@ Grammar populate_grammar(FILE* fp) {
 int Union(int* a ,int* b, int length) {
     // Performs a union operation (OR) between
     // two sets a and b, indexed using an array
-    //leave 0 epsilon
     int change = 0;
     for(int i=1; i<length; i++) {
         if(b[i] == 1) {
@@ -612,16 +616,15 @@ FirstAndFollow ComputeFirstAndFollowSets(Grammar G){
     
     // Keep an extra index for $ (TK_DOLLAR)
     // although we don't care about that for the first sets
-    F.first = (int **)calloc(G.num_symbols + G.num_tokens + 2, sizeof(int *)); 
-    for (int i=0; i<G.num_symbols + G.num_tokens + 2; i++) 
-         F.first[i] = (int *)calloc(G.num_symbols + G.num_tokens + 2, sizeof(int));
+    F.first = (int**) calloc (G.num_symbols + G.num_tokens + 2, sizeof(int*)); 
+    for (int i=0; i < G.num_symbols + G.num_tokens + 2; i++) 
+         F.first[i] = (int*) calloc (G.num_symbols + G.num_tokens + 2, sizeof(int));
     F.num_symbols = G.num_symbols;
     F.num_tokens = G.num_tokens;
     
-    // Keep an extra index for $ (TK_DOLLAR)
-    F.follow = (int **)calloc(G.num_symbols + G.num_tokens + 2, sizeof(int *)); 
-    for (int i=0; i<G.num_symbols+G.num_tokens+2; i++) 
-         F.follow[i] = (int *)calloc(G.num_symbols + G.num_tokens + 2, sizeof(int));
+    F.follow = (int **) calloc (G.num_symbols + G.num_tokens + 2, sizeof(int *)); 
+    for (int i=0; i < G.num_symbols + G.num_tokens + 2; i++) 
+         F.follow[i] = (int *) calloc (G.num_symbols + G.num_tokens + 2, sizeof(int));
     
     
     // F.first
@@ -695,8 +698,12 @@ FirstAndFollow ComputeFirstAndFollowSets(Grammar G){
         change = 0;
         for(int i=0; i< G.num_rules; i++) {
             for(int j=0; j<G.rules[i].num_right ; j++) {
-                if (is_terminal(G.rules[i].right[j]))
+                if (is_terminal(G.rules[i].right[j])) {
+                    // Just continue, since the right is a terminal.
+                    // We shouldn't union along with the first / follow
+                    // of a terminal
                     continue;
+                }
                 // If we're at the last right symbol of i
                 if(j == G.rules[i].num_right-1) {
                     // Then the follow of the rightmost symbol will be UNIONed with the follow of the leftmost!
@@ -723,10 +730,11 @@ FirstAndFollow ComputeFirstAndFollowSets(Grammar G){
                 }
             }
         }       
-    } while(change==1);
+    } while(change == 1);
     
     for (int i=0; i<G.num_tokens; i++)
         for (int j=0; j<G.num_tokens + G.num_symbols; j++)
+            // Follow sets for terminals don't exist
             F.follow[i][j] = 0;
     
     return F;
@@ -752,6 +760,9 @@ ParseTable createParseTable(FirstAndFollow F, Grammar G){
         int B = G.rules[i].right[0];
         
         if (B == TK_EPSILON) {
+            // If the rule is A -> E, we need
+            // to insert this rule to all the 
+            // elements in the follow of A
             for(int j=1; j<G.num_tokens; j++) {
                 if(F.follow[A][j] == 1)
                     P.matrix[A][j] = i;
@@ -780,6 +791,8 @@ ParseTable createParseTable(FirstAndFollow F, Grammar G){
 }
 
 TreeNode* generateParseTree (char* filename, ParseTable p, Grammar g) {
+    // Generates the Parse Tree from the Grammar rules and the
+    // parse table. The tokens are retrieved from the Lexer.
     Token t = {TK_DOLLAR, NULL, -1};
     TreeNode* dollar = make_tree_node(NULL, t);
     StackNode* stack = make_stack_node(dollar);
@@ -788,8 +801,10 @@ TreeNode* generateParseTree (char* filename, ParseTable p, Grammar g) {
     TreeNode* root = make_tree_node(NULL, t);
     stack = push(stack, root);
 
+    // Invoke the Lexer
     init_tokenizer(filename);
     
+    // Process the next token
     t = get_next_token();
     
     bool is_complete = false;
@@ -797,12 +812,17 @@ TreeNode* generateParseTree (char* filename, ParseTable p, Grammar g) {
     bool is_correct = true;
         
     while (!is_empty(stack)) {
+        // Until the stack is empty, process
+        // tokens using get_next_token()
         if (t.token_type == TK_ERROR) {
+            // Shout for a Syntax Error
             fprintf(stderr, "Syntax Error: At line number: %d\n", t.line_no);
             t = get_next_token();
             continue;
         }
         else if (t.token_type == TK_DOLLAR) {
+            // We reached the EOF while parsing.
+            // We're done!
             if (is_correct) {
                 printf("Parsed successfully!\n");
                 break;
@@ -813,6 +833,7 @@ TreeNode* generateParseTree (char* filename, ParseTable p, Grammar g) {
             }
         }
         else if (t.token_type == TK_COMMENTMARK) {
+            // Ignore Comments
             t = get_next_token();
             continue;
         }
@@ -832,22 +853,31 @@ TreeNode* generateParseTree (char* filename, ParseTable p, Grammar g) {
             // Pop the stack
             stack = pop(stack);
             
+            // Create a node for that token
+            // and insert it into the tree, indexed by curr
+            // So curr's child will have the new node
             Rule rule = g.rules[rule_no];
             curr->children = (TreeNode**) calloc (rule.num_right, sizeof(TreeNode*));
             curr->rule_no = rule_no;
             curr->num_children = rule.num_right;
             
             for (int i=0; i<rule.num_right; i++) {
+                // Add to the tree
                 Token temp = {rule.right[i], NULL, -1};
                 curr->children[i] = make_tree_node(curr, temp);
             }
             
             for (int i=rule.num_right-1; i>=0; i--) {
+                // Push to the stack in reverse order
+                // Since A -> B C will be interpreted as
+                // | $ | C | B | A | Top of Stack in the PDA
                 stack = push(stack, curr->children[i]);
             }
             continue;
         }
         else {
+            // Is a terminal
+            // Check current symbol from the top of stack
             TreeNode* curr = stack->data;
             if (curr->token.token_type == TK_EPSILON) {
                 // Pop from the stack and add to curr
@@ -857,6 +887,7 @@ TreeNode* generateParseTree (char* filename, ParseTable p, Grammar g) {
                 continue;
             }
             if (curr->token.token_type == t.token_type) {
+                // Matched with stack
                 if (t.token_type == TK_DOLLAR) {
                     // End of stack
                     is_complete = true;
@@ -869,9 +900,10 @@ TreeNode* generateParseTree (char* filename, ParseTable p, Grammar g) {
                 t = get_next_token();
             }
             else {
-                //continue;
+                // Terminal from stack and Terminal from token stream don't match
+                // Throw a Syntax Error and pop the current symbol from the stack
+                // We'll try our best to continue parsing by looking for the next match
                 fprintf(stderr, "Syntax Error at Line %d: Expected: %s, but got: %s\n", t.line_no, get_parser_token(stack->data->token), get_parser_token(t));
-                //fprintf(stderr, "Syntax Error at Line %d: Expected: %s, but got: %s\n", t.line_no, get_string_from_term(stack->data->token.token_type), get_string_from_term(t.token_type));
                 // Pop from the stack
                 stack = pop(stack);
                 t = get_next_token();
@@ -882,6 +914,7 @@ TreeNode* generateParseTree (char* filename, ParseTable p, Grammar g) {
             break;
     }
 
+    // Free whatever is left in the stack
     StackNode* temp = stack;
     while(temp) {
         if (temp->data->token.token_type == TK_DOLLAR)
@@ -892,7 +925,7 @@ TreeNode* generateParseTree (char* filename, ParseTable p, Grammar g) {
         rmnode->next = NULL;
         free(rmnode);
     }
-    //free_stack(stack);
+    // Close the Lexer
     close_tokenizer();
     return root;
 }
