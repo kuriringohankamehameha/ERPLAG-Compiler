@@ -72,7 +72,7 @@ unsigned long hash_func (char* str) {
 
 
 // Populate the Hash Table with Keywords, indexed by a hash function pointer
-HashTable* populate_hash_table(HashTable* ht, Keyword* keywords, unsigned long (*hash_fun)(char*)) {
+HashTable* populate_hash_table(HashTable* ht, Keyword keywords[], unsigned long (*hash_fun)(char*)) {
     ht = create_table(CAPACITY, hash_fun);
     for (int i=0; i < NUM_KEYWORDS; i++) {
         ht_insert(ht, keywords[i].key, keywords[i].tid);
@@ -168,7 +168,7 @@ void init_tokenizer(char* filename) {
     hash_fun = hash_func;
     // Hash Table of Keywords
     // ht = populate_hash_table(ht, keywords, hash_fun); 
-    keyword_table = populate_hash_table(keyword_table, keywords, hash_fun); 
+    //keyword_table = populate_hash_table(keyword_table, keywords, hash_fun); 
     //print_hashtable(ht);
 }
 

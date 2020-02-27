@@ -159,7 +159,9 @@ void free_parse_tree(TreeNode* root) {
     for (int i=0; i<root->num_children; i++) {
         free_parse_tree(root->children[i]);
     }
-    free(root->token.lexeme);
+    free(root->children);
+    if (root->token.lexeme)
+        free(root->token.lexeme);
     free(root);
 }
 
@@ -241,6 +243,7 @@ void free_stack(StackNode* stack) {
     StackNode* temp = stack;
     stack = stack->next;
     temp->next = NULL;
+    free_parse_tree(temp->data);
     free(temp);
     free_stack(stack);
 }
@@ -878,6 +881,17 @@ TreeNode* generateParseTree (char* filename, ParseTable p, Grammar g) {
         if (is_complete)
             break;
     }
+
+    StackNode* temp = stack;
+    while(temp) {
+        if (temp->data->token.token_type == TK_DOLLAR)
+            free_parse_tree(temp->data);
+        temp->data = NULL;
+        StackNode* rmnode =  temp;
+        temp = temp->next;
+        rmnode->next = NULL;
+        free(rmnode);
+    }
     //free_stack(stack);
     close_tokenizer();
     return root;
@@ -885,6 +899,8 @@ TreeNode* generateParseTree (char* filename, ParseTable p, Grammar g) {
 
 void pretty_print(TreeNode* node) {
     // Prints only one node
+    if (!node)
+        return;
     if (node->check_term == true) {
         // Terminal
         Token t = node->token;
@@ -932,6 +948,8 @@ void pretty_print(TreeNode* node) {
 }
 
 void printParseTree(TreeNode* root) {
+    if (!root)
+        return;
     if (root->num_children == 0) {
         pretty_print(root);
         return;
