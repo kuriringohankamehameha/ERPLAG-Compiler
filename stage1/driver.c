@@ -13,7 +13,7 @@ extern unsigned long (*hash_fun)(char*); // Function Pointer to the Hash Functio
 extern Keyword keywords[];
 
 int main(int argc, char* argv[]) {
-    if (argc != 2 && argc != 3) {
+    if (argc != 2 || argc != 3) {
         fprintf(stderr, "Format: %s <input> <output>\n", argv[0]);
         exit(EXIT_FAILURE);
     }
