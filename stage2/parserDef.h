@@ -9,6 +9,9 @@
 #include "hash_table.h"
 #include "lexerDef.h"
 
+struct ASTNode;
+typedef struct ASTNode ASTNode;
+
 typedef struct Rule Rule;
 
 struct Rule{
@@ -67,6 +70,8 @@ struct TreeNode {
     int num_lhs; // The number of repetitions of the LHS Symbol
     int num_children;
     bool check_term;
+    // For AST Node
+    ASTNode* node;
 };
 
 typedef struct StackNode StackNode;
