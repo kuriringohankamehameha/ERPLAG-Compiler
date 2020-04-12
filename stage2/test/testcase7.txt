@@ -1,0 +1,24 @@
+<<<driver program>>>
+start
+	declare num, a, k:integer;
+	num:=9;
+	for( k in 2..8)
+	start
+		a:=(num - k)*(num-k);
+		print(a);
+	end
+end
+
+<<module mod1>> 
+takes input [a: integer, b: integer]; 
+returns  [x: integer, abc: real]; 
+start 
+ 
+declare c: real; 
+ 
+c:=10.4; 
+ 
+x:=a+b-10; 
+ 
+abc:=b/5+c; 
+end

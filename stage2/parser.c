@@ -778,6 +778,8 @@ ParseTable createParseTable(FirstAndFollow F, Grammar G){
                 if(F.follow[A][j] == 1)
                     P.matrix[A][j] = i;
             }
+            // Set p[A][B] as 1!!
+            P.matrix[A][B] = i;
             continue;
         }
         
@@ -833,7 +835,32 @@ TreeNode* generateParseTree (char* filename, ParseTable p, Grammar g) {
         }
         else if (t.token_type == TK_DOLLAR) {
             // We reached the EOF while parsing.
-            // We're done!
+            // We're almost done
+            // Set all remaining rules to E, if possible
+            // If any one of them can't resolve to E, then it's an error
+            int rule_no = -1;
+            while (!(stack->data->token.token_type == TK_DOLLAR)) {
+                // printf("Stack contains %s\n", get_string_from_term(stack->data->token.token_type));
+                if ((rule_no = p.matrix[stack->data->token.token_type][TK_EPSILON] != -1)) {
+                    TreeNode* curr = stack->data;
+                    Rule rule = g.rules[rule_no];
+                    curr->children = (TreeNode**) calloc (rule.num_right, sizeof(TreeNode*));
+                    curr->rule_no = rule_no;
+                    curr->num_lhs = rule.num_lhs;
+                    curr->num_children = rule.num_right;
+                    // Resolves to Epsilon. Set it to this rule
+                    // For some reason, g.rules[rule_no].num_right = 2 for <othermodules> -> E
+                    // Add to the tree
+                    Token temp = {TK_EPSILON, NULL, -1};
+                    curr->children[0] = make_tree_node(curr, temp);
+                }
+                else {
+                    // Boo Hoo. Error
+                    fprintf(stderr, "Error during Parsing. Non Terminal Rule (LHS = %s) must resolve to Epsilon\n", get_string_from_term(stack->data->token.token_type));
+                }
+
+                stack = pop(stack);
+            }
             if (is_correct) {
                 printf("Parsed successfully!\n");
                 break;
@@ -852,6 +879,7 @@ TreeNode* generateParseTree (char* filename, ParseTable p, Grammar g) {
             // Non terminal
             TreeNode* curr = stack->data;
             // Look at the parse table
+            // printf("Lookup at p[%s][%s]\n", get_string_from_term(curr->token.token_type), get_string_from_term(t.token_type));
             int rule_no = p.matrix[curr->token.token_type][t.token_type];
             if (rule_no == -1) {
                 if (t.token_type != TK_COMMENTMARK) {
@@ -881,8 +909,6 @@ TreeNode* generateParseTree (char* filename, ParseTable p, Grammar g) {
             
             for (int i=rule.num_right-1; i>=0; i--) {
                 // Push to the stack in reverse order
-                // Since A -> B C will be interpreted as
-                // | $ | C | B | A | Top of Stack in the PDA
                 stack = push(stack, curr->children[i]);
             }
             continue;

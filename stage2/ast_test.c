@@ -30,7 +30,10 @@ int main(int argc, char* argv[]) {
     printf("-------------------------------------------------------------\n");
 
     // AST Operations Here
-    
+    printf("Generating AST...\n");
+    generate_AST(parseTree);
+    print_AST(parseTree->node);
+    free_AST(parseTree->node);
     /*
     ASTNode* abstractParent = (ASTNode*) calloc (1, sizeof(ASTNode));
     ASTNode* abstractTree = make_ASTNode(NULL, program);
@@ -49,13 +52,11 @@ int main(int argc, char* argv[]) {
     free_AST(abstractParent);
     */
 
-    /*
     free_parse_tree(parseTree);
     free_parse_table(p);
     free_first_and_follow(f);
     free_grammar(g);
     free_table(keyword_table);
-    */
     return 0;
 }
 #endif
