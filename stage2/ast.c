@@ -290,8 +290,10 @@ void generate_AST(TreeNode* root)
         // <moduleDef> -> TK_START <statements> TK_END
         TreeNode *statementsNode = root->children[1];
         generate_AST(statementsNode);
+        root->node = make_ASTNode(make_ASTLeaf(NULL, root->children[0]->token), moduleDef);
         if (statementsNode->node)
-            root->node = make_ASTNode(statementsNode->node, moduleDef);
+            add_ASTChild(root->node, statementsNode->node);
+        add_ASTChild(root->node, make_ASTLeaf(NULL, root->children[2]->token));
     }
     else if AST_COND(root, statements, statement)
     {
@@ -803,10 +805,12 @@ void generate_AST(TreeNode* root)
         generate_AST(caseStmtsNode);
         generate_AST(g_defaultNode);
         root->node = make_ASTNode(make_ASTLeaf(NULL, root->children[2]->token), condionalStmt);
+        add_ASTChild(root->node, make_ASTLeaf(NULL, root->children[4]->token));
         if (caseStmtsNode->node)
             add_ASTChild(root->node, caseStmtsNode->node);
         if (g_defaultNode->node)
             add_ASTChild(root->node, g_defaultNode->node);
+        add_ASTChild(root->node, make_ASTLeaf(NULL, root->children[7]->token));
     }
     else if AST_COND(root, caseStmts, TK_CASE)
     {
@@ -880,8 +884,10 @@ void generate_AST(TreeNode* root)
         root->node = make_ASTNode(make_ASTLeaf(NULL, root->children[2]->token), iterativeStmt);
         if (rangeNode->node)
             add_ASTChild(root->node, rangeNode->node);
+        add_ASTChild(root->node, make_ASTLeaf(NULL, root->children[6]->token));
         if (statementsNode->node)
             add_ASTChild(root->node, statementsNode->node);
+        add_ASTChild(root->node, make_ASTLeaf(NULL, root->children[8]->token));
     }
     else if AST_COND(root, iterativeStmt, TK_WHILE)
     {
@@ -891,8 +897,10 @@ void generate_AST(TreeNode* root)
         generate_AST(arithmeticOrBooleanExprNode);
         generate_AST(statementsNode);
         root->node = make_ASTNode(arithmeticOrBooleanExprNode->node, iterativeStmt);
+        add_ASTChild(root->node, make_ASTLeaf(NULL, root->children[4]->token));
         if (statementsNode->node)
             add_ASTChild(root->node, statementsNode->node);
+        add_ASTChild(root->node, make_ASTLeaf(NULL, root->children[6]->token));
     }
     else if AST_COND(root, range, TK_NUM)
     {
@@ -908,7 +916,7 @@ void print_AST(ASTNode* root) {
     if (!root)
         return;
     // printf("Number of Children: %d\n", root->num_children);
-    printf("Node: %s => ", get_string_from_term(root->token_type));
+    printf("%s => ", get_string_from_term(root->token_type));
     if (root->children == NULL || root->num_children == 0) {
         printf("Lexeme: %s, Line No: %d\n", root->token.lexeme, root->token.line_no);
     }
