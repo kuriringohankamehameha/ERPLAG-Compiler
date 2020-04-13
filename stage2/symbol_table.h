@@ -34,6 +34,49 @@ struct SymbolTable {
 
 typedef struct SymbolTable SymbolTable;
 
+typedef struct St_item St_item;
+
+// Define the Hash Table Item here
+struct St_item {
+    char* key;
+    //char* value;
+    term value;
+};
+
+
+typedef struct SymbolLinkedList SymbolLinkedList;
+
+// Define the SymbolLinkedlist here
+struct SymbolLinkedList {
+    St_item* item; 
+    SymbolLinkedList* next;
+};
+
+
+typedef struct SymbolHashTable SymbolHashTable;
+
+// Define the Hash Table here
+struct SymbolHashTable {
+    // Contains an array of pointers
+    // to items
+    St_item** items;
+    SymbolLinkedList** overflow_buckets;
+    int size;
+    int count;
+    unsigned long (*hash_function)(char*);
+};
+
+
+SymbolHashTable* create_symtable(int size, unsigned long (*hash_fun)(char*));
+void free_symtable(SymbolHashTable* table);
+SymbolHashTable* st_insert(SymbolHashTable* table, char* key, term value);
+term st_search(SymbolHashTable* table, char* key);
+void st_delete(SymbolHashTable* table, char* key);
+void print_term_type_symtable(term t, char ch);
+void print_search_symtable(SymbolHashTable* table, char* key);
+void print_symtable(SymbolHashTable* table);
+
+
 char* get_string_from_type(TypeName);
 SymbolTable* createSymbolTable(ASTNode*);
 
