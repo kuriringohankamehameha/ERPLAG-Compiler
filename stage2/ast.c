@@ -459,7 +459,9 @@ void generate_AST(TreeNode* root)
         // <lvalueIDStmt> -> TK_ASSIGNOP <expression> TK_SEMICOL
         TreeNode *expressionNode = root->children[1];
         generate_AST(expressionNode);
-        root->node = make_ASTNode(expressionNode->node, lvalueIDStmt);
+        // For AssignOp
+        root->node = make_ASTNode(make_ASTLeaf(NULL, root->children[0]->token), lvalueIDStmt);
+        add_ASTChild(root->node, expressionNode->node);
     }
     else if AST_COND(root, lvalueARRStmt, TK_SQBO)
     {
@@ -469,6 +471,8 @@ void generate_AST(TreeNode* root)
         generate_AST(g_indexNode);
         generate_AST(expressionNode);
         root->node = make_ASTNode(g_indexNode->node, lvalueARRStmt);
+        // For AssignOp
+        add_ASTChild(root->node, make_ASTLeaf(NULL, root->children[3]->token));
         if (expressionNode->node)
             add_ASTChild(root->node, expressionNode->node);
     }
@@ -505,6 +509,8 @@ void generate_AST(TreeNode* root)
         TreeNode *idListNode = root->children[1];
         generate_AST(idListNode);
         root->node = make_ASTNode(idListNode->node, optional);
+        // For AssignOp
+        add_ASTChild(root->node, make_ASTLeaf(NULL, root->children[3]->token));
     }
     else if AST_COND(root, optional, TK_EPSILON)
     {
