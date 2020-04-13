@@ -11,15 +11,17 @@ char* get_string_from_type(TypeName typename) {
         return "TYPE_REAL";
         case TYPE_ARRAY:
         return "TYPE_ARRAY";
+        case TYPE_NONE:
+        return "TYPE_NONE";
         default:
         return "Not Yet Implemented";
     }
     return NULL;
 }
 
-SymbolTable* createSymbolTable(ASTNode* root) {
+SymbolHashTable* createSymbolTable(ASTNode* root) {
     // Creates a Symbol Table
-    SymbolTable* symboltable = (SymbolTable*) calloc (1, sizeof(SymbolTable));
+    SymbolHashTable* symboltable = (SymbolHashTable*) calloc (1, sizeof(SymbolHashTable));
     return symboltable;
 }
 
@@ -28,6 +30,30 @@ unsigned long hash_function(char* str) {
     for (int j=0; str[j]; j++)
         i += str[j];
     return i % CAPACITY;
+}
+
+SymbolRecord* create_symbolrecord(char* var_name, TypeName type_name, char* fun_name, char* const_value) {
+    SymbolRecord* symbolrecord = (SymbolRecord*) calloc (1, sizeof(SymbolRecord));
+    if (var_name) {
+        symbolrecord->var_name = (char*) calloc (strlen(var_name) + 1, sizeof(char));
+        strcpy(symbolrecord->var_name, var_name);
+    }
+    else
+        symbolrecord->var_name = NULL;
+    symbolrecord->type_name = type_name;
+    if (fun_name) {
+        symbolrecord->fun_name = (char*) calloc (strlen(fun_name) + 1, sizeof(char));
+        strcpy(symbolrecord->fun_name, fun_name);
+    }
+    else
+        symbolrecord->fun_name = NULL;
+    if (const_value) {
+        symbolrecord->const_value = (char*) calloc (strlen(const_value) + 1, sizeof(char));
+        strcpy(symbolrecord->const_value, const_value);
+    }
+    else
+        symbolrecord->const_value = NULL;
+    return symbolrecord;
 }
 
 static SymbolLinkedList* allocate_list () {
@@ -98,7 +124,7 @@ static void free_overflow_buckets(SymbolHashTable* table) {
 }
 
 
-St_item* create_symitem(char* key, term value) {
+St_item* create_symitem(char* key, SymbolRecord* value) {
     // Creates a pointer to a new hash table item
     St_item* item = (St_item*) malloc (sizeof(St_item));
     item->key = (char*) calloc (strlen(key) + 1, sizeof(char));
@@ -128,7 +154,10 @@ SymbolHashTable* create_symtable(int size, unsigned long (*hash_fun)(char*)) {
 void free_symitem(St_item* item) {
     // Frees an item
     free(item->key);
-    //free(item->value);
+    if (item->value->var_name) free(item->value->var_name);
+    if (item->value->fun_name) free(item->value->fun_name);
+    if (item->value->const_value) free(item->value->const_value);
+    if (item->value) free(item->value);
     free(item);
 }
 
@@ -162,10 +191,10 @@ void handle_collision(SymbolHashTable* table, unsigned long index, St_item* item
     }
  }
 
-SymbolHashTable* st_insert(SymbolHashTable* table, char* key, term value) {
+SymbolHashTable* st_insert(SymbolHashTable* table, char* key, SymbolRecord* value) {
     // Create the item
     St_item* item = create_symitem(key, value);
-    //printf("Inserting %s : %s\n", item->key, get_string_from_term(item->value));
+    //printf("Inserting %s : %s\n", item->key, get_string_from_SymbolRecord*(item->value));
 
     // Compute the index
     int index = table->hash_function(key);
@@ -184,7 +213,7 @@ SymbolHashTable* st_insert(SymbolHashTable* table, char* key, term value) {
         
         // Insert directly
         table->items[index] = item; 
-        //printf("Inserting %s : %s\n", table->items[index]->key, get_string_from_term(table->items[index]->value));
+        //printf("Inserting %s : %s\n", table->items[index]->key, get_string_from_SymbolRecord*(table->items[index]->value));
         table->count++;
     }
 
@@ -208,7 +237,7 @@ SymbolHashTable* st_insert(SymbolHashTable* table, char* key, term value) {
     return table;
 }
 
-term st_search(SymbolHashTable* table, char* key) {
+SymbolRecord* st_search(SymbolHashTable* table, char* key) {
     // Searches the key in the hashtable
     // and returns NULL if it doesn't exist
     int index = table->hash_function(key);
@@ -220,11 +249,11 @@ term st_search(SymbolHashTable* table, char* key) {
         if (strcmp(item->key, key) == 0)
             return item->value;
         if (head == NULL)
-            return TK_NONE;
+            return NULL;
         item = head->item;
         head = head->next;
     }
-    return TK_NONE;
+    return NULL;
 }
 
 void st_delete(SymbolHashTable* table, char* key) {
@@ -291,209 +320,26 @@ void st_delete(SymbolHashTable* table, char* key) {
 
 }
 
-void print_term_type_symtable(term t, char ch) {
-    // Prints the term type
-    switch(t) {
-        case TK_NUM:
-        printf("TK_NUM%c", ch);
-        break;
-        case TK_RNUM:
-        printf("TK_RNUM%c", ch);
-        break;
-        case TK_BOOLEAN:
-        printf("TK_BOOLEAN%c", ch);
-        break;
-        case TK_OF:
-        printf("TK_OF%c", ch);
-        break;
-        case TK_ARRAY:
-        printf("TK_ARRAY%c", ch);
-        break;
-        case TK_START:
-        printf("TK_START%c", ch);
-        break;
-        case TK_END:
-        printf("TK_END%c", ch);
-        break;
-        case TK_DECLARE:
-        printf("TK_DECLARE%c", ch);
-        break;
-        case TK_MODULE:
-        printf("TK_MODULE%c", ch);
-        break;
-        case TK_DRIVER:
-        printf("TK_DRIVER%c", ch);
-        break;
-        case TK_PROGRAM:
-        printf("TK_PROGRAM%c", ch);
-        break;
-        case TK_RECORD:
-        printf("TK_RECORD%c", ch);
-        break;
-        case TK_TAGGED:
-        printf("TK_TAGGED%c", ch);
-        break;
-        case TK_UNION:
-        printf("TK_UNION%c", ch);
-        break;
-        case TK_GET_VALUE:
-        printf("TK_GET_VALUE%c", ch);
-        break;
-        case TK_PRINT:
-        printf("TK_PRINT%c", ch);
-        break;
-        case TK_USE:
-        printf("TK_USE%c", ch);
-        break;
-        case TK_WITH:
-        printf("TK_WITH%c", ch);
-        break;
-        case TK_PARAMETERS:
-        printf("TK_PARAMETERS%c", ch);
-        break;
-        case TK_TRUE:
-        printf("TK_TRUE%c", ch);
-        break;
-        case TK_FALSE:
-        printf("TK_FALSE%c", ch);
-        break;
-        case TK_TAKES:
-        printf("TK_TAKES%c", ch);
-        break;
-        case TK_INPUT:
-        printf("TK_INPUT%c", ch);
-        break;
-        case TK_RETURNS:
-        printf("TK_RETURNS%c", ch);
-        break;
-        case TK_AND:
-        printf("TK_AND%c", ch);
-        break;
-        case TK_OR:
-        printf("TK_OR%c", ch);
-        break;
-        case TK_FOR:
-        printf("TK_FOR%c", ch);
-        break;
-        case TK_IN:
-        printf("TK_IN%c", ch);
-        break;
-        case TK_SWITCH:
-        printf("TK_SWITCH%c", ch);
-        break;
-        case TK_CASE:
-        printf("TK_CASE%c", ch);
-        break;
-        case TK_BREAK:
-        printf("TK_BREAK%c", ch);
-        break;
-        case TK_DEFAULT:
-        printf("TK_DEFAULT%c", ch);
-        break;
-        case TK_WHILE:
-        printf("TK_WHILE%c", ch);
-        break;
-        case TK_PLUS:
-        printf("TK_PLUS%c", ch);
-        break;
-        case TK_MINUS:
-        printf("TK_MINUS%c", ch);
-        break;
-        case TK_MUL:
-        printf("TK_MUL%c", ch);
-        break;
-        case TK_DIV:
-        printf("TK_DIV%c", ch);
-        break;
-        case TK_LT:
-        printf("TK_LT%c", ch);
-        break;
-        case TK_LE:
-        printf("TK_LE%c", ch);
-        break;
-        case TK_GE:
-        printf("TK_GE%c", ch);
-        break;
-        case TK_GT:
-        printf("TK_GT%c", ch);
-        break;
-        case TK_EQ:
-        printf("TK_EQ%c", ch);
-        break;
-        case TK_NE:
-        printf("TK_NE%c", ch);
-        break;
-        case TK_DEF:
-        printf("TK_DEF%c", ch);
-        break;
-        case TK_ENDDEF:
-        printf("TK_ENDDEF%c", ch);
-        break;
-        case TK_COLON:
-        printf("TK_COLON%c", ch);
-        break;
-        case TK_RANGEOP:
-        printf("TK_RANGEOP%c", ch);
-        break;
-        case TK_SEMICOL:
-        printf("TK_SEMICOL%c", ch);
-        break;
-        case TK_COMMA:
-        printf("TK_COMMA%c", ch);
-        break;
-        case TK_ASSIGNOP:
-        printf("TK_ASSIGNOP%c", ch);
-        break;
-        case TK_SQBO:
-        printf("TK_SQBO%c", ch);
-        break;
-        case TK_SQBC:
-        printf("TK_SQBC%c", ch);
-        break;
-        case TK_BO:
-        printf("TK_BO%c", ch);
-        break;
-        case TK_BC:
-        printf("TK_BC%c", ch);
-        break;
-        case TK_COMMENTMARK:
-        printf("TK_COMMENTMARK%c", ch);
-        break;
-        case TK_ID:
-        printf("TK_ID%c", ch);
-        break;
-        case TK_EPSILON:
-        printf("TK_EPSILON%c", ch);
-        break;
-        case TK_EOF:
-        printf("TK_EOF%c", ch);
-        break;
-        case TK_ERROR:
-        printf("TK_ERROR%c", ch);
-        break;
-        case TK_NONE:
-        printf("TK_NONE%c", ch);
-        break;
-        case TK_INTEGER:
-        printf("TK_INTEGER%c", ch);
-        break;
-        case TK_REAL:
-        printf("TK_REAL%c", ch);
-        break;
-        default:
-        break;
-    }
+void print_record_symtable(SymbolRecord* t, char ch) {
+    // Prints the SymbolRecord* type
+    if (t->var_name)
+        printf("var_name = %s\n", t->var_name);
+    printf("%s\n", get_string_from_type(t->type_name));
+    if (t->fun_name)
+        printf("fun_name = %s\n", t->fun_name);
+    if (t->const_value)
+        printf("const_value = %s\n", t->const_value);
 }
 
 void print_search_symtable(SymbolHashTable* table, char* key) {
-    term val;
-    if ((val = st_search(table, key)) == TK_NONE) {
+    SymbolRecord* val;
+    if ((val = st_search(table, key)) == NULL) {
         printf("%s does not exist\n", key);
         return;
     }
     else {
         printf("Key:%s, Value:", key);
-        print_term_type_symtable(val, '\n');
+        print_record_symtable(val, '\n');
     }
 }
 
@@ -502,13 +348,13 @@ void print_symtable(SymbolHashTable* table) {
     for (int i=0; i<table->size; i++) {
         if (table->items[i]) {
             printf("Index:%d, Key:%s, Value:", i, table->items[i]->key);
-            print_term_type_symtable(table->items[i]->value, '\0');
+            print_record_symtable(table->items[i]->value, '\0');
             if (table->overflow_buckets[i]) {
                 printf(" => Overflow Bucket => ");
                 SymbolLinkedList* head = table->overflow_buckets[i];
                 while (head) {
                     printf("Key:%s, Value:" , head->item->key);
-                    print_term_type_symtable(head->item->value, ' ');
+                    print_record_symtable(head->item->value, ' ');
                     head = head->next;
                 }
             }

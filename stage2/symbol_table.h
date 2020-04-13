@@ -9,10 +9,11 @@ typedef enum {
     TYPE_INTEGER,
     TYPE_BOOLEAN,
     TYPE_REAL,
-    TYPE_ARRAY
+    TYPE_ARRAY,
+    TYPE_NONE
 } TypeName;
 
-struct SymbolTable {
+struct SymbolRecord {
     // SymbolTable Structure
     // Reference: https://www.csie.ntu.edu.tw/~b93501005/slide5.pdf
     // Contains:
@@ -27,12 +28,13 @@ struct SymbolTable {
     TypeName type_name;
     char* fun_name;
     char* const_value;
-    int scope_label; // Defaults to 0 for global scope
-    int total_size;
-    int offset;
+    // Add these later
+    //int scope_label; // Defaults to 0 for global scope
+    //int total_size;
+    //int offset;
 };
 
-typedef struct SymbolTable SymbolTable;
+typedef struct SymbolRecord SymbolRecord;
 
 typedef struct St_item St_item;
 
@@ -40,7 +42,7 @@ typedef struct St_item St_item;
 struct St_item {
     char* key;
     //char* value;
-    term value;
+    SymbolRecord* value;
 };
 
 
@@ -68,16 +70,22 @@ struct SymbolHashTable {
 
 
 SymbolHashTable* create_symtable(int size, unsigned long (*hash_fun)(char*));
+SymbolRecord* create_symbolrecord(char* var_name, TypeName type_name, char* fun_name, char* const_value);
 void free_symtable(SymbolHashTable* table);
-SymbolHashTable* st_insert(SymbolHashTable* table, char* key, term value);
-term st_search(SymbolHashTable* table, char* key);
+St_item* create_symitem(char* key, SymbolRecord* value);
+void free_symitem(St_item* item);
+void free_symtable(SymbolHashTable* table);
+SymbolHashTable* st_insert(SymbolHashTable* table, char* key, SymbolRecord* value);
+SymbolRecord* st_search(SymbolHashTable* table, char* key);
+void handle_collision(SymbolHashTable* table, unsigned long index, St_item* item);
 void st_delete(SymbolHashTable* table, char* key);
-void print_term_type_symtable(term t, char ch);
+void print_record_symtable(SymbolRecord* symbolrecord, char ch);
 void print_search_symtable(SymbolHashTable* table, char* key);
 void print_symtable(SymbolHashTable* table);
 
 
 char* get_string_from_type(TypeName);
-SymbolTable* createSymbolTable(ASTNode*);
+SymbolHashTable* createSymbolTable(ASTNode*);
+SymbolRecord* create_symbolrecord(char* var_name, TypeName type_name, char* fun_name, char* const_value);
 
 #endif
