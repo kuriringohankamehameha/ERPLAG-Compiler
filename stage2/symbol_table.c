@@ -13,16 +13,14 @@ char* get_string_from_type(TypeName typename) {
         return "TYPE_ARRAY";
         case TYPE_NONE:
         return "TYPE_NONE";
+        case TYPE_FUNCTION:
+        return "TYPE_FUNCTION";
+        case TYPE_MODULE:
+        return "TYPE_MODULE";
         default:
         return "Not Yet Implemented";
     }
     return NULL;
-}
-
-SymbolHashTable* createSymbolTable(ASTNode* root) {
-    // Creates a Symbol Table
-    SymbolHashTable* symboltable = (SymbolHashTable*) calloc (1, sizeof(SymbolHashTable));
-    return symboltable;
 }
 
 unsigned long hash_function(char* str) {
@@ -32,7 +30,25 @@ unsigned long hash_function(char* str) {
     return i % CAPACITY;
 }
 
-SymbolRecord* create_symbolrecord(char* var_name, TypeName type_name, char* fun_name, char* const_value, int scope_label, int total_size, int offset) {
+SymbolHashTable* createSymbolTable(ASTNode* root) {
+    // Creates a Symbol Table
+    SymbolHashTable* symboltable = create_symtable(CAPACITY, hash_function);
+    SymbolRecord* value = create_symbolrecord("num", NULL, NULL, TYPE_INTEGER, "10", 1, 4, 0);
+    symboltable = st_insert(symboltable, "num", value);
+    SymbolRecord* value2 = create_symbolrecord("num", NULL, NULL, TYPE_INTEGER, "20", 2, 4, 0);
+    symboltable = st_insert(symboltable, "num", value2);
+    SymbolRecord* value3 = create_symbolrecord("abd", NULL, NULL, TYPE_INTEGER, "20", 2, 4, 0);
+    symboltable = st_insert(symboltable, "abd", value3);
+    SymbolRecord* value4 = create_symbolrecord("bbc", NULL, NULL, TYPE_INTEGER, "20", 2, 4, 0);
+    symboltable = st_insert(symboltable, "bbc", value4);
+    print_search_symtable(symboltable, "bbc");
+    print_search_symtable(symboltable, "abd");
+    print_search_symtable(symboltable, "none");
+    print_symtable(symboltable);
+    return symboltable;
+}
+
+SymbolRecord* create_symbolrecord(char* var_name, char* fun_name, char* module_name, TypeName type_name, char* const_value, int scope_label, int total_size, int offset) {
     SymbolRecord* symbolrecord = (SymbolRecord*) calloc (1, sizeof(SymbolRecord));
     if (var_name) {
         symbolrecord->var_name = (char*) calloc (strlen(var_name) + 1, sizeof(char));
@@ -47,6 +63,12 @@ SymbolRecord* create_symbolrecord(char* var_name, TypeName type_name, char* fun_
     }
     else
         symbolrecord->fun_name = NULL;
+    if (module_name) {
+        symbolrecord->module_name = (char*) calloc (strlen(fun_name) + 1, sizeof(char));
+        strcpy(symbolrecord->module_name, fun_name);
+    }
+    else
+        symbolrecord->module_name = NULL;
     if (const_value) {
         symbolrecord->const_value = (char*) calloc (strlen(const_value) + 1, sizeof(char));
         strcpy(symbolrecord->const_value, const_value);
@@ -105,7 +127,8 @@ static void free_linkedlist(SymbolLinkedList* list) {
         list = list->next;
         if (temp->item->key)
             free(temp->item->key);
-        free_symrecord(temp->item->value);
+        if (temp->item->value)
+            free_symrecord(temp->item->value);
         //free(temp->item->value);
         if (temp->item)
             free(temp->item);
@@ -159,11 +182,17 @@ SymbolHashTable* create_symtable(int size, unsigned long (*hash_fun)(char*)) {
 
 void free_symitem(St_item* item) {
     // Frees an item
-    free(item->key);
-    if (item->value->var_name) free(item->value->var_name);
-    if (item->value->fun_name) free(item->value->fun_name);
-    if (item->value->const_value) free(item->value->const_value);
-    if (item->value) free(item->value);
+    if (!item)
+        return;
+    if (item->key)
+        free(item->key);
+    if (item->value) {
+        if (item->value->var_name) free(item->value->var_name);
+        if (item->value->fun_name) free(item->value->fun_name);
+        if (item->value->module_name) free(item->value->module_name);
+        if (item->value->const_value) free(item->value->const_value);
+        free(item->value);
+    }
     free(item);
 }
 
@@ -172,6 +201,7 @@ void free_symrecord(SymbolRecord* record) {
         return;
     if (record->var_name) free(record->var_name);
     if (record->fun_name) free(record->fun_name);
+    if (record->module_name) free(record->module_name);
     if (record->const_value) free(record->const_value);
     free(record);
 }
@@ -204,7 +234,7 @@ void handle_collision(SymbolHashTable* table, unsigned long index, St_item* item
         table->overflow_buckets[index] = linkedlist_insert(head, item);
         return;
     }
- }
+}
 
 SymbolHashTable* st_insert(SymbolHashTable* table, char* key, SymbolRecord* value) {
     //printf("Inserting %s : %s\n", item->key, get_string_from_SymbolRecord*(item->value));
@@ -305,6 +335,8 @@ void st_delete(SymbolHashTable* table, char* key) {
                 head = head->next;
                 node->next = NULL;
                 table->items[index] = create_symitem(node->item->key, node->item->value);
+                node->item->key = NULL;
+                node->item->value = NULL;
                 free_linkedlist(node);
                 table->overflow_buckets[index] = head;
                 return;
@@ -339,18 +371,35 @@ void st_delete(SymbolHashTable* table, char* key) {
 
 }
 
-void print_record_symtable(SymbolRecord* t, char ch) {
+void print_symrecord(SymbolRecord* t, char ch) {
     // Prints the SymbolRecord* type
     if (t->var_name)
-        printf("var_name = %s\n", t->var_name);
-    printf("%s\n", get_string_from_type(t->type_name));
+        printf("var_name = %s , ", t->var_name);
+    printf("Type Name = %s , ", get_string_from_type(t->type_name));
     if (t->fun_name)
-        printf("fun_name = %s\n", t->fun_name);
-    if (t->const_value)
-        printf("const_value = %s\n", t->const_value);
-    printf("scope_label = %d\n", t->scope_label);
-    printf("total_size = %d\n", t->total_size);
-    printf("offset = %d\n", t->total_size);
+        printf("fun_name = %s , ", t->fun_name);
+    if (t->module_name)
+        printf("module_name = %s , ", t->module_name);
+    if (t->const_value) {
+        switch(t->type_name) {
+            case TYPE_INTEGER:
+                printf("const_value = %d , ", atoi(t->const_value));
+                break;
+            case TYPE_BOOLEAN:
+                printf("const_value = %s , ", t->const_value);
+                break;
+            case TYPE_REAL:
+                printf("const_value = %.4f , ", atof(t->const_value));
+            case TYPE_NONE:
+                printf("const_value = %s , ", t->const_value);
+            default:
+                printf("Not Yet Implemented ");
+                break;
+        }       
+    }
+    printf("scope_label = %d , ", t->scope_label);
+    printf("total_size = %d , ", t->total_size);
+    printf("offset = %d%c", t->total_size, ch);
 }
 
 void print_search_symtable(SymbolHashTable* table, char* key) {
@@ -361,7 +410,7 @@ void print_search_symtable(SymbolHashTable* table, char* key) {
     }
     else {
         printf("Key:%s, Value:", key);
-        print_record_symtable(val, '\n');
+        print_symrecord(val, '\n');
     }
 }
 
@@ -370,13 +419,13 @@ void print_symtable(SymbolHashTable* table) {
     for (int i=0; i<table->size; i++) {
         if (table->items[i]) {
             printf("Index:%d, Key:%s, Value:", i, table->items[i]->key);
-            print_record_symtable(table->items[i]->value, '\0');
+            print_symrecord(table->items[i]->value, '\0');
             if (table->overflow_buckets[i]) {
                 printf(" => Overflow Bucket => ");
                 SymbolLinkedList* head = table->overflow_buckets[i];
                 while (head) {
                     printf("Key:%s, Value:" , head->item->key);
-                    print_record_symtable(head->item->value, ' ');
+                    print_symrecord(head->item->value, ' ');
                     head = head->next;
                 }
             }

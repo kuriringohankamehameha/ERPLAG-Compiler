@@ -1,3 +1,4 @@
+<<module arraysum>>
 takes input[list:array[40..200] of real];
 returns [sum:real];
 start

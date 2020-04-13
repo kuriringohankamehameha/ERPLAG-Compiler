@@ -266,6 +266,8 @@ void generate_AST(TreeNode* root)
         generate_AST(g_indexNode);
         generate_AST(g_index2Node);
         root->node = make_ASTNode(g_indexNode->node, range_arrays);
+        // Range Op
+        add_ASTChild(root->node, make_ASTLeaf(NULL, root->children[1]->token));
         if (g_indexNode->node)
             add_ASTChild(root->node, g_index2Node->node);
     }
