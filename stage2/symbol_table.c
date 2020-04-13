@@ -1,4 +1,7 @@
 #include "common.h"
+#include "lexer.h"
+#include "parser.h"
+#include "ast.h"
 #include "symbol_table.h"
 
 char* get_string_from_type(TypeName typename) {
@@ -23,27 +26,61 @@ char* get_string_from_type(TypeName typename) {
     return NULL;
 }
 
-unsigned long hash_function(char* str) {
+unsigned long hash_function_symbol(char* str) {
     unsigned long i = 0;
     for (int j=0; str[j]; j++)
         i += str[j];
     return i % CAPACITY;
 }
 
+void helper_function(SymbolHashTable** symboltable, ASTNode* root, int enna_child) {
+    // Adds relevant elements of the AST to the symbol table
+    if (!root)
+        return;
+    //printf("Now at %s\n", get_string_from_term(root->token_type));
+    //if (root->parent)
+    //    printf("My Parent is %s\n", get_string_from_term(root->parent->token_type));
+    // Only non-leaf nodes get examined
+    if (root->parent && root->parent->token_type == module && root->token_type == TK_ID) {
+        // Module Name. Add to Symbol table
+        SymbolRecord* record = create_symbolrecord(NULL, NULL, root->token.lexeme, TYPE_MODULE, NULL, curr_scope, 0, 0);
+        *(symboltable) = st_insert(*(symboltable), root->token.lexeme, record);
+    }
+    else if (root->parent && root->parent->token_type == input_plist && root->token_type == TK_ID) {
+        // Input Identifier (parameter)
+        if (root->parent->children[enna_child + 1]->children[0]->token.token_type == TK_ARRAY) {
+            // Array. Find size and offset
+            if (root->parent->children[enna_child + 1]->children[1]->children[0]->children[0]->token.token_type == TK_NUM) {
+                int start_offset = atoi(root->parent->children[enna_child + 1]->children[1]->children[0]->children[0]->token.lexeme);
+                int end_offset = atoi(root->parent->children[enna_child + 1]->children[1]->children[1]->children[0]->token.lexeme);
+                SymbolRecord* record = create_symbolrecord(root->token.lexeme, NULL, NULL, TYPE_ARRAY, NULL, curr_scope, end_offset - start_offset, start_offset);
+                *(symboltable) = st_insert(*(symboltable), root->token.lexeme, record);
+            }
+            else if (root->parent->children[enna_child + 1]->children[1]->children[0]->children[0]->token.token_type == TK_ID) {
+                fprintf(stderr, "\nSemantic Error (Line No: %d): Identifier not allowed as an array index for a function parameter\n", root->parent->children[enna_child + 1]->children[1]->children[0]->children[0]->token.line_no);
+                return;
+            }
+            else if (root->parent->children[enna_child + 1]->children[1]->children[1]->children[0]->token.token_type == TK_ID) {
+                fprintf(stderr, "\nSemantic Error (Line No: %d): Identifier not allowed as an array index for a function parameter\n", root->parent->children[enna_child + 1]->children[1]->children[1]->children[0]->token.line_no);
+                return;
+            }
+        }
+    }
+    else if (root->token_type == TK_NUM) {
+
+    }
+    else if (root->token_type == TK_RNUM) {
+
+    }
+    for (int i=0; i<root->num_children; i++)
+        helper_function(symboltable, root->children[i], i);
+}
+
 SymbolHashTable* createSymbolTable(ASTNode* root) {
     // Creates a Symbol Table
-    SymbolHashTable* symboltable = create_symtable(CAPACITY, hash_function);
-    SymbolRecord* value = create_symbolrecord("num", NULL, NULL, TYPE_INTEGER, "10", 1, 4, 0);
-    symboltable = st_insert(symboltable, "num", value);
-    SymbolRecord* value2 = create_symbolrecord("num", NULL, NULL, TYPE_INTEGER, "20", 2, 4, 0);
-    symboltable = st_insert(symboltable, "num", value2);
-    SymbolRecord* value3 = create_symbolrecord("abd", NULL, NULL, TYPE_INTEGER, "20", 2, 4, 0);
-    symboltable = st_insert(symboltable, "abd", value3);
-    SymbolRecord* value4 = create_symbolrecord("bbc", NULL, NULL, TYPE_INTEGER, "20", 2, 4, 0);
-    symboltable = st_insert(symboltable, "bbc", value4);
-    print_search_symtable(symboltable, "bbc");
-    print_search_symtable(symboltable, "abd");
-    print_search_symtable(symboltable, "none");
+    SymbolHashTable* symboltable = create_symtable(CAPACITY, hash_function_symbol);
+    ASTNode* temp = root;
+    helper_function(&symboltable, temp, 0);
     print_symtable(symboltable);
     return symboltable;
 }
@@ -64,8 +101,8 @@ SymbolRecord* create_symbolrecord(char* var_name, char* fun_name, char* module_n
     else
         symbolrecord->fun_name = NULL;
     if (module_name) {
-        symbolrecord->module_name = (char*) calloc (strlen(fun_name) + 1, sizeof(char));
-        strcpy(symbolrecord->module_name, fun_name);
+        symbolrecord->module_name = (char*) calloc (strlen(module_name) + 1, sizeof(char));
+        strcpy(symbolrecord->module_name, module_name);
     }
     else
         symbolrecord->module_name = NULL;
@@ -219,7 +256,7 @@ void free_symtable(SymbolHashTable* table) {
     free(table);
 }
 
-void handle_collision(SymbolHashTable* table, unsigned long index, St_item* item) {
+void handle_collision_sym(SymbolHashTable* table, unsigned long index, St_item* item) {
     SymbolLinkedList* head = table->overflow_buckets[index];
 
     if (head == NULL) {
@@ -279,7 +316,7 @@ SymbolHashTable* st_insert(SymbolHashTable* table, char* key, SymbolRecord* valu
             // Scenario 2: Collision
             // Create the item
             St_item* item = create_symitem(key, value);
-            handle_collision(table, index, item);
+            handle_collision_sym(table, index, item);
             return table;
         }
     }
@@ -399,7 +436,7 @@ void print_symrecord(SymbolRecord* t, char ch) {
     }
     printf("scope_label = %d , ", t->scope_label);
     printf("total_size = %d , ", t->total_size);
-    printf("offset = %d%c", t->total_size, ch);
+    printf("offset = %d%c", t->offset, ch);
 }
 
 void print_search_symtable(SymbolHashTable* table, char* key) {

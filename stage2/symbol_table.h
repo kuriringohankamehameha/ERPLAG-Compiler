@@ -91,4 +91,6 @@ void print_symtable(SymbolHashTable* table);
 char* get_string_from_type(TypeName);
 SymbolHashTable* createSymbolTable(ASTNode*);
 
+static int curr_scope = 0;
+
 #endif

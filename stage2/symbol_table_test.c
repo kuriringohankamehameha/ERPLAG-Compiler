@@ -9,8 +9,8 @@ unsigned long hash_function_sym(char* str) {
 }
 
 int main() {
-    SymbolRecord* value = create_symbolrecord("num", NULL, NULL, TYPE_INTEGER, "10", 1, 4, 0);
     SymbolHashTable* table = create_symtable(1000, hash_function_sym);
+    SymbolRecord* value = create_symbolrecord("num", NULL, NULL, TYPE_INTEGER, "10", 1, 4, 0);
     table = st_insert(table, "num", value);
     SymbolRecord* value2 = create_symbolrecord("num", NULL, NULL, TYPE_INTEGER, "20", 2, 4, 0);
     table = st_insert(table, "num", value2);
