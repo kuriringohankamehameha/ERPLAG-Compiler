@@ -32,7 +32,7 @@ unsigned long hash_function(char* str) {
     return i % CAPACITY;
 }
 
-SymbolRecord* create_symbolrecord(char* var_name, TypeName type_name, char* fun_name, char* const_value) {
+SymbolRecord* create_symbolrecord(char* var_name, TypeName type_name, char* fun_name, char* const_value, int scope_label, int total_size, int offset) {
     SymbolRecord* symbolrecord = (SymbolRecord*) calloc (1, sizeof(SymbolRecord));
     if (var_name) {
         symbolrecord->var_name = (char*) calloc (strlen(var_name) + 1, sizeof(char));
@@ -53,6 +53,9 @@ SymbolRecord* create_symbolrecord(char* var_name, TypeName type_name, char* fun_
     }
     else
         symbolrecord->const_value = NULL;
+    symbolrecord->scope_label = scope_label;
+    symbolrecord->total_size = total_size;
+    symbolrecord->offset = offset;
     return symbolrecord;
 }
 
@@ -329,6 +332,9 @@ void print_record_symtable(SymbolRecord* t, char ch) {
         printf("fun_name = %s\n", t->fun_name);
     if (t->const_value)
         printf("const_value = %s\n", t->const_value);
+    printf("scope_label = %d\n", t->scope_label);
+    printf("total_size = %d\n", t->total_size);
+    printf("offset = %d\n", t->total_size);
 }
 
 void print_search_symtable(SymbolHashTable* table, char* key) {
