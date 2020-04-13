@@ -73,6 +73,7 @@ SymbolRecord* create_symbolrecord(char* var_name, TypeName type_name, char* fun_
 void free_symtable(SymbolHashTable* table);
 St_item* create_symitem(char* key, SymbolRecord* value);
 void free_symitem(St_item* item);
+void free_symrecord(SymbolRecord* record);
 void free_symtable(SymbolHashTable* table);
 SymbolHashTable* st_insert(SymbolHashTable* table, char* key, SymbolRecord* value);
 SymbolRecord* st_search(SymbolHashTable* table, char* key);

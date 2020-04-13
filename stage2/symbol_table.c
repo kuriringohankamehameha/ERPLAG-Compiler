@@ -103,9 +103,12 @@ static void free_linkedlist(SymbolLinkedList* list) {
     while (list) {
         temp = list;
         list = list->next;
-        free(temp->item->key);
+        if (temp->item->key)
+            free(temp->item->key);
+        free_symrecord(temp->item->value);
         //free(temp->item->value);
-        free(temp->item);
+        if (temp->item)
+            free(temp->item);
         free(temp);
     }
 }
@@ -164,6 +167,15 @@ void free_symitem(St_item* item) {
     free(item);
 }
 
+void free_symrecord(SymbolRecord* record) {
+    if (!record)
+        return;
+    if (record->var_name) free(record->var_name);
+    if (record->fun_name) free(record->fun_name);
+    if (record->const_value) free(record->const_value);
+    free(record);
+}
+
 void free_symtable(SymbolHashTable* table) {
     // Frees the table
     for (int i=0; i<table->size; i++) {
@@ -195,8 +207,6 @@ void handle_collision(SymbolHashTable* table, unsigned long index, St_item* item
  }
 
 SymbolHashTable* st_insert(SymbolHashTable* table, char* key, SymbolRecord* value) {
-    // Create the item
-    St_item* item = create_symitem(key, value);
     //printf("Inserting %s : %s\n", item->key, get_string_from_SymbolRecord*(item->value));
 
     // Compute the index
@@ -209,12 +219,13 @@ SymbolHashTable* st_insert(SymbolHashTable* table, char* key, SymbolRecord* valu
         if (table->count == table->size) {
             // Hash Table Full
             printf("Insert Error: Hash Table is full\n");
-            // Remove the create item
-            free_symitem(item);
+            // Avoid this free, since our value is now a pointer to a struct!!!
+            // free_symitem(item);
             return table;
         }
         
         // Insert directly
+        St_item* item = create_symitem(key, value);
         table->items[index] = item; 
         //printf("Inserting %s : %s\n", table->items[index]->key, get_string_from_SymbolRecord*(table->items[index]->value));
         table->count++;
@@ -226,13 +237,18 @@ SymbolHashTable* st_insert(SymbolHashTable* table, char* key, SymbolRecord* valu
                 //free(table->items[index]->value);
                 //table->items[index]->value = (char*) calloc (strlen(value) + 1, sizeof(char));
                 //strcpy(table->items[index]->value, value);
+                if (table->items[index]->value)
+                    free_symrecord(table->items[index]->value);
                 table->items[index]->value = value;
-                free_symitem(item);
+                // Avoid this free, since our value is now a pointer to a struct!!!
+                // free_symitem(item);
                 return table;
             }
     
         else {
             // Scenario 2: Collision
+            // Create the item
+            St_item* item = create_symitem(key, value);
             handle_collision(table, index, item);
             return table;
         }
