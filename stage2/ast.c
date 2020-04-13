@@ -4,7 +4,6 @@
 #include "ast.h"
 
 // Reduce Boilerplate code
-// #define AST_COND(root, gterm, num) (root->token.token_type == gterm && root->num_lhs == num)
 #define AST_COND(root, gterm, tk_type) (root->token.token_type == gterm && root->children[0]->token.token_type == tk_type)
 
 ASTNode* make_ASTNode(ASTNode* child, term token_type)
@@ -249,7 +248,7 @@ void generate_AST(TreeNode* root)
 		TreeNode *g_indexNode = root->children[0];
 		TreeNode *g_index2Node = root->children[2];
 		generate_AST(g_indexNode);
-		generate_AST(g_indexNode);
+		generate_AST(g_index2Node);
 		root->node = make_ASTNode(g_indexNode->node, range_arrays);
 		if (g_indexNode->node)
 			add_ASTChild(root->node, g_index2Node->node);

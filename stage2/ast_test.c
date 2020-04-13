@@ -1,4 +1,3 @@
-#ifndef MAIN
 #define _CRT_SECURE_NO_WARNINGS
 #include <stdio.h>
 #include "common.h"
@@ -33,25 +32,8 @@ int main(int argc, char* argv[]) {
     printf("Generating AST...\n");
     generate_AST(parseTree);
     print_AST(parseTree->node);
-    free_AST(parseTree->node);
-    /*
-    ASTNode* abstractParent = (ASTNode*) calloc (1, sizeof(ASTNode));
-    ASTNode* abstractTree = make_ASTNode(NULL, program);
-    add_ASTChild(abstractParent, abstractTree);
-    ASTNode* abstractSibling = make_ASTNode(NULL, otherModules);
-    add_ASTChild(abstractParent, abstractSibling);
-    Token token1 = {TK_ID, "Hello", 1};
-    add_ASTChild(abstractTree, make_ASTLeaf(abstractTree, token1));
-    Token token2 = {TK_ID, "Boy", 2};
-    add_ASTChild(abstractTree, make_ASTLeaf(abstractTree, token2));
-    Token token3 = {TK_ID, "How", 3};
-    add_ASTChild(abstractSibling, make_ASTLeaf(abstractTree, token3));
-    Token token4 = {TK_ID, "Are", 4};
-    add_ASTChild(abstractSibling, make_ASTLeaf(abstractTree, token4));
-    print_AST_without_parent(abstractParent);
-    free_AST(abstractParent);
-    */
 
+    free_AST(parseTree->node);
     free_parse_tree(parseTree);
     free_parse_table(p);
     free_first_and_follow(f);
@@ -59,4 +41,3 @@ int main(int argc, char* argv[]) {
     free_table(keyword_table);
     return 0;
 }
-#endif
