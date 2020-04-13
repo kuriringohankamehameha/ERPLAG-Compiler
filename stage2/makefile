@@ -5,3 +5,6 @@ all:
 	gcc -o driver.out driver.c parser.c lexer.c hash_table.c common.c -ggdb3
 	gcc -o ast_test.out ast_test.c ast.c parser.c lexer.c hash_table.c common.c -ggdb3
 	gcc -o symbol_table_test.out symbol_table_test.c symbol_table.c common.c -ggdb3
+
+clean:
+	rm *.out
