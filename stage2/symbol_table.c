@@ -40,7 +40,6 @@ void helper_function(SymbolHashTable** symboltable, ASTNode* root, int enna_chil
     //printf("Now at %s\n", get_string_from_term(root->token_type));
     //if (root->parent)
     //    printf("My Parent is %s\n", get_string_from_term(root->parent->token_type));
-    // Only non-leaf nodes get examined
     if (root->parent && root->parent->token_type == module && root->token_type == TK_ID) {
         // Module Name. Add to Symbol table
         SymbolRecord* record = create_symbolrecord(NULL, NULL, root->token.lexeme, TYPE_MODULE, NULL, curr_scope, 0, 0);

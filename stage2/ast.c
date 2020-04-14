@@ -123,9 +123,13 @@ void generate_AST(TreeNode* root)
         TreeNode *otherModulesNode = root->children[1];
         generate_AST(moduleNode);
         generate_AST(otherModulesNode);
-        root->node = make_ASTNode(moduleNode->node, otherModules);
-        if (otherModulesNode->node)
+        if (otherModulesNode->node) {
+            root->node = make_ASTNode(moduleNode->node, otherModules);
             add_ASTChild(root->node, otherModulesNode->node);
+        }
+        else {
+            root->node = moduleNode->node;
+        }
     }
     else if AST_COND(root, otherModules, TK_EPSILON)
     {
@@ -139,7 +143,8 @@ void generate_AST(TreeNode* root)
         // printf("<driverModule> -> TK_DRIVERDEF TK_DRIVER TK_PROGRAM TK_DRIVERENDDEF <moduleDef>\n");
         TreeNode *moduleDefNode = root->children[4];
         generate_AST(moduleDefNode);
-        root->node = make_ASTNode(moduleDefNode->node, driverModule);
+        root->node = make_ASTNode(make_ASTLeaf(NULL, root->children[1]->token), driverModule);
+        add_ASTChild(root->node, moduleDefNode->node);
     }
     else if AST_COND(root, module, TK_DEF)
     {
@@ -164,7 +169,7 @@ void generate_AST(TreeNode* root)
         // <ret> -> TK_RETURNS TK_SQBO <output_plist> TK_SQBC TK_SEMICOL
         TreeNode *output_plistNode = root->children[2];
         generate_AST(output_plistNode);
-        root->node = make_ASTNode(output_plistNode->node, ret);
+        root->node = output_plistNode->node;
     }
     else if AST_COND(root, ret, TK_EPSILON)
     {
@@ -269,8 +274,7 @@ void generate_AST(TreeNode* root)
         generate_AST(g_indexNode);
         generate_AST(g_index2Node);
         root->node = make_ASTNode(g_indexNode->node, range_arrays);
-        if (g_indexNode->node)
-            add_ASTChild(root->node, g_index2Node->node);
+        add_ASTChild(root->node, g_index2Node->node);
     }
     else if AST_COND(root, type, TK_INTEGER)
     {
@@ -305,7 +309,7 @@ void generate_AST(TreeNode* root)
         TreeNode *statementsNode = root->children[1];
         generate_AST(statementNode);
         generate_AST(statementsNode);
-        root->node = make_ASTNode(statementNode->node, statements);
+        root->node = statementNode->node;
         if (statementsNode->node)
             add_ASTChild(root->node, statementsNode->node);
     }
@@ -319,35 +323,35 @@ void generate_AST(TreeNode* root)
         // <statement> -> <ioStmt>
         TreeNode *ioStmtNode = root->children[0];
         generate_AST(ioStmtNode);
-        root->node = make_ASTNode(ioStmtNode->node, statement);
+        root->node = ioStmtNode->node;
     }
     else if AST_COND(root, statement, simpleStmt)
     {
         // <statement> -> <simpleStmt>
         TreeNode *simpleStmtNode = root->children[0];
         generate_AST(simpleStmtNode);
-        root->node = make_ASTNode(simpleStmtNode->node, statement);
+        root->node = simpleStmtNode->node;
     }
     else if AST_COND(root, statement, declareStmt)
     {
         // <statement> -> <declareStmt>
         TreeNode *declareStmtNode = root->children[0];
         generate_AST(declareStmtNode);
-        root->node = make_ASTNode(declareStmtNode->node, statement);
+        root->node = declareStmtNode->node;
     }
     else if AST_COND(root, statement, condionalStmt)
     {
         // <statement> -> <condionalStmt>
         TreeNode *condionalStmtNode = root->children[0];
         generate_AST(condionalStmtNode);
-        root->node = make_ASTNode(condionalStmtNode->node, statement);
+        root->node = condionalStmtNode->node;
     }
     else if AST_COND(root, statement, iterativeStmt)
     {
         // <statement> -> <iterativeStmt>
         TreeNode *iterativeStmtNode = root->children[0];
         generate_AST(iterativeStmtNode);
-        root->node = make_ASTNode(iterativeStmtNode->node, statement);
+        root->node = iterativeStmtNode->node;
     }
     else if AST_COND(root, ioStmt, TK_GET_VALUE)
     {
@@ -369,14 +373,14 @@ void generate_AST(TreeNode* root)
         // <var> -> <var_id_num>
         TreeNode *var_id_numNode = root->children[0];
         generate_AST(var_id_numNode);
-        root->node = make_ASTNode(var_id_numNode->node, var);
+        root->node = var_id_numNode->node;
     }
     else if AST_COND(root, var, boolConstt)
     {
         // <var> -> <boolConstt>
         TreeNode *boolConsttNode = root->children[0];
         generate_AST(boolConsttNode);
-        root->node = make_ASTNode(boolConsttNode->node, var);
+        root->node = boolConsttNode->node;
     }
     else if AST_COND(root, boolConstt, TK_TRUE)
     {
@@ -413,7 +417,7 @@ void generate_AST(TreeNode* root)
         // <whichId> -> TK_SQBO <g_index> TK_SQBC
         TreeNode *g_indexNode = root->children[1];
         generate_AST(g_indexNode);
-        root->node = make_ASTNode(g_indexNode->node, whichId);
+        root->node = g_indexNode->node;
     }
     else if AST_COND(root, whichId, TK_EPSILON)
     {
@@ -425,14 +429,14 @@ void generate_AST(TreeNode* root)
         // <simpleStmt> -> <assignmentStmt>
         TreeNode *assignmentStmtNode = root->children[0];
         generate_AST(assignmentStmtNode);
-        root->node = make_ASTNode(assignmentStmtNode->node, simpleStmt);
+        root->node = assignmentStmtNode->node;
     }
     else if AST_COND(root, simpleStmt, moduleReuseStmt)
     {
         // <simpleStmt> -> <moduleReuseStmt>
         TreeNode *moduleReuseStmtNode = root->children[0];
         generate_AST(moduleReuseStmtNode);
-        root->node = make_ASTNode(moduleReuseStmtNode->node, simpleStmt);
+        root->node = moduleReuseStmtNode->node;
     }
     else if AST_COND(root, assignmentStmt, TK_ID)
     {
@@ -448,21 +452,21 @@ void generate_AST(TreeNode* root)
         // <whichStmt> -> <lvalueIDStmt>
         TreeNode *lvalueIDStmtNode = root->children[0];
         generate_AST(lvalueIDStmtNode);
-        root->node = make_ASTNode(lvalueIDStmtNode->node, whichStmt);
+        root->node = lvalueIDStmtNode->node;
     }
     else if AST_COND(root, whichStmt, lvalueARRStmt)
     {
         // <whichStmt> -> <lvalueARRStmt>
         TreeNode *lvalueARRStmtNode = root->children[0];
         generate_AST(lvalueARRStmtNode);
-        root->node = make_ASTNode(lvalueARRStmtNode->node, whichStmt);
+        root->node = lvalueARRStmtNode->node;
     }
     else if AST_COND(root, lvalueIDStmt, TK_ASSIGNOP)
     {
         // <lvalueIDStmt> -> TK_ASSIGNOP <expression> TK_SEMICOL
         TreeNode *expressionNode = root->children[1];
         generate_AST(expressionNode);
-        root->node = make_ASTNode(expressionNode->node, lvalueIDStmt);
+        root->node = expressionNode->node;
     }
     else if AST_COND(root, lvalueARRStmt, TK_SQBO)
     {
@@ -507,7 +511,7 @@ void generate_AST(TreeNode* root)
         // <optional> -> TK_SQBO <idList> TK_SQBC TK_ASSIGNOP
         TreeNode *idListNode = root->children[1];
         generate_AST(idListNode);
-        root->node = make_ASTNode(idListNode->node, optional);
+        root->node = idListNode->node;
     }
     else if AST_COND(root, optional, TK_EPSILON)
     {
@@ -544,14 +548,14 @@ void generate_AST(TreeNode* root)
         // <expression> -> <arithmeticOrBooleanExpr>
         TreeNode *arithmeticOrBooleanExprNode = root->children[0];
         generate_AST(arithmeticOrBooleanExprNode);
-        root->node = make_ASTNode(arithmeticOrBooleanExprNode->node, expression);
+        root->node = arithmeticOrBooleanExprNode->node;
     }
     else if AST_COND(root, expression, U)
     {
         // <expression> -> <U>
         TreeNode *UNode = root->children[0];
         generate_AST(UNode);
-        root->node = make_ASTNode(UNode->node, expression);
+        root->node = UNode->node;
     }
     else if AST_COND(root, U, unary_op)
     {
@@ -569,14 +573,14 @@ void generate_AST(TreeNode* root)
         // <new_NT> -> TK_BO <arithmeticExpr> TK_BC
         TreeNode *arithmeticExprNode = root->children[1];
         generate_AST(arithmeticExprNode);
-        root->node = make_ASTNode(arithmeticExprNode->node, new_NT);
+        root->node = arithmeticExprNode->node;
     }
     else if AST_COND(root, new_NT, var_id_num)
     {
         // <new_NT> -> <var_id_num>
         TreeNode *var_id_numNode = root->children[0];
         generate_AST(var_id_numNode);
-        root->node = make_ASTNode(var_id_numNode->node, new_NT);
+        root->node = var_id_numNode->node;
     }
     else if AST_COND(root, unary_op, TK_PLUS)
     {
@@ -595,9 +599,13 @@ void generate_AST(TreeNode* root)
         TreeNode *N7Node = root->children[1];
         generate_AST(AnyTermNode);
         generate_AST(N7Node);
-        root->node = make_ASTNode(AnyTermNode->node, arithmeticOrBooleanExpr);
-        if (N7Node->node)
+        if (N7Node->node) {
+            root->node = make_ASTNode(AnyTermNode->node, arithmeticOrBooleanExpr);
             add_ASTChild(root->node, N7Node->node);
+        }
+        else {
+            root->node = AnyTermNode->node;
+        }
     }
     else if AST_COND(root, N7, logicalOp)
     {
@@ -626,16 +634,20 @@ void generate_AST(TreeNode* root)
         TreeNode *N8Node = root->children[1];
         generate_AST(arithmeticExprNode);
         generate_AST(N8Node);
-        root->node = make_ASTNode(arithmeticExprNode->node, AnyTerm);
-        if (N8Node->node)
+        if (N8Node->node) {
+            root->node = make_ASTNode(arithmeticExprNode->node, AnyTerm);
             add_ASTChild(root->node, N8Node->node);
+        }
+        else {
+            root->node = arithmeticExprNode->node;
+        }
     }
     else if AST_COND(root, AnyTerm, boolConstt)
     {
         // <AnyTerm> -> <boolConstt>
         TreeNode *boolConsttNode = root->children[0];
         generate_AST(boolConsttNode);
-        root->node = make_ASTNode(boolConsttNode->node, AnyTerm);
+        root->node = boolConsttNode->node;
     }
     else if AST_COND(root, N8, relationalOp)
     {
@@ -660,9 +672,13 @@ void generate_AST(TreeNode* root)
         TreeNode *N4Node = root->children[1];
         generate_AST(g_termNode);
         generate_AST(N4Node);
-        root->node = make_ASTNode(g_termNode->node, arithmeticExpr);
-        if (N4Node->node)
+        if (N4Node->node) {
+            root->node = make_ASTNode(g_termNode->node, arithmeticExpr);
             add_ASTChild(root->node, N4Node->node);
+        }
+        else {
+            root->node = g_termNode->node;
+        }
     }
     else if AST_COND(root, N4, op1)
     {
@@ -691,9 +707,13 @@ void generate_AST(TreeNode* root)
         TreeNode *N5Node = root->children[1];
         generate_AST(factorNode);
         generate_AST(N5Node);
-        root->node = make_ASTNode(factorNode->node, g_term);
-        if (N5Node->node)
+        if (N5Node->node) {
+            root->node = make_ASTNode(factorNode->node, g_term);
             add_ASTChild(root->node, N5Node->node);
+        }
+        else {
+            root->node = factorNode->node;
+        }
     }
     else if AST_COND(root, N5, op2)
     {
@@ -720,14 +740,14 @@ void generate_AST(TreeNode* root)
         // <factor> -> TK_BO <arithmeticOrBooleanExpr> TK_BC
         TreeNode *arithmeticOrBooleanExprNode = root->children[1];
         generate_AST(arithmeticOrBooleanExprNode);
-        root->node = make_ASTNode(arithmeticOrBooleanExprNode->node, factor);
+        root->node = arithmeticOrBooleanExprNode->node;
     }
     else if AST_COND(root, factor, var_id_num)
     {
         // <factor> -> <var_id_num>
         TreeNode *var_id_numNode = root->children[0];
         generate_AST(var_id_numNode);
-        root->node = make_ASTNode(var_id_numNode->node, factor);
+        root->node = var_id_numNode->node;
     }
     else if AST_COND(root, op1, TK_PLUS)
     {
@@ -870,7 +890,7 @@ void generate_AST(TreeNode* root)
         // <g_default> -> TK_DEFAULT TK_COLON <statements> TK_BREAK TK_SEMICOL
         TreeNode *statementsNode = root->children[2];
         generate_AST(statementsNode);
-        root->node = make_ASTNode(statementsNode->node, g_default);
+        root->node = statementsNode->node;
     }
     else if AST_COND(root, g_default, TK_EPSILON)
     {
@@ -924,8 +944,10 @@ void print_AST(ASTNode* root) {
     }
     else {
         for (int i=0; i<root->num_children; i++) {
+            //printf("Children of %s\n", get_string_from_term(root->token_type));
             print_AST(root->children[i]);
         }       
+        //printf("Children End of %s\n", get_string_from_term(root->token_type));
     }
 }
 
