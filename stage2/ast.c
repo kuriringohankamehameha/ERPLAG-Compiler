@@ -699,12 +699,14 @@ void generate_AST(TreeNode* root)
         TreeNode *op1Node = root->children[0];
         TreeNode *g_termNode = root->children[1];
         TreeNode *N4Node = root->children[2];
-        generate_AST(op1Node);
+        //generate_AST(op1Node);
         generate_AST(g_termNode);
         generate_AST(N4Node);
-        root->node = make_ASTNode(op1Node->node, N4);
-        if (g_termNode->node)
-            add_ASTChild(root->node, g_termNode->node);
+        //root->node = make_ASTNode(op1Node->node, N4);
+        term syn_token = op1Node->children[0]->token.token_type;
+        root->node = make_ASTNode(g_termNode->node, N4);
+        root->node->syn_attribute.token_type = syn_token;
+        //add_ASTChild(root->node, g_termNode->node);
         if (N4Node->node)
             add_ASTChild(root->node, N4Node->node);
     }
@@ -734,12 +736,13 @@ void generate_AST(TreeNode* root)
         TreeNode *op2Node = root->children[0];
         TreeNode *factorNode = root->children[1];
         TreeNode *N5Node = root->children[2];
-        generate_AST(op2Node);
+        //generate_AST(op2Node);
         generate_AST(factorNode);
         generate_AST(N5Node);
-        root->node = make_ASTNode(op2Node->node, N5);
-        if (factorNode->node)
-            add_ASTChild(root->node, factorNode->node);
+        //root->node = make_ASTNode(op2Node->node, N5);
+        term syn_token = op2Node->children[0]->token.token_type;
+        root->node = make_ASTNode(factorNode->node, N5);
+        root->node->syn_attribute.token_type = syn_token;
         if (N5Node->node)
             add_ASTChild(root->node, N5Node->node);
     }
@@ -967,91 +970,7 @@ void synthesize_attributes(ASTNode* root) {
     for (int i=0; i<root->num_children; i++) {
         synthesize_attributes(root->children[i]);
     }
-    /*
-    if (root->token_type == N4) {
-        ASTNode* op1Node = root->children[0];
-        term operator = op1Node->token_type;
-        root->parent->syn_attribute.token_type = operator;
-        ASTNode* temp = root->children[0];
-        root->children[0] = root->children[1];
-        temp->parent = NULL;
-        free_AST(temp);
-        ASTNode* old_root = root;
-        root = old_root;
-        root->parent = old_root->parent;
-        old_root->parent = NULL;
-        old_root->children = NULL;
-        free_AST(old_root);
-    }
-    */
-    if (root->token_type == arithmeticExpr || root->token_type == AnyTerm) {
-        // Synthesize the operator and remove it from the AST
-        if (root->token_type == arithmeticExpr) {
-            // children[1] = <N4> and <N4>->children[0] = <op1>
-            // Move <op1> to <arithmeticexpr>
-            if (root->children[1] != NULL) {
-                // <N4> is not Epsilon
-                ASTNode* N4Node = root->children[1];
-                while (N4Node->children[2] != NULL) {
-                    // N4 -> N4
-                    N4Node = N4Node->children[2];
-                }
-                ASTNode* curr = N4Node;
-                while (curr != root) {
-                    ASTNode* node = curr->parent;
-                    printf("Now at %s\n", curr->children[1]->token.lexeme);
-                    term operator = curr->children[0]->token_type;
-                    node->syn_attribute.token_type = operator;
-                    ASTNode* rmnode1 = curr->children[0];
-                    ASTNode* rmnode2 = curr;
-                    curr = curr->children[1];
-                    rmnode1->children = NULL;
-                    rmnode1->parent->children[0] = NULL;
-                    rmnode1->parent = NULL;
-                    node->children[2] = curr;
-                    printf("Node->children[2] = %s\n", curr->token.lexeme);
-                    curr->parent = node;
-                    rmnode2->children[1] = NULL;
-                    rmnode2->children = NULL;
-                    rmnode2->parent = NULL;
-                    free_AST(rmnode1);
-                    free_AST(rmnode2);
-                    curr = curr->parent;
-                }
-                return;
-                //printf("root->children[2] = %s\n", get_string_from_term(root->children[1]->token_type));
-                ASTNode* op1Node = root->children[1]->children[0];
-                term operator = op1Node->token_type;
-                //printf("Operator = %s\n", get_string_from_term(operator));
-                root->syn_attribute.token_type = operator;
-                // Delete <N4>
-                ASTNode* temp = root->children[1];
-                root->children[1] = root->children[1]->children[1];
-                temp->parent = NULL;
-                temp->children[1] = NULL;
-                //temp->num_children = 1;
-                free_AST(temp);
-            }
-        }
-    }
-    else if (root->token_type == g_term) {
-        // For TK_MUL and TK_DIV
-        if (root->children[1]) {
-            // <N5> is not NULL
-            // <N5> -> <op2> factor <N5>
-            ASTNode* op2Node = root->children[1]->children[0];
-            term operator = op2Node->token_type;
-            root->syn_attribute.token_type = operator;
-            // Delete <N5>
-            ASTNode* temp = root->children[1];
-            root->children[1] = root->children[1]->children[1];
-            temp->parent = NULL;
-            temp->children[1] = NULL;
-            temp->num_children = 1;
-            free_AST(temp);
-        }
-    }
-    else if (root->token_type == range) {
+    if (root->token_type == range) {
         // Synthesize attributes for <range>
         if (atoi(root->children[0]->token.lexeme) > atoi(root->children[1]->token.lexeme)) {
             fprintf(stderr, "Semantic Error (Line No: %d) : Range Operator must be of the form (lower..higher)\n", root->children[0]->token.line_no);
@@ -1065,6 +984,8 @@ void print_AST(ASTNode* root) {
         return;
     // printf("Number of Children: %d\n", root->num_children);
     printf("%s => ", get_string_from_term(root->token_type));
+    if (root->syn_attribute.token_type != TK_EPSILON)
+        printf("Synthesized Attribute: %s\n", get_string_from_term(root->syn_attribute.token_type));
     if (root->children == NULL || root->num_children == 0) {
         printf("Lexeme: %s, Line No: %d\n", root->token.lexeme, root->token.line_no);
     }
