@@ -571,11 +571,12 @@ void generate_AST(TreeNode* root)
         // <U> -> <unary_op> <new_NT>
         TreeNode *unary_opNode = root->children[0];
         TreeNode *new_NTNode = root->children[1];
-        generate_AST(unary_opNode);
+        //generate_AST(unary_opNode);
         generate_AST(new_NTNode);
-        root->node = make_ASTNode(unary_opNode->node, U);
-        if (new_NTNode->node)
-            add_ASTChild(root->node, new_NTNode->node);
+        term syn_token = unary_opNode->children[0]->token.token_type;
+        //root->node = make_ASTNode(unary_opNode->node, U);
+        root->node = make_ASTNode(new_NTNode->node, U);
+        root->node->syn_attribute.token_type = syn_token;
     }
     else if AST_COND(root, new_NT, TK_BO)
     {
