@@ -16,10 +16,15 @@ end
 start
 	declare num, k:integer;
 	declare A:array [4..10] of integer;
+    declare cond:boolean;
+    declare temp:integer;
 	for( k in 6..10)
 	start
 		A[k]:=(num - k)*(num-k);
 		print(A[k]);
+        cond := (k < k + 1);
+        print(cond);
+        temp := k + 10 + num;
 	end
 	[num]:=use module arraysum with parameters A;
 	print(num);

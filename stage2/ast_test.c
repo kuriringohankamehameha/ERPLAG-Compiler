@@ -33,11 +33,11 @@ int main(int argc, char* argv[]) {
     generate_AST(parseTree);
     print_AST(parseTree->node);
     
-    printf("Printing AST\n");
-    printf("AST = %s\n", get_string_from_term(parseTree->node->token_type));
-    printf("AST -> Child[0] = %s\n", get_string_from_term(parseTree->node->children[0]->token_type));
-    printf("AST -> Child[1] = %s\n", get_string_from_term(parseTree->node->children[1]->token_type));
-    printf("AST -> child[0] -> Child[0] = %s\n", get_string_from_term(parseTree->node->children[0]->children[0]->token_type));
+    //printf("AST = %s\n", get_string_from_term(parseTree->node->token_type));
+    //printf("AST -> Child[0] = %s\n", get_string_from_term(parseTree->node->children[0]->token_type));
+    //printf("AST -> Child[1] = %s\n", get_string_from_term(parseTree->node->children[1]->token_type));
+    //printf("AST -> child[0] -> Child[0] = %s\n", get_string_from_term(parseTree->node->children[0]->children[0]->token_type));
+
 
     free_AST(parseTree->node);
     free_parse_tree(parseTree);
