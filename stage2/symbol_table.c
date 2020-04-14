@@ -49,18 +49,18 @@ void helper_function(SymbolHashTable** symboltable, ASTNode* root, int enna_chil
         // Input Identifier (parameter)
         if (root->parent->children[enna_child + 1]->children[0]->token.token_type == TK_ARRAY) {
             // Array. Find size and offset
-            if (root->parent->children[enna_child + 1]->children[1]->children[0]->children[0]->token.token_type == TK_NUM) {
-                int start_offset = atoi(root->parent->children[enna_child + 1]->children[1]->children[0]->children[0]->token.lexeme);
-                int end_offset = atoi(root->parent->children[enna_child + 1]->children[1]->children[1]->children[0]->token.lexeme);
+            if (root->parent->children[enna_child + 1]->children[1]->children[0]->token.token_type == TK_NUM) {
+                int start_offset = atoi(root->parent->children[enna_child + 1]->children[1]->children[0]->token.lexeme);
+                int end_offset = atoi(root->parent->children[enna_child + 1]->children[1]->children[1]->token.lexeme);
                 SymbolRecord* record = create_symbolrecord(root->token.lexeme, NULL, NULL, TYPE_ARRAY, NULL, curr_scope, end_offset - start_offset, start_offset);
                 *(symboltable) = st_insert(*(symboltable), root->token.lexeme, record);
             }
-            else if (root->parent->children[enna_child + 1]->children[1]->children[0]->children[0]->token.token_type == TK_ID) {
-                fprintf(stderr, "\nSemantic Error (Line No: %d): Identifier not allowed as an array index for a function parameter\n", root->parent->children[enna_child + 1]->children[1]->children[0]->children[0]->token.line_no);
+            else if (root->parent->children[enna_child + 1]->children[1]->children[0]->token.token_type == TK_ID) {
+                fprintf(stderr, "\nSemantic Error (Line No: %d): Identifier not allowed as an array index for a function parameter\n", root->parent->children[enna_child + 1]->children[1]->children[0]->token.line_no);
                 return;
             }
-            else if (root->parent->children[enna_child + 1]->children[1]->children[1]->children[0]->token.token_type == TK_ID) {
-                fprintf(stderr, "\nSemantic Error (Line No: %d): Identifier not allowed as an array index for a function parameter\n", root->parent->children[enna_child + 1]->children[1]->children[1]->children[0]->token.line_no);
+            else if (root->parent->children[enna_child + 1]->children[1]->children[1]->token.token_type == TK_ID) {
+                fprintf(stderr, "\nSemantic Error (Line No: %d): Identifier not allowed as an array index for a function parameter\n", root->parent->children[enna_child + 1]->children[1]->children[1]->token.line_no);
                 return;
             }
         }
