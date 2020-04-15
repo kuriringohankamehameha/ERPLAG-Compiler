@@ -94,7 +94,7 @@ char* get_string_from_type(TypeName);
 SymbolHashTable*** createSymbolTables(ASTNode* root);
 void create_scope_table(SymbolHashTable*** symboltables_ptr, int index);
 void insert_into_symbol_table(SymbolHashTable*** symboltables_ptr, char* key, SymbolRecord* record, int index);
-void perform_type_extraction(SymbolHashTable*** symboltables_ptr, ASTNode* root, int enna_child);
+void perform_semantic_analysis(SymbolHashTable*** symboltables_ptr, ASTNode* root, int enna_child);
 void free_symtables(SymbolHashTable** tables, int num_tables);
 
 static int curr_scope = 0;

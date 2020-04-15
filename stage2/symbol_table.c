@@ -81,7 +81,7 @@ int* get_offsets(ASTNode* node) {
     return offsets;
 }
 
-void perform_type_extraction(SymbolHashTable*** symboltables_ptr, ASTNode* root, int enna_child) {
+void perform_semantic_analysis(SymbolHashTable*** symboltables_ptr, ASTNode* root, int enna_child) {
     // Performs Type Extraction 
     if (!root)
         return;
@@ -124,7 +124,7 @@ void perform_type_extraction(SymbolHashTable*** symboltables_ptr, ASTNode* root,
         }
     }
     for (int i=0; i<root->num_children; i++)
-        perform_type_extraction(symboltables_ptr, root->children[i], i);
+        perform_semantic_analysis(symboltables_ptr, root->children[i], i);
 }
 
 SymbolHashTable*** createSymbolTables(ASTNode* root) {
@@ -133,7 +133,7 @@ SymbolHashTable*** createSymbolTables(ASTNode* root) {
     symboltables_ptr[0] = calloc (1, sizeof(SymbolHashTable*));
     symboltables_ptr[0][0] = create_symtable(CAPACITY, hash_function_symbol);
     ASTNode* temp = root;
-    perform_type_extraction(symboltables_ptr, temp, 0);
+    perform_semantic_analysis(symboltables_ptr, temp, 0);
     total_scope = start_scope;
     return symboltables_ptr;
 }
