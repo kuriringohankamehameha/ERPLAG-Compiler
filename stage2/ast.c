@@ -623,12 +623,13 @@ void generate_AST(TreeNode* root)
         TreeNode *logicalOpNode = root->children[0];
         TreeNode *AnyTermNode = root->children[1];
         TreeNode *N7Node = root->children[2];
-        generate_AST(logicalOpNode);
+        //generate_AST(logicalOpNode);
+        term syn_token = logicalOpNode->children[0]->token.token_type;
         generate_AST(AnyTermNode);
         generate_AST(N7Node);
-        root->node = make_ASTNode(logicalOpNode->node, N7);
-        if (AnyTermNode->node)
-            add_ASTChild(root->node, AnyTermNode->node);
+        //root->node = make_ASTNode(logicalOpNode->node, N7);
+        root->node = make_ASTNode(AnyTermNode->node, N7);
+        root->node->syn_attribute.token_type = syn_token;
         if (N7Node->node)
             add_ASTChild(root->node, N7Node->node);
     }
@@ -664,15 +665,14 @@ void generate_AST(TreeNode* root)
         // <N8> -> <relationalOp> <arithmeticExpr>
         TreeNode *relationalOpNode = root->children[0];
         TreeNode *arithmeticExprNode = root->children[1];
-        generate_AST(relationalOpNode);
+        //generate_AST(relationalOpNode);
+        term syn_token = relationalOpNode->children[0]->token.token_type;
+        //printf("relationalOp = %s\n", get_string_from_term(syn_token));
         generate_AST(arithmeticExprNode);
-        if (arithmeticExprNode->node) {
-            root->node = make_ASTNode(relationalOpNode->node, N8);
-            add_ASTChild(root->node, arithmeticExprNode->node);
-        }
-        else {
-            root->node = relationalOpNode->node;
-        }
+        //root->node = make_ASTNode(relationalOpNode->node, N8);
+        root->node = make_ASTNode(arithmeticExprNode->node, N8);
+        root->node->syn_attribute.token_type = syn_token;
+        //add_ASTChild(root->node, arithmeticExprNode->node);
     }
     else if AST_COND(root, N8, TK_EPSILON)
     {
@@ -954,7 +954,12 @@ void generate_AST(TreeNode* root)
     else if AST_COND(root, range, TK_NUM)
     {
         // <range> -> TK_NUM TK_RANGEOP TK_NUM
+        if (atoi(root->children[0]->token.lexeme) > atoi(root->children[2]->token.lexeme)) {
+            fprintf(stderr, "Semantic Error (Line No: %d) : Range Operator must be of the form (lower..higher)\n", root->children[0]->token.line_no);
+        }
+        term syn_token = root->children[1]->token.token_type;
         root->node = make_ASTNode(make_ASTLeaf(NULL, root->children[0]->token), range);
+        root->node->syn_attribute.token_type = syn_token;
         add_ASTChild(root->node, make_ASTLeaf(NULL, root->children[2]->token));
     }
 }
