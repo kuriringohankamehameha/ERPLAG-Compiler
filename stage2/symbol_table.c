@@ -72,6 +72,15 @@ void insert_into_symbol_table(SymbolHashTable*** symboltables_ptr, char* key, Sy
     //printf("Inserted %s successfully\n", key);
 }
 
+int* get_offsets(ASTNode* node) {
+    int* offsets = calloc(2, sizeof(int));
+    if (node->token_type == dataType && node->children[0]->token_type == TK_ARRAY) {
+        offsets[0] = atoi(node->children[1]->children[0]->token.lexeme);
+        offsets[1] = atoi(node->children[1]->children[1]->token.lexeme);
+    }
+    return offsets;
+}
+
 void perform_type_extraction(SymbolHashTable*** symboltables_ptr, ASTNode* root, int enna_child) {
     // Performs Type Extraction 
     if (!root)
@@ -89,13 +98,29 @@ void perform_type_extraction(SymbolHashTable*** symboltables_ptr, ASTNode* root,
         ASTNode* input_plistNode = root->children[1];
         ASTNode* retNode = root->children[2];
         if (retNode == NULL) {
-            printf("Module does not have a return type\n");
+            printf("Module <<%s>> does not have a return type\n", moduleIDNode->token.lexeme);
         }
         else {
             // Module Name. Add to Symbol table
             //printf("Module name is %s\n", moduleIDNode->token.lexeme);
             SymbolRecord* record = create_symbolrecord(NULL, NULL, moduleIDNode->token.lexeme, TYPE_MODULE, NULL, start_scope, 0, 0, TK_EPSILON);
             insert_into_symbol_table(symboltables_ptr, moduleIDNode->token.lexeme, record, start_scope);
+            // Insert <input_plist>
+            for (ASTNode* temp = input_plistNode; ; temp=temp->children[2]) {
+                ASTNode* idNode = temp->children[0];
+                ASTNode* typeNode = temp->children[1];
+                int* offsets = get_offsets(typeNode);
+                int a = offsets[0]; int b = offsets[1];
+                free(offsets);
+                SymbolRecord* record;
+                if (typeNode->num_children > 1)
+                    record = create_symbolrecord(idNode->token.lexeme, NULL, NULL, get_typename_from_term(typeNode->children[0]->token_type), NULL, start_scope, b-a, a, typeNode->children[2]->token_type);
+                else
+                    record = create_symbolrecord(idNode->token.lexeme, NULL, NULL, get_typename_from_term(typeNode->children[0]->token_type), NULL, start_scope, b-a, a, TK_EPSILON);
+                insert_into_symbol_table(symboltables_ptr, idNode->token.lexeme, record, start_scope);
+                if (temp->children[2] == NULL)
+                    break;
+            }
         }
     }
     for (int i=0; i<root->num_children; i++)
