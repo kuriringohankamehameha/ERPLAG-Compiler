@@ -42,7 +42,7 @@ void helper_function(SymbolHashTable** symboltable, ASTNode* root, int enna_chil
     //    printf("My Parent is %s\n", get_string_from_term(root->parent->token_type));
     if (root->parent && root->parent->token_type == module && root->token_type == TK_ID) {
         // Module Name. Add to Symbol table
-        SymbolRecord* record = create_symbolrecord(NULL, NULL, root->token.lexeme, TYPE_MODULE, NULL, curr_scope, 0, 0);
+        SymbolRecord* record = create_symbolrecord(NULL, NULL, root->token.lexeme, TYPE_MODULE, NULL, curr_scope, 0, 0, TK_EPSILON);
         *(symboltable) = st_insert(*(symboltable), root->token.lexeme, record);
     }
     else if (root->parent && root->parent->token_type == input_plist && root->token_type == TK_ID) {
@@ -52,7 +52,8 @@ void helper_function(SymbolHashTable** symboltable, ASTNode* root, int enna_chil
             if (root->parent->children[enna_child + 1]->children[1]->children[0]->token.token_type == TK_NUM) {
                 int start_offset = atoi(root->parent->children[enna_child + 1]->children[1]->children[0]->token.lexeme);
                 int end_offset = atoi(root->parent->children[enna_child + 1]->children[1]->children[1]->token.lexeme);
-                SymbolRecord* record = create_symbolrecord(root->token.lexeme, NULL, NULL, TYPE_ARRAY, NULL, curr_scope, end_offset - start_offset, start_offset);
+                term element_type = root->parent->children[enna_child + 1]->children[2]->token.token_type;
+                SymbolRecord* record = create_symbolrecord(root->token.lexeme, NULL, NULL, TYPE_ARRAY, NULL, curr_scope, end_offset - start_offset, start_offset, element_type);
                 *(symboltable) = st_insert(*(symboltable), root->token.lexeme, record);
             }
             else if (root->parent->children[enna_child + 1]->children[1]->children[0]->token.token_type == TK_ID) {
@@ -84,7 +85,7 @@ SymbolHashTable* createSymbolTable(ASTNode* root) {
     return symboltable;
 }
 
-SymbolRecord* create_symbolrecord(char* var_name, char* fun_name, char* module_name, TypeName type_name, char* const_value, int scope_label, int total_size, int offset) {
+SymbolRecord* create_symbolrecord(char* var_name, char* fun_name, char* module_name, TypeName type_name, char* const_value, int scope_label, int total_size, int offset, term element_type) {
     SymbolRecord* symbolrecord = (SymbolRecord*) calloc (1, sizeof(SymbolRecord));
     if (var_name) {
         symbolrecord->var_name = (char*) calloc (strlen(var_name) + 1, sizeof(char));
@@ -114,6 +115,7 @@ SymbolRecord* create_symbolrecord(char* var_name, char* fun_name, char* module_n
     symbolrecord->scope_label = scope_label;
     symbolrecord->total_size = total_size;
     symbolrecord->offset = offset;
+    symbolrecord->element_type = element_type;
     return symbolrecord;
 }
 
@@ -435,7 +437,8 @@ void print_symrecord(SymbolRecord* t, char ch) {
     }
     printf("scope_label = %d , ", t->scope_label);
     printf("total_size = %d , ", t->total_size);
-    printf("offset = %d%c", t->offset, ch);
+    printf("offset = %d , ", t->offset);
+    printf("element_type = %s%c", get_string_from_term(t->element_type), ch);
 }
 
 void print_search_symtable(SymbolHashTable* table, char* key) {
