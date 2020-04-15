@@ -4,6 +4,8 @@
 #include "ast.h"
 #include "symbol_table.h"
 
+int total_scope = 0;
+
 char* get_string_from_type(TypeName typename) {
     switch(typename) {
         case TYPE_INTEGER:
@@ -50,27 +52,24 @@ unsigned long hash_function_symbol(char* str) {
 
 void create_scope_table(SymbolHashTable*** symboltables_ptr, int index) {
     // Creates a scope table
-    printf("Entering a new scope. start_scope = %d\n...\n", start_scope);
+    //printf("Entering a new scope. start_scope = %d\n...\n", start_scope);
     SymbolHashTable** symboltables = *symboltables_ptr;
     symboltables = (SymbolHashTable**) realloc (symboltables, (index + 1) * sizeof(SymbolHashTable*));
     // Update pointer to new memory location due to realloc
     *symboltables_ptr = symboltables;
-    //for (int i=0; i<=index; i++)
-    //    (*symboltables_ptr)[i] = symboltables[i];
     if (symboltables == NULL) {
         perror("Out of Memory\n");
         exit(1);
     }
-    symboltables_ptr = &symboltables;
     symboltables[index] = create_symtable(CAPACITY, hash_function_symbol);
-    printf("Entered new scope. Created a Scope Table\n");
+    //printf("Entered new scope. Created a Scope Table\n");
 }
 
 void insert_into_symbol_table(SymbolHashTable*** symboltables_ptr, char* key, SymbolRecord* record, int index) {
-    printf("Inserting %s ...\n", key);
+    //printf("Inserting %s ...\n", key);
     SymbolHashTable** symboltables = *symboltables_ptr;
     symboltables[index] = st_insert(symboltables[index], key, record);
-    printf("Inserted %s successfully\n", key);
+    //printf("Inserted %s successfully\n", key);
 }
 
 void perform_type_extraction(SymbolHashTable*** symboltables_ptr, ASTNode* root, int enna_child) {
@@ -94,7 +93,7 @@ void perform_type_extraction(SymbolHashTable*** symboltables_ptr, ASTNode* root,
         }
         else {
             // Module Name. Add to Symbol table
-            printf("Module name is %s\n", moduleIDNode->token.lexeme);
+            //printf("Module name is %s\n", moduleIDNode->token.lexeme);
             SymbolRecord* record = create_symbolrecord(NULL, NULL, moduleIDNode->token.lexeme, TYPE_MODULE, NULL, start_scope, 0, 0, TK_EPSILON);
             insert_into_symbol_table(symboltables_ptr, moduleIDNode->token.lexeme, record, start_scope);
         }
@@ -103,16 +102,15 @@ void perform_type_extraction(SymbolHashTable*** symboltables_ptr, ASTNode* root,
         perform_type_extraction(symboltables_ptr, root->children[i], i);
 }
 
-SymbolHashTable** createSymbolTables(ASTNode* root) {
-    // Creates a Symbol Table
-    SymbolHashTable** symboltables = calloc (1, sizeof(SymbolHashTable*));
-    symboltables[0] = create_symtable(CAPACITY, hash_function_symbol);
-    printf("Created Symtable\n");
+SymbolHashTable*** createSymbolTables(ASTNode* root) {
+    // Creates the Symbol Tables; one for every scope
+    SymbolHashTable*** symboltables_ptr = calloc (1, sizeof(SymbolHashTable**));
+    symboltables_ptr[0] = calloc (1, sizeof(SymbolHashTable*));
+    symboltables_ptr[0][0] = create_symtable(CAPACITY, hash_function_symbol);
     ASTNode* temp = root;
-    perform_type_extraction(&symboltables, temp, 0);
-    //helper_function(&symboltables, temp, 0);
-    print_symtables(symboltables, start_scope);
-    return symboltables;
+    perform_type_extraction(symboltables_ptr, temp, 0);
+    total_scope = start_scope;
+    return symboltables_ptr;
 }
 
 SymbolRecord* create_symbolrecord(char* var_name, char* fun_name, char* module_name, TypeName type_name, char* const_value, int scope_label, int total_size, int offset, term element_type) {

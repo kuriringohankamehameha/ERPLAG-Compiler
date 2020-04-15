@@ -91,8 +91,7 @@ void print_symtables(SymbolHashTable** tables, int num_tables);
 
 
 char* get_string_from_type(TypeName);
-//SymbolHashTable* createSymbolTable(ASTNode*);
-SymbolHashTable** createSymbolTables(ASTNode* root);
+SymbolHashTable*** createSymbolTables(ASTNode* root);
 void create_scope_table(SymbolHashTable*** symboltables_ptr, int index);
 void insert_into_symbol_table(SymbolHashTable*** symboltables_ptr, char* key, SymbolRecord* record, int index);
 void perform_type_extraction(SymbolHashTable*** symboltables_ptr, ASTNode* root, int enna_child);

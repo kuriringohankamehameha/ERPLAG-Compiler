@@ -11,6 +11,7 @@
 extern HashTable* keyword_table;
 extern unsigned long (*hash_fun)(char*); // Function Pointer to the Hash Function
 extern Keyword keywords[];
+extern int total_scope;
 
 int main(int argc, char* argv[]) {    
     FILE* fp = fopen("grammar_rules.txt", "r");
@@ -34,10 +35,13 @@ int main(int argc, char* argv[]) {
     generate_AST(parseTree);
     print_AST(parseTree->node);
 
-    // Symbol Table
-    //SymbolHashTable* table = createSymbolTable(parseTree->node);
-    SymbolHashTable** tables = createSymbolTables(parseTree->node);
-    free_symtables(tables, start_scope);
+    // Symbol Tables
+    SymbolHashTable*** tables_ptr = createSymbolTables(parseTree->node);
+    printf("Printing Symbol Tables\n");
+    SymbolHashTable** tables = *tables_ptr;
+    print_symtables(tables, total_scope);
+    free_symtables(tables, total_scope);
+    free(tables_ptr);
 
     free_AST(parseTree->node);
     free_parse_tree(parseTree);
