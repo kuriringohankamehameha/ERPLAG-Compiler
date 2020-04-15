@@ -628,10 +628,15 @@ void generate_AST(TreeNode* root)
         generate_AST(AnyTermNode);
         generate_AST(N7Node);
         //root->node = make_ASTNode(logicalOpNode->node, N7);
-        root->node = make_ASTNode(AnyTermNode->node, N7);
-        root->node->syn_attribute.token_type = syn_token;
-        if (N7Node->node)
+        if (N7Node->node) {
+            root->node = make_ASTNode(AnyTermNode->node, N7);
+            root->node->syn_attribute.token_type = syn_token;
             add_ASTChild(root->node, N7Node->node);
+        }
+        else {
+            root->node = AnyTermNode->node;
+            root->node->syn_attribute.token_type = syn_token; 
+        }
     }
     else if AST_COND(root, N7, TK_EPSILON)
     {

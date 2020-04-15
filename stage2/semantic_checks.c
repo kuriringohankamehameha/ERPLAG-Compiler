@@ -35,8 +35,9 @@ int main(int argc, char* argv[]) {
     print_AST(parseTree->node);
 
     // Symbol Table
-    SymbolHashTable* table = createSymbolTable(parseTree->node);
-    free_symtable(table);
+    //SymbolHashTable* table = createSymbolTable(parseTree->node);
+    SymbolHashTable** tables = createSymbolTables(parseTree->node);
+    free_symtables(tables, start_scope);
 
     free_AST(parseTree->node);
     free_parse_tree(parseTree);

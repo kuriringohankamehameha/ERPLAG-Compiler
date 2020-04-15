@@ -87,11 +87,21 @@ void st_delete(SymbolHashTable* table, char* key);
 void print_symrecord(SymbolRecord* symbolrecord, char ch);
 void print_search_symtable(SymbolHashTable* table, char* key);
 void print_symtable(SymbolHashTable* table);
+void print_symtables(SymbolHashTable** tables, int num_tables);
 
 
 char* get_string_from_type(TypeName);
-SymbolHashTable* createSymbolTable(ASTNode*);
+//SymbolHashTable* createSymbolTable(ASTNode*);
+SymbolHashTable** createSymbolTables(ASTNode* root);
+void create_scope_table(SymbolHashTable*** symboltables_ptr, int index);
+void insert_into_symbol_table(SymbolHashTable*** symboltables_ptr, char* key, SymbolRecord* record, int index);
+void perform_type_extraction(SymbolHashTable*** symboltables_ptr, ASTNode* root, int enna_child);
+void free_symtables(SymbolHashTable** tables, int num_tables);
 
 static int curr_scope = 0;
+
+// Keep two variables to keep track of nested scopes
+static int start_scope = 0;
+static int end_scope = 0;
 
 #endif

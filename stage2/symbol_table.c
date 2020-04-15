@@ -26,6 +26,21 @@ char* get_string_from_type(TypeName typename) {
     return NULL;
 }
 
+TypeName get_typename_from_term(term token_type) {
+    switch(token_type) {
+        case TK_NUM:
+            return TYPE_INTEGER;
+        case TK_RNUM:
+            return TYPE_REAL;
+        case TK_BOOLEAN:
+            return TYPE_BOOLEAN;
+        case TK_ARRAY:
+            return TYPE_ARRAY;
+        default:
+            return TYPE_NONE;
+    }
+}
+
 unsigned long hash_function_symbol(char* str) {
     unsigned long i = 0;
     for (int j=0; str[j]; j++)
@@ -33,56 +48,71 @@ unsigned long hash_function_symbol(char* str) {
     return i % CAPACITY;
 }
 
-void helper_function(SymbolHashTable** symboltable, ASTNode* root, int enna_child) {
-    // Adds relevant elements of the AST to the symbol table
-    if (!root)
-        return;
-    //printf("Now at %s\n", get_string_from_term(root->token_type));
-    //if (root->parent)
-    //    printf("My Parent is %s\n", get_string_from_term(root->parent->token_type));
-    if (root->parent && root->parent->token_type == module && root->token_type == TK_ID) {
-        // Module Name. Add to Symbol table
-        SymbolRecord* record = create_symbolrecord(NULL, NULL, root->token.lexeme, TYPE_MODULE, NULL, curr_scope, 0, 0, TK_EPSILON);
-        *(symboltable) = st_insert(*(symboltable), root->token.lexeme, record);
+void create_scope_table(SymbolHashTable*** symboltables_ptr, int index) {
+    // Creates a scope table
+    printf("Entering a new scope. start_scope = %d\n...\n", start_scope);
+    SymbolHashTable** symboltables = *symboltables_ptr;
+    symboltables = (SymbolHashTable**) realloc (symboltables, (index + 1) * sizeof(SymbolHashTable*));
+    // Update pointer to new memory location due to realloc
+    *symboltables_ptr = symboltables;
+    //for (int i=0; i<=index; i++)
+    //    (*symboltables_ptr)[i] = symboltables[i];
+    if (symboltables == NULL) {
+        perror("Out of Memory\n");
+        exit(1);
     }
-    else if (root->parent && root->parent->token_type == input_plist && root->token_type == TK_ID) {
-        // Input Identifier (parameter)
-        if (root->parent->children[enna_child + 1]->children[0]->token.token_type == TK_ARRAY) {
-            // Array. Find size and offset
-            if (root->parent->children[enna_child + 1]->children[1]->children[0]->token.token_type == TK_NUM) {
-                int start_offset = atoi(root->parent->children[enna_child + 1]->children[1]->children[0]->token.lexeme);
-                int end_offset = atoi(root->parent->children[enna_child + 1]->children[1]->children[1]->token.lexeme);
-                term element_type = root->parent->children[enna_child + 1]->children[2]->token.token_type;
-                SymbolRecord* record = create_symbolrecord(root->token.lexeme, NULL, NULL, TYPE_ARRAY, NULL, curr_scope, end_offset - start_offset, start_offset, element_type);
-                *(symboltable) = st_insert(*(symboltable), root->token.lexeme, record);
-            }
-            else if (root->parent->children[enna_child + 1]->children[1]->children[0]->token.token_type == TK_ID) {
-                fprintf(stderr, "\nSemantic Error (Line No: %d): Identifier not allowed as an array index for a function parameter\n", root->parent->children[enna_child + 1]->children[1]->children[0]->token.line_no);
-                return;
-            }
-            else if (root->parent->children[enna_child + 1]->children[1]->children[1]->token.token_type == TK_ID) {
-                fprintf(stderr, "\nSemantic Error (Line No: %d): Identifier not allowed as an array index for a function parameter\n", root->parent->children[enna_child + 1]->children[1]->children[1]->token.line_no);
-                return;
-            }
-        }
-    }
-    else if (root->token_type == TK_NUM) {
-
-    }
-    else if (root->token_type == TK_RNUM) {
-
-    }
-    for (int i=0; i<root->num_children; i++)
-        helper_function(symboltable, root->children[i], i);
+    symboltables_ptr = &symboltables;
+    symboltables[index] = create_symtable(CAPACITY, hash_function_symbol);
+    printf("Entered new scope. Created a Scope Table\n");
 }
 
-SymbolHashTable* createSymbolTable(ASTNode* root) {
+void insert_into_symbol_table(SymbolHashTable*** symboltables_ptr, char* key, SymbolRecord* record, int index) {
+    printf("Inserting %s ...\n", key);
+    SymbolHashTable** symboltables = *symboltables_ptr;
+    symboltables[index] = st_insert(symboltables[index], key, record);
+    printf("Inserted %s successfully\n", key);
+}
+
+void perform_type_extraction(SymbolHashTable*** symboltables_ptr, ASTNode* root, int enna_child) {
+    // Performs Type Extraction 
+    if (!root)
+        return;
+    if (root->token_type == TK_END) {
+        // End of Scope
+        end_scope ++;
+    }
+    else if (root->token_type == module) {
+        // Module Declaration. Add input_plist to it's local scope
+        start_scope ++;
+        // Create a scope table
+        create_scope_table(symboltables_ptr, start_scope);
+        ASTNode* moduleIDNode = root->children[0];
+        ASTNode* input_plistNode = root->children[1];
+        ASTNode* retNode = root->children[2];
+        if (retNode == NULL) {
+            printf("Module does not have a return type\n");
+        }
+        else {
+            // Module Name. Add to Symbol table
+            printf("Module name is %s\n", moduleIDNode->token.lexeme);
+            SymbolRecord* record = create_symbolrecord(NULL, NULL, moduleIDNode->token.lexeme, TYPE_MODULE, NULL, start_scope, 0, 0, TK_EPSILON);
+            insert_into_symbol_table(symboltables_ptr, moduleIDNode->token.lexeme, record, start_scope);
+        }
+    }
+    for (int i=0; i<root->num_children; i++)
+        perform_type_extraction(symboltables_ptr, root->children[i], i);
+}
+
+SymbolHashTable** createSymbolTables(ASTNode* root) {
     // Creates a Symbol Table
-    SymbolHashTable* symboltable = create_symtable(CAPACITY, hash_function_symbol);
+    SymbolHashTable** symboltables = calloc (1, sizeof(SymbolHashTable*));
+    symboltables[0] = create_symtable(CAPACITY, hash_function_symbol);
+    printf("Created Symtable\n");
     ASTNode* temp = root;
-    helper_function(&symboltable, temp, 0);
-    print_symtable(symboltable);
-    return symboltable;
+    perform_type_extraction(&symboltables, temp, 0);
+    //helper_function(&symboltables, temp, 0);
+    print_symtables(symboltables, start_scope);
+    return symboltables;
 }
 
 SymbolRecord* create_symbolrecord(char* var_name, char* fun_name, char* module_name, TypeName type_name, char* const_value, int scope_label, int total_size, int offset, term element_type) {
@@ -472,4 +502,19 @@ void print_symtable(SymbolHashTable* table) {
         }
     }
     printf("-------------------\n");
+}
+
+void print_symtables(SymbolHashTable** tables, int num_tables) {
+    // Table #0 is for global scoped variables
+    for (int i=0; i<=num_tables; i++) {
+        printf("Table #%d\n\n", i);
+        print_symtable(tables[i]);
+    }
+}
+
+void free_symtables(SymbolHashTable** tables, int num_tables) {
+    // Index #0 is for global scope
+    // and one more index for realloc (index + 1) jugaad
+    for (int i=0; i<=num_tables+1; i++) if (tables[i]) free_symtable(tables[i]);
+    free(tables);
 }
