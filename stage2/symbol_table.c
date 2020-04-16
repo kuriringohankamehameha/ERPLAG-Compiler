@@ -327,6 +327,9 @@ void perform_semantic_analysis(SymbolHashTable*** symboltables_ptr, ASTNode* roo
     else if (root->token_type == declareStmt) {
         process_declaration_statement(symboltables_ptr, root);
     }
+    else if (root->token_type == driverModule) {
+        process_driver_module(symboltables_ptr, root);
+    }
     for (int i=0; i<root->num_children; i++)
         perform_semantic_analysis(symboltables_ptr, root->children[i], i);
 }
