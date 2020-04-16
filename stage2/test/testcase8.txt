@@ -4,7 +4,7 @@ start
     declare sum: integer;
     for (index in 1..10)
     start
-        sum := sum + 2 * (numbers[index] + 1);
+        sum := sum + 2 * (numbers[0] + 1);
     end
     print(sum);
 end
@@ -18,7 +18,7 @@ start
 	declare index : integer;
 	for (index in 4..20)
 	start
-		s := s + list[index];
+		index := s + list[index];
 	end
 	sum := s;
 end

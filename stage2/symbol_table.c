@@ -295,31 +295,114 @@ static TypeName get_type_of_arithmeticOrBooleanExpr(SymbolHashTable*** symboltab
     return expr_type;
 }
 
-static TypeName get_type_of_expression(ASTNode* root) {
+static int error = 0;
+static TypeName expression_type = TYPE_NONE;
+static bool set_to_boolean = false;
+
+static void get_type_of_expression(SymbolHashTable*** symboltables_ptr, ASTNode* root) {
     // Get the type of the expression
     // Will return TYPE_ERROR if there's a semantic error when processing the expression
-    
-    // <arithmeticOrBooleanExpr> -> <AnyTerm> <N7>
-    // <N7> -> <logicalOp> <AnyTerm> <N7> 
-    // <N7> -> E
-    // <AnyTerm> -> <arithmeticExpr> <N8> 
-    // <AnyTerm> -> <boolConstt>
-    // <N8> -> <relationalOp> <arithmeticExpr> 
-    // <N8> -> E
-    // <arithmeticExpr> -> <g_term> <N4>
-    // <N4> -> <op1> <g_term> <N4>  
-    // <N4> -> E
-    // <g_term> -> <factor> <N5>
-    // <N5> -> <op2> <factor> <N5> 
-    // <N5> -> E
-    // <factor> -> TK_BO <arithmeticOrBooleanExpr> TK_BC 
-    // <factor> -> <var_id_num>
-    ASTNode* AnyTermNode = root->children[0];
-    ASTNode* N7Node = root->children[1];
+    if (!root) return;
+    root->visited = true;
+    SymbolHashTable** symboltables = *symboltables_ptr;
+    TypeName expr_type = TYPE_NONE;
+    for (int i=0; i<root->num_children; i++) {
+        if (root->children[i]->visited)
+            continue;
+        get_type_of_expression(symboltables_ptr, root->children[i]);
+        if (error == 1) {
+            root->visited = true;
+            error = 1; expression_type = TYPE_ERROR;
+            return;
+        }       
+    }
+    if (root->token_type == var_id_num) {
+        //printf("Reached var_id_num: %s\n", root->children[0]->token.lexeme);
+        ASTNode* var_id_numNode = root;
+        if (var_id_numNode->children[0]->token_type == TK_NUM)
+            expr_type = TYPE_INTEGER;
+        else if (var_id_numNode->children[0]->token_type == TK_RNUM)
+            expr_type = TYPE_REAL;
+        else {
+            // TK_ID
+            ASTNode* idNode = var_id_numNode->children[0];
+            if (var_id_numNode->children[1] == NULL) {
+                // Simply an identifier
+                SymbolRecord* search = st_search(symboltables[start_scope], idNode->token.lexeme);
+                if (search == NULL) {
+                    fprintf(stderr, "Semantic Error (Line No: %d) : Identifier %s used in arithmetic expression not declared in scope\n", idNode->token.line_no, idNode->token.lexeme);
+                    error = 1; expression_type = TYPE_ERROR;
+                    return;
+                }
+                expr_type = search->type_name;
+                if (expression_type != TYPE_NONE && expr_type != expression_type) {
+                    fprintf(stderr, "Semantic Error (Line No: %d) : Identifier %s used in arithmetic expression not conforming to type %s\n", search->token.line_no, search->token.lexeme, get_string_from_type(expression_type));
+                    error = 1; expression_type = TYPE_ERROR;
+                    return;
+                }
+            }
+            else {
+                // An array index
+                SymbolRecord* search;
+                ASTNode* idxNode = var_id_numNode->children[1];
+                search = st_search(symboltables[start_scope], idNode->token.lexeme);
+                if (search == NULL) {
+                    fprintf(stderr, "Semantic Error (Line No: %d) : Identifier %s used in arithmetic expression not declared in scope\n", idNode->token.line_no, idNode->token.lexeme);
+                    error = 1; expression_type = TYPE_ERROR;
+                    return;
+                }
+                expr_type = get_typename_from_term(search->element_type);
+                if (expression_type != TYPE_NONE && expr_type != expression_type) {
+                    fprintf(stderr, "Semantic Error (Line No: %d) : Identifier %s used in arithmetic expression not conforming to type\n", search->token.line_no, search->token.lexeme);
+                    error = 1; expression_type = TYPE_ERROR;
+                    return;
+                }
+                if (idxNode->token.token_type == TK_NUM) {
+                    expression_type = expr_type;
+                    return;
+                }
+                search = st_search(symboltables[start_scope], idxNode->token.lexeme);
+                if (search == NULL) {
+                    fprintf(stderr, "Semantic Error (Line No: %d) : Identifier %s used in arithmetic expression not declared in scope\n", idxNode->token.line_no, idxNode->token.lexeme);
+                    error = 1; expression_type = TYPE_ERROR;
+                    return;
+                }
+                // Check if array index is of integer type
+                // TODO: Add Dynamic Arrays
+                if (search->type_name != TYPE_INTEGER) {
+                    fprintf(stderr, "Semantic Error (Line No: %d) : Identifier %s used in array index must be an integer\n", idxNode->token.line_no, idxNode->token.lexeme);
+                    error = 1; expression_type = TYPE_ERROR;
+                    return;
+                }
+            }
+        }
+        if (expression_type != TYPE_NONE && expr_type != expression_type) {
+            fprintf(stderr, "Semantic Error (Line No: %d) : Identifier %s used in arithmetic expression not conforming to type\n", var_id_numNode->children[0]->token.line_no, var_id_numNode->children[0]->token.lexeme);
+            error = 1; expression_type = TYPE_ERROR;
+            return;
+        }
+        expression_type = expr_type;
+        //printf("var_id_num returns %s\n", get_string_from_type(expression_type));
+        return;
+    }
+    else if (root->token_type == boolConstt) {
+        expr_type = TYPE_BOOLEAN;
+        expression_type = expr_type;
+    }
+    else if (root->token_type == N8) {
+        set_to_boolean = true;
+    }
+    return;
+}
 
-    // Get type of AnyTerm
-
-    return TYPE_ERROR;
+static void process_expression(SymbolHashTable*** symboltables_ptr, ASTNode* root) {
+    get_type_of_expression(symboltables_ptr, root);
+    if (expression_type !=  TYPE_NONE && set_to_boolean == true)
+        expression_type = TYPE_BOOLEAN;
+    if (expression_type != TYPE_NONE)
+        printf("Type of Expression : %s\n", get_string_from_type(expression_type));
+    // Remember to reset expression_type and error after every call
+    error = 0; expression_type = TYPE_NONE; set_to_boolean = false;
 }
 
 static void process_assignment_statement(SymbolHashTable*** symboltables_ptr, ASTNode* root) {
@@ -331,9 +414,40 @@ static void process_assignment_statement(SymbolHashTable*** symboltables_ptr, AS
         fprintf(stderr, "Semantic Error (Line No: %d): Identifier %s being assigned before declaration\n", lvalueNode->token.line_no, lvalueNode->token.lexeme);
         return;
     }
+
+    if (root->children[1]->token_type != expression) {
+        // Array
+        ASTNode* idxNode = root->children[1];
+        if (idxNode->token.token_type == TK_ID) {
+            SymbolRecord* idx_search = st_search(symboltables[start_scope], idxNode->token.lexeme);
+            if (idx_search == NULL) {
+                fprintf(stderr, "Semantic Error (Line No: %d): Lvalue array index %s being assigned before declaration\n", idxNode->token.line_no, idxNode->token.lexeme);
+                return;
+            }
+        }
+        error = 0; expression_type = TYPE_NONE; set_to_boolean = false;
+        get_type_of_expression(symboltables_ptr, root);
+        if (set_to_boolean) expression_type = TYPE_BOOLEAN;
+        if (error == 0) {
+            if (expression_type != get_typename_from_term(search->element_type)) {
+                fprintf(stderr, "Semantic Error (Line No: %d): Identifier %s. Incompatible types for an lvalue assignment statement. lvalue is of type %s, while the assignment statement is of type %s\n", lvalueNode->token.line_no, lvalueNode->token.lexeme, get_string_from_type(get_typename_from_term(search->element_type)), get_string_from_type(expression_type));
+            }
+        }
+        error = 0; expression_type = TYPE_NONE; set_to_boolean = false;
+        return;
+    }
     // Now the type expressions must match
     // Consider the rhs
-    ASTNode* whichStmtNode = root->children[1];
+    // ASTNode* whichStmtNode = root->children[1];
+    error = 0; expression_type = TYPE_NONE; set_to_boolean = false;
+    get_type_of_expression(symboltables_ptr, root);
+    if (set_to_boolean) expression_type = TYPE_BOOLEAN;
+    if (error == 0) {
+        if (expression_type != search->type_name) {
+            fprintf(stderr, "Semantic Error (Line No: %d): Identifier %s. Incompatible types for an lvalue assignment statement. lvalue is of type %s, while the assignment statement is of type %s\n", lvalueNode->token.line_no, lvalueNode->token.lexeme, get_string_from_type(search->type_name), get_string_from_type(expression_type));
+        }
+    }
+    error = 0; expression_type = TYPE_NONE; set_to_boolean = false;
 }
 
 static void process_module_reuse(SymbolHashTable*** symboltables_ptr, ASTNode* root) {
@@ -435,6 +549,11 @@ void perform_semantic_analysis(SymbolHashTable*** symboltables_ptr, ASTNode* roo
     else if (root->token_type == driverModule) {
         process_driver_module(symboltables_ptr, root);
     }
+    else if (root->token_type == arithmeticExpr) {
+        //printf("Processing Expression\n");
+        process_expression(symboltables_ptr, root);
+    }
+    // TODO: Unary Operators
     for (int i=0; i<root->num_children; i++)
         perform_semantic_analysis(symboltables_ptr, root->children[i], i);
 }

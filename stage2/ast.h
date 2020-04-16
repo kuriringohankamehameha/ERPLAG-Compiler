@@ -17,6 +17,7 @@ typedef struct ASTNode {
     int num_children;
     // For synthesized attributes (type checking, etc)
     Synthesized syn_attribute;
+    bool visited;
 }ASTNode;
 
 ASTNode* make_ASTNode(ASTNode* child, term token_type);

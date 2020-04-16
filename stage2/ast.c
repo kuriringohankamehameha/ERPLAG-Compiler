@@ -14,6 +14,7 @@ ASTNode* make_ASTNode(ASTNode* child, term token_type)
     node->parent = NULL;
     node->children = (ASTNode**) calloc (1, sizeof(ASTNode*));
     node->children[0] = child;
+    node->visited = false;
     child->parent = node;
     node->num_children = 1;
     return node;
@@ -47,6 +48,7 @@ ASTNode* make_ASTLeaf(ASTNode* parent, Token token)
     node->parent = parent;
     node->children = NULL;
     node->num_children = 0;
+    node->visited = false;
     return node;
 }
 
@@ -568,14 +570,14 @@ void generate_AST(TreeNode* root)
         // <expression> -> <arithmeticOrBooleanExpr>
         TreeNode *arithmeticOrBooleanExprNode = root->children[0];
         generate_AST(arithmeticOrBooleanExprNode);
-        root->node = arithmeticOrBooleanExprNode->node;
+        root->node = make_ASTNode(arithmeticOrBooleanExprNode->node, expression);
     }
     else if AST_COND(root, expression, U)
     {
         // <expression> -> <U>
         TreeNode *UNode = root->children[0];
         generate_AST(UNode);
-        root->node = UNode->node;
+        root->node = make_ASTNode(UNode->node, U);
     }
     else if AST_COND(root, U, unary_op)
     {
