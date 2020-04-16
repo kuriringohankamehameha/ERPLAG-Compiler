@@ -10,6 +10,7 @@ unsigned long hash_function_sym(char* str) {
 
 int main() {
     SymbolHashTable* table = create_symtable(1000, hash_function_sym);
+    /*
     SymbolRecord* value = create_symbolrecord("num", NULL, NULL, TYPE_INTEGER, "10", 1, 4, 0, TK_EPSILON);
     table = st_insert(table, "num", value);
     SymbolRecord* value2 = create_symbolrecord("num", NULL, NULL, TYPE_INTEGER, "20", 2, 4, 0, TK_EPSILON);
@@ -25,6 +26,7 @@ int main() {
     st_delete(table, "abd");
     st_delete(table, "bbc");
     print_symtable(table);
+    */
     free_symtable(table);
     return 0;
 }

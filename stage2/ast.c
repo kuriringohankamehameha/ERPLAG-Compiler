@@ -159,8 +159,14 @@ void generate_AST(TreeNode* root)
         root->node = make_ASTNode(make_ASTLeaf(NULL, root->children[2]->token), module);
         if (input_plistNode->node)
             add_ASTChild(root->node, input_plistNode->node);
-        if (retNode->node)
+        if (retNode->node) {
             add_ASTChild(root->node, retNode->node);
+            root->node->syn_attribute.token_type = ret;
+        }
+        else {
+            // To indicate that <ret> -> E
+            root->node->syn_attribute.token_type = TK_EPSILON;
+        }
         if (moduleDefNode->node)
             add_ASTChild(root->node, moduleDefNode->node);
     }
@@ -309,7 +315,7 @@ void generate_AST(TreeNode* root)
         TreeNode *statementsNode = root->children[1];
         generate_AST(statementNode);
         generate_AST(statementsNode);
-        root->node = statementNode->node;
+        root->node = make_ASTNode(statementNode->node, statements);
         if (statementsNode->node)
             add_ASTChild(root->node, statementsNode->node);
     }
@@ -502,9 +508,11 @@ void generate_AST(TreeNode* root)
         if (optionalNode->node) {
             root->node = make_ASTNode(optionalNode->node, moduleReuseStmt);
             add_ASTChild(root->node, make_ASTLeaf(NULL, root->children[3]->token));
+            root->node->syn_attribute.token_type = optional;
         }
         else {
             root->node = make_ASTNode(make_ASTLeaf(NULL, root->children[3]->token), moduleReuseStmt);
+            root->node->syn_attribute.token_type = TK_EPSILON;
         }
         if (idListNode->node)
             add_ASTChild(root->node, idListNode->node);
@@ -519,6 +527,9 @@ void generate_AST(TreeNode* root)
     else if AST_COND(root, optional, TK_EPSILON)
     {
         // <optional> -> E
+        // This is a wierd case. When first(LHS) -> E,
+        // the next token is also TK_ID. So, we need to
+        // explicitly mark this node, instead of setting it to NULL
         root->node = NULL;
     }
     else if AST_COND(root, idList, TK_ID)
@@ -531,7 +542,7 @@ void generate_AST(TreeNode* root)
             add_ASTChild(root->node, N3Node->node);
         }
         else {
-            root->node = make_ASTLeaf(NULL, root->children[0]->token);
+            root->node = make_ASTNode(make_ASTLeaf(NULL, root->children[0]->token), idList);
         }
     }
     else if AST_COND(root, N3, TK_COMMA)
@@ -544,7 +555,7 @@ void generate_AST(TreeNode* root)
             add_ASTChild(root->node, N3Node->node);
         }
         else {
-            root->node = make_ASTLeaf(NULL, root->children[1]->token);
+            root->node = make_ASTNode(make_ASTLeaf(NULL, root->children[1]->token), N3);
         }
     }
     else if AST_COND(root, N3, TK_EPSILON)
@@ -614,7 +625,7 @@ void generate_AST(TreeNode* root)
             add_ASTChild(root->node, N7Node->node);
         }
         else {
-            root->node = AnyTermNode->node;
+            root->node = make_ASTNode(AnyTermNode->node, arithmeticOrBooleanExpr);
         }
     }
     else if AST_COND(root, N7, logicalOp)
@@ -634,7 +645,7 @@ void generate_AST(TreeNode* root)
             add_ASTChild(root->node, N7Node->node);
         }
         else {
-            root->node = AnyTermNode->node;
+            root->node = make_ASTNode(AnyTermNode->node, N7);
             root->node->syn_attribute.token_type = syn_token; 
         }
     }
@@ -655,7 +666,7 @@ void generate_AST(TreeNode* root)
             add_ASTChild(root->node, N8Node->node);
         }
         else {
-            root->node = arithmeticExprNode->node;
+            root->node = make_ASTNode(arithmeticExprNode->node, AnyTerm);
         }
     }
     else if AST_COND(root, AnyTerm, boolConstt)
@@ -696,7 +707,7 @@ void generate_AST(TreeNode* root)
             add_ASTChild(root->node, N4Node->node);
         }
         else {
-            root->node = g_termNode->node;
+            root->node = make_ASTNode(g_termNode->node, arithmeticExpr);
         }
     }
     else if AST_COND(root, N4, op1)
@@ -733,7 +744,7 @@ void generate_AST(TreeNode* root)
             add_ASTChild(root->node, N5Node->node);
         }
         else {
-            root->node = factorNode->node;
+            root->node = make_ASTNode(factorNode->node, g_term);
         }
     }
     else if AST_COND(root, N5, op2)
@@ -893,7 +904,7 @@ void generate_AST(TreeNode* root)
             add_ASTChild(root->node, N9Node->node);
         }
         else if (statementsNode->node == NULL && N9Node->node == NULL) {
-            root->node = valueNode->node;
+            root->node = make_ASTNode(valueNode->node, N9);
         }
     }
     else if AST_COND(root, N9, TK_EPSILON)
@@ -921,7 +932,8 @@ void generate_AST(TreeNode* root)
         // <g_default> -> TK_DEFAULT TK_COLON <statements> TK_BREAK TK_SEMICOL
         TreeNode *statementsNode = root->children[2];
         generate_AST(statementsNode);
-        root->node = statementsNode->node;
+        root->node = make_ASTNode(make_ASTLeaf(NULL, root->children[0]->token), g_default);
+        add_ASTChild(root->node, statementsNode->node);
     }
     else if AST_COND(root, g_default, TK_EPSILON)
     {

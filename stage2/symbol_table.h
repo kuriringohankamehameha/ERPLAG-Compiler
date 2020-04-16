@@ -27,11 +27,8 @@ struct SymbolRecord {
     // * Scope Label
     // * Total Size
     // * Offset (for Arrays)
-    char* var_name;
-    char* fun_name;
-    char* module_name;
+    Token token;
     TypeName type_name;
-    char* const_value;
     int scope_label; // Defaults to 0 for global scope
     int total_size;
     int offset;
@@ -74,7 +71,7 @@ struct SymbolHashTable {
 
 
 SymbolHashTable* create_symtable(int size, unsigned long (*hash_fun)(char*));
-SymbolRecord* create_symbolrecord(char* var_name, char* fun_name, char* module_name, TypeName type_name, char* const_value, int scope_label, int total_size, int offset, term element_type);
+SymbolRecord* create_symbolrecord(Token token, TypeName type_name, int scope_label, int total_size, int offset, term element_type);
 void free_symtable(SymbolHashTable* table);
 St_item* create_symitem(char* key, SymbolRecord* value);
 void free_symitem(St_item* item);

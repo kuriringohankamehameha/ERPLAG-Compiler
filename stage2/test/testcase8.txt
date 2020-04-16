@@ -1,3 +1,14 @@
+<<module lolmax>>
+takes input[numbers:array[1..100] of integer];
+start
+    declare sum: integer;
+    for (index in 1..10)
+    start
+        sum := sum + numbers[index];
+    end
+    print(sum);
+end
+
 <<module arraysum>>
 takes input[list:array[40..200] of real];
 returns [sum:real];

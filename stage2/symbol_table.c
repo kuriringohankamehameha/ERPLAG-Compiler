@@ -3,6 +3,7 @@
 #include "parser.h"
 #include "ast.h"
 #include "symbol_table.h"
+#include <assert.h>
 
 int total_scope = 0;
 
@@ -30,6 +31,10 @@ char* get_string_from_type(TypeName typename) {
 
 TypeName get_typename_from_term(term token_type) {
     switch(token_type) {
+        case TK_INTEGER:
+            return TYPE_INTEGER;
+        case TK_REAL:
+            return TYPE_REAL;
         case TK_NUM:
             return TYPE_INTEGER;
         case TK_RNUM:
@@ -81,47 +86,243 @@ int* get_offsets(ASTNode* node) {
     return offsets;
 }
 
+static void process_module_declaration(SymbolHashTable*** symboltables_ptr, ASTNode* root) {
+    SymbolRecord* record;
+    ASTNode* moduleIDNode = root->children[0];
+    record = create_symbolrecord(moduleIDNode->token, TYPE_MODULE, 0, 0, 0, TK_EPSILON);
+    insert_into_symbol_table(symboltables_ptr, moduleIDNode->token.lexeme, record, 0);
+    // Move onto local scope
+    start_scope ++;
+    record = create_symbolrecord(moduleIDNode->token, TYPE_MODULE, start_scope, 0, 0, TK_EPSILON);
+    insert_into_symbol_table(symboltables_ptr, moduleIDNode->token.lexeme, record, start_scope);
+}
+
+static void process_module_definition(SymbolHashTable*** symboltables_ptr, ASTNode* root) {
+    // Move to local scope
+    start_scope ++;
+    // Create a scope table
+    create_scope_table(symboltables_ptr, start_scope);
+    ASTNode* moduleIDNode = root->children[0];
+    ASTNode* input_plistNode = root->children[1];
+    ASTNode* retNode;
+    //ASTNode* moduleDefNode;
+    if (root->syn_attribute.token_type == TK_EPSILON) {
+        retNode = NULL;
+        //moduleDefNode = root->children[2];
+    }
+    else {
+        retNode = root->children[2];
+        //moduleDefNode = root->children[3];
+    }
+    
+    // Module Name. Add to local and global Symbol table
+    SymbolRecord* record;
+    record = create_symbolrecord(moduleIDNode->token, TYPE_MODULE, 0, 0, 0, TK_EPSILON);
+    insert_into_symbol_table(symboltables_ptr, moduleIDNode->token.lexeme, record, 0);
+
+    record = create_symbolrecord(moduleIDNode->token, TYPE_MODULE, start_scope, 0, 0, TK_EPSILON);
+    insert_into_symbol_table(symboltables_ptr, moduleIDNode->token.lexeme, record, start_scope);
+    
+    // Insert <input_plist>
+    for (ASTNode* temp = input_plistNode; ; temp=temp->children[2]) {
+        ASTNode* idNode = temp->children[0];
+        ASTNode* typeNode = temp->children[1];
+        int* offsets = get_offsets(typeNode);
+        int a = offsets[0]; int b = offsets[1];
+        free(offsets);
+        SymbolRecord* record;
+        if (typeNode->num_children > 1)
+            record = create_symbolrecord(idNode->token, get_typename_from_term(typeNode->children[0]->token_type), start_scope, b-a, a, typeNode->children[2]->token_type);
+        else
+            record = create_symbolrecord(idNode->token, get_typename_from_term(typeNode->children[0]->token_type), start_scope, b-a, a, TK_EPSILON);
+        insert_into_symbol_table(symboltables_ptr, idNode->token.lexeme, record, start_scope);
+        if (temp->children[2] == NULL)
+            break;
+    }
+
+    if (retNode == NULL) {
+        printf("Module <<%s>> does not have a return type\n", moduleIDNode->token.lexeme);
+    }
+    else {
+        // Insert <output_plist>
+        ASTNode* output_plistNode = retNode;
+        for (ASTNode* temp = output_plistNode; ; temp=temp->children[2]) {
+            ASTNode* idNode = temp->children[0];
+            ASTNode* typeNode = temp->children[1];
+            record = create_symbolrecord(idNode->token, get_typename_from_term(typeNode->token_type), start_scope, 0, 0, TK_EPSILON);
+            insert_into_symbol_table(symboltables_ptr, idNode->token.lexeme, record, start_scope);
+            if (temp->children[2] == NULL)
+                break;
+        }
+    }
+}
+
+static void insert_identifier(SymbolHashTable*** symboltables_ptr, ASTNode* idNode, ASTNode* dataTypeNode) {
+    // Inserts a single identifier, specified by datatype
+    SymbolRecord* record;
+    int* offsets = get_offsets(dataTypeNode);
+    int a = offsets[0]; int b = offsets[1];
+    free(offsets);
+    if (dataTypeNode->children[0]->token.token_type == TK_ARRAY)
+        record = create_symbolrecord(idNode->token, get_typename_from_term(TK_ARRAY), start_scope, b-a, a, dataTypeNode->children[2]->token.token_type);
+    else
+        record = create_symbolrecord(idNode->token, get_typename_from_term(dataTypeNode->children[0]->token.token_type), start_scope, b-a, a, TK_EPSILON);
+    insert_into_symbol_table(symboltables_ptr, idNode->token.lexeme, record, start_scope);
+}
+
+static void process_declaration_statement(SymbolHashTable*** symboltables_ptr, ASTNode* root) {
+    SymbolHashTable** symboltables = *symboltables_ptr;
+    SymbolRecord* search;
+    // <declarestmt> -> <idList> <dataType>
+    // <idList> -> TK_ID <N3>
+    // <N3> -> TK_COMMA TK_ID <N3> 
+    // <N3> -> E
+    ASTNode* idListNode = root->children[0];
+    ASTNode* dataTypeNode = root->children[1];
+    ASTNode* idNode = idListNode->children[0];
+    
+    search = st_search(symboltables[start_scope], idNode->token.lexeme);
+    if (search != NULL) {
+        fprintf(stderr, "Semantic Error (Line No: %d): Identifier %s already in current scope. Cannot be declared\n", search->token.line_no, search->token.lexeme);
+        return;
+    }
+    search = st_search(symboltables[0], idNode->token.lexeme);
+    if (search != NULL) {
+        fprintf(stderr, "Semantic Error (Line No: %d): Identifier %s already in global scope. Cannot be declared\n", search->token.line_no, search->token.lexeme);
+        return;
+    }
+
+    insert_identifier(symboltables_ptr, idNode, dataTypeNode);
+
+    // Check for the rest of the identifiers
+    ASTNode* N3Node = idListNode->children[1];
+    if (N3Node != NULL) {
+        for (ASTNode* curr = N3Node; ;curr = curr->children[1]) {
+            search = st_search(symboltables[start_scope], curr->children[0]->token.lexeme);
+            if (search != NULL) {
+                fprintf(stderr, "Semantic Error (Line No: %d): Identifier %s already in current scope. Cannot be declared\n", search->token.line_no, search->token.lexeme);
+                return;
+            }
+            search = st_search(symboltables[0], curr->children[0]->token.lexeme);
+            if (search != NULL) {
+                fprintf(stderr, "Semantic Error (Line No: %d): Identifier %s already in global scope. Cannot be declared\n", search->token.line_no, search->token.lexeme);
+                return;
+            }
+            // Insert into the table
+            insert_identifier(symboltables_ptr, curr->children[0], dataTypeNode);
+            if (curr->children[1] == NULL)
+                break;
+        }
+    }
+}
+
+static void process_assignment_statement(SymbolHashTable*** symboltables_ptr, ASTNode* root) {
+    SymbolHashTable** symboltables = *symboltables_ptr;
+    ASTNode* lvalueNode = root->children[0];
+    // This must already be declared
+    SymbolRecord* search = st_search(symboltables[start_scope], lvalueNode->token.lexeme);
+    if (search == NULL) {
+        fprintf(stderr, "Semantic Error (Line No: %d): Identifier %s being used before declaration\n", lvalueNode->token.line_no, lvalueNode->token.lexeme);
+        return;
+    }
+    // Now the type expressions must match
+}
+
+static void process_module_reuse(SymbolHashTable*** symboltables_ptr, ASTNode* root) {
+    // <optional> => <output_plist> and <idList> => <input_plist>
+    // Case 1: If <optional> is not E
+    SymbolHashTable** symboltables = *symboltables_ptr;
+    if (root->syn_attribute.token_type == TK_EPSILON) {
+        // <optional> -> E
+    }
+    else {
+        assert (root->syn_attribute.token_type == optional);
+        if (root->children[0]->num_children == 0) {
+            // <N3> -> E
+            // Optional has only a single identifier
+            ASTNode* idNode = root->children[0];
+            SymbolRecord* search;
+            // Search the local scope first
+            search = st_search(symboltables[start_scope], idNode->token.lexeme);
+            if (search == NULL) {
+                // Otherwise Search the global scope
+                search = st_search(symboltables[0], idNode->token.lexeme);
+                if (search == NULL) {
+                    // Not found. Error
+                    fprintf(stderr, "Semantic Error (Line No: %d): Identifier %s not found in scope, but used in module call statement\n", idNode->token.line_no, idNode->token.lexeme);
+                    return;
+                }
+            }
+            // Otherwise, now check types of parameters
+        }
+        else {
+            for (ASTNode* temp=root->children[0]; ; temp=temp->children[1]) {
+                ASTNode* idNode = temp->children[0];
+                SymbolRecord* search;
+                // Search the local scope first
+                search = st_search(symboltables[start_scope], idNode->token.lexeme);
+                if (search == NULL) {
+                    // Otherwise Search the global scope
+                    search = st_search(symboltables[0], idNode->token.lexeme);
+                    if (search == NULL) {
+                        // Not found. Error
+                        fprintf(stderr, "Semantic Error (Line No: %d): Identifier %s not found\n", idNode->token.line_no, idNode->token.lexeme);
+                        return;
+                    }
+                }
+                // Ssearch must have the matched variable
+                // Now check types of parameters
+                // Result types must match <output_plist>
+                // Maintain a Stack / List of all modules with their scopes.
+                // This list is used to lookup parameter lists and verify types
+                if (temp->children[1]== NULL)
+                    break;
+            }
+        }
+    }
+}
+
 void perform_semantic_analysis(SymbolHashTable*** symboltables_ptr, ASTNode* root, int enna_child) {
     // Performs Type Extraction 
     if (!root)
         return;
+    SymbolHashTable** symboltables = *symboltables_ptr; // Careful with realloc()
     if (root->token_type == TK_END) {
         // End of Scope
         end_scope ++;
     }
+    else if (root->token_type == moduleDeclaration) {
+        // Module Declaration. Add the moduleID to both local and global scopes.
+        // Nested Declarations are not allowed, so this directly goes only to the global scope table
+        // Can we have a module definition before a declaration?
+        SymbolRecord* search = st_search(symboltables[0], root->children[0]->token.lexeme);
+        if (search != NULL) {
+            fprintf(stderr, "Semantic Error (Line No: %d): Function definition before a declaration\n", search->token.line_no);
+        }
+        else
+            process_module_declaration(symboltables_ptr, root);
+    }
     else if (root->token_type == module) {
-        // Module Declaration. Add input_plist to it's local scope
-        start_scope ++;
-        // Create a scope table
-        create_scope_table(symboltables_ptr, start_scope);
-        ASTNode* moduleIDNode = root->children[0];
-        ASTNode* input_plistNode = root->children[1];
-        ASTNode* retNode = root->children[2];
-        if (retNode == NULL) {
-            printf("Module <<%s>> does not have a return type\n", moduleIDNode->token.lexeme);
+        // Module Definition. Add moduleID to both local and global scope
+        // Add input_plist to it's local scope and output_plist
+        // Check in global scope
+        SymbolRecord* search = st_search(symboltables[0], root->children[0]->token.lexeme);
+        if (search != NULL) {
+            // Definition before declaration. Not allowed
+            fprintf(stderr, "Semantic Error (Line No: %d): Function declaration is redundant\n", search->token.line_no);
         }
         else {
-            // Module Name. Add to Symbol table
-            //printf("Module name is %s\n", moduleIDNode->token.lexeme);
-            SymbolRecord* record = create_symbolrecord(NULL, NULL, moduleIDNode->token.lexeme, TYPE_MODULE, NULL, start_scope, 0, 0, TK_EPSILON);
-            insert_into_symbol_table(symboltables_ptr, moduleIDNode->token.lexeme, record, start_scope);
-            // Insert <input_plist>
-            for (ASTNode* temp = input_plistNode; ; temp=temp->children[2]) {
-                ASTNode* idNode = temp->children[0];
-                ASTNode* typeNode = temp->children[1];
-                int* offsets = get_offsets(typeNode);
-                int a = offsets[0]; int b = offsets[1];
-                free(offsets);
-                SymbolRecord* record;
-                if (typeNode->num_children > 1)
-                    record = create_symbolrecord(idNode->token.lexeme, NULL, NULL, get_typename_from_term(typeNode->children[0]->token_type), NULL, start_scope, b-a, a, typeNode->children[2]->token_type);
-                else
-                    record = create_symbolrecord(idNode->token.lexeme, NULL, NULL, get_typename_from_term(typeNode->children[0]->token_type), NULL, start_scope, b-a, a, TK_EPSILON);
-                insert_into_symbol_table(symboltables_ptr, idNode->token.lexeme, record, start_scope);
-                if (temp->children[2] == NULL)
-                    break;
-            }
+            process_module_definition(symboltables_ptr, root);
         }
+    }
+    else if (root->token_type == assignmentStmt) {
+        process_assignment_statement(symboltables_ptr, root);
+    }
+    else if (root->token_type == moduleReuseStmt) {
+        process_module_reuse(symboltables_ptr, root);
+    }
+    else if (root->token_type == declareStmt) {
+        process_declaration_statement(symboltables_ptr, root);
     }
     for (int i=0; i<root->num_children; i++)
         perform_semantic_analysis(symboltables_ptr, root->children[i], i);
@@ -138,33 +339,10 @@ SymbolHashTable*** createSymbolTables(ASTNode* root) {
     return symboltables_ptr;
 }
 
-SymbolRecord* create_symbolrecord(char* var_name, char* fun_name, char* module_name, TypeName type_name, char* const_value, int scope_label, int total_size, int offset, term element_type) {
+SymbolRecord* create_symbolrecord(Token token, TypeName type_name, int scope_label, int total_size, int offset, term element_type) {
     SymbolRecord* symbolrecord = (SymbolRecord*) calloc (1, sizeof(SymbolRecord));
-    if (var_name) {
-        symbolrecord->var_name = (char*) calloc (strlen(var_name) + 1, sizeof(char));
-        strcpy(symbolrecord->var_name, var_name);
-    }
-    else
-        symbolrecord->var_name = NULL;
+    symbolrecord->token = token;
     symbolrecord->type_name = type_name;
-    if (fun_name) {
-        symbolrecord->fun_name = (char*) calloc (strlen(fun_name) + 1, sizeof(char));
-        strcpy(symbolrecord->fun_name, fun_name);
-    }
-    else
-        symbolrecord->fun_name = NULL;
-    if (module_name) {
-        symbolrecord->module_name = (char*) calloc (strlen(module_name) + 1, sizeof(char));
-        strcpy(symbolrecord->module_name, module_name);
-    }
-    else
-        symbolrecord->module_name = NULL;
-    if (const_value) {
-        symbolrecord->const_value = (char*) calloc (strlen(const_value) + 1, sizeof(char));
-        strcpy(symbolrecord->const_value, const_value);
-    }
-    else
-        symbolrecord->const_value = NULL;
     symbolrecord->scope_label = scope_label;
     symbolrecord->total_size = total_size;
     symbolrecord->offset = offset;
@@ -278,10 +456,6 @@ void free_symitem(St_item* item) {
     if (item->key)
         free(item->key);
     if (item->value) {
-        if (item->value->var_name) free(item->value->var_name);
-        if (item->value->fun_name) free(item->value->fun_name);
-        if (item->value->module_name) free(item->value->module_name);
-        if (item->value->const_value) free(item->value->const_value);
         free(item->value);
     }
     free(item);
@@ -290,10 +464,6 @@ void free_symitem(St_item* item) {
 void free_symrecord(SymbolRecord* record) {
     if (!record)
         return;
-    if (record->var_name) free(record->var_name);
-    if (record->fun_name) free(record->fun_name);
-    if (record->module_name) free(record->module_name);
-    if (record->const_value) free(record->const_value);
     free(record);
 }
 
@@ -464,29 +634,9 @@ void st_delete(SymbolHashTable* table, char* key) {
 
 void print_symrecord(SymbolRecord* t, char ch) {
     // Prints the SymbolRecord* type
-    if (t->var_name)
-        printf("var_name = %s , ", t->var_name);
-    printf("Type Name = %s , ", get_string_from_type(t->type_name));
-    if (t->fun_name)
-        printf("fun_name = %s , ", t->fun_name);
-    if (t->module_name)
-        printf("module_name = %s , ", t->module_name);
-    if (t->const_value) {
-        switch(t->type_name) {
-            case TYPE_INTEGER:
-                printf("const_value = %d , ", atoi(t->const_value));
-                break;
-            case TYPE_BOOLEAN:
-                printf("const_value = %s , ", t->const_value);
-                break;
-            case TYPE_REAL:
-                printf("const_value = %.4f , ", atof(t->const_value));
-            case TYPE_NONE:
-                printf("const_value = %s , ", t->const_value);
-            default:
-                printf("Not Yet Implemented ");
-                break;
-        }       
+    printf("token_type = %s , ", get_string_from_type(t->type_name));
+    if (t->token.lexeme) {
+        printf("lexeme = %s , ", t->token.lexeme);
     }
     printf("scope_label = %d , ", t->scope_label);
     printf("total_size = %d , ", t->total_size);
@@ -537,7 +687,6 @@ void print_symtables(SymbolHashTable** tables, int num_tables) {
 
 void free_symtables(SymbolHashTable** tables, int num_tables) {
     // Index #0 is for global scope
-    // and one more index for realloc (index + 1) jugaad
-    for (int i=0; i<=num_tables+1; i++) if (tables[i]) free_symtable(tables[i]);
+    for (int i=0; i<=num_tables; i++) if (tables[i]) free_symtable(tables[i]);
     free(tables);
 }
