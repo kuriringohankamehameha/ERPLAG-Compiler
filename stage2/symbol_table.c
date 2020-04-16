@@ -157,6 +157,9 @@ static void process_module_definition(SymbolHashTable*** symboltables_ptr, ASTNo
     }
 }
 
+static void process_driver_module(SymbolHashTable*** symboltables_ptr, ASTNode* root) {
+}
+
 static void insert_identifier(SymbolHashTable*** symboltables_ptr, ASTNode* idNode, ASTNode* dataTypeNode) {
     // Inserts a single identifier, specified by datatype
     SymbolRecord* record;
