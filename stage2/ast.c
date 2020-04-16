@@ -391,12 +391,12 @@ void generate_AST(TreeNode* root)
     else if AST_COND(root, boolConstt, TK_TRUE)
     {
         // <boolConstt> -> TK_TRUE
-        root->node = make_ASTLeaf(NULL, root->children[0]->token);
+        root->node = make_ASTNode(make_ASTLeaf(NULL, root->children[0]->token), boolConstt);
     }
     else if AST_COND(root, boolConstt, TK_FALSE)
     {
         // <boolConstt> -> TK_FALSE
-        root->node = make_ASTLeaf(NULL, root->children[0]->token);
+        root->node = make_ASTNode(make_ASTLeaf(NULL, root->children[0]->token), boolConstt);
     }
     else if AST_COND(root, var_id_num, TK_ID)
     {
@@ -408,18 +408,18 @@ void generate_AST(TreeNode* root)
             add_ASTChild(root->node, whichIdNode->node);
         }
         else {
-            root->node = make_ASTLeaf(NULL, root->children[0]->token);
+            root->node = make_ASTNode(make_ASTLeaf(NULL, root->children[0]->token), var_id_num);
         }
     }
     else if AST_COND(root, var_id_num, TK_NUM)
     {
         // <var_id_num> -> TK_NUM
-        root->node = make_ASTLeaf(NULL, root->children[0]->token);
+        root->node = make_ASTNode(make_ASTLeaf(NULL, root->children[0]->token), var_id_num);
     }
     else if AST_COND(root, var_id_num, TK_RNUM)
     {
         // <var_id_num> -> TK_RNUM
-        root->node = make_ASTLeaf(NULL, root->children[0]->token);
+        root->node = make_ASTNode(make_ASTLeaf(NULL, root->children[0]->token), var_id_num);
     }
     else if AST_COND(root, whichId, TK_SQBO)
     {
@@ -773,14 +773,14 @@ void generate_AST(TreeNode* root)
         // <factor> -> TK_BO <arithmeticOrBooleanExpr> TK_BC
         TreeNode *arithmeticOrBooleanExprNode = root->children[1];
         generate_AST(arithmeticOrBooleanExprNode);
-        root->node = arithmeticOrBooleanExprNode->node;
+        root->node = make_ASTNode(arithmeticOrBooleanExprNode->node, factor);
     }
     else if AST_COND(root, factor, var_id_num)
     {
         // <factor> -> <var_id_num>
         TreeNode *var_id_numNode = root->children[0];
         generate_AST(var_id_numNode);
-        root->node = var_id_numNode->node;
+        root->node = make_ASTNode(var_id_numNode->node, factor);
     }
     else if AST_COND(root, op1, TK_PLUS)
     {

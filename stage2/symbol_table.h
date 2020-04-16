@@ -12,7 +12,8 @@ typedef enum {
     TYPE_ARRAY,
     TYPE_FUNCTION,
     TYPE_MODULE,
-    TYPE_NONE
+    TYPE_NONE,
+    TYPE_ERROR
 } TypeName;
 
 struct SymbolRecord {
