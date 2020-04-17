@@ -307,7 +307,9 @@ static void get_type_of_expression(SymbolHashTable*** symboltables_ptr, ASTNode*
                         break;
                     }
                 }
+                expression_type = TYPE_BOOLEAN;
                 convert_to_bool = false; // Just in case I do something stupid
+                return;
             }
         }
     }
