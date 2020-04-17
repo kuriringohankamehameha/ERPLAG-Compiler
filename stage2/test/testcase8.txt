@@ -25,6 +25,24 @@ start
     start
         index := index - 1;
     end
+    
+    switch(zoology)
+    start
+        case 1:
+        break;
+        case true:
+            zoology := false;
+        break;
+    end
+
+    switch(index)
+    start
+        case 1:
+        break;
+        case true:
+            zoology := false;
+        break;
+    end
 
 	sum := s;
 end
