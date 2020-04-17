@@ -45,6 +45,8 @@ TypeName get_typename_from_term(term token_type) {
             return TYPE_BOOLEAN;
         case TK_ARRAY:
             return TYPE_ARRAY;
+        case TYPE_ERROR:
+            return TYPE_ERROR;
         default:
             return TYPE_NONE;
     }
@@ -77,6 +79,18 @@ void insert_into_symbol_table(SymbolHashTable*** symboltables_ptr, char* key, Sy
     SymbolHashTable** symboltables = *symboltables_ptr;
     symboltables[index] = st_insert(symboltables[index], key, record);
     //printf("Inserted %s successfully\n", key);
+}
+
+static SymbolRecord* st_search_scope(SymbolHashTable*** symboltables_ptr, char* key, int start_scope, int end_scope) {
+    SymbolRecord* search;
+    SymbolHashTable** symboltables = *symboltables_ptr;
+    for (int i=start_scope; i>=end_scope; i--) {
+        search = st_search(symboltables[i], key);
+        if (search != NULL) {
+            return search;
+        }
+    }
+    return NULL;
 }
 
 int* get_offsets(ASTNode* node) {
@@ -200,7 +214,7 @@ static void process_declaration_statement(SymbolHashTable*** symboltables_ptr, A
     ASTNode* dataTypeNode = root->children[1];
     ASTNode* idNode = idListNode->children[0];
 
-    search = st_search(symboltables[start_scope], idNode->token.lexeme);
+    search = st_search_scope(symboltables_ptr, idNode->token.lexeme, start_scope, start_scope);
     if (search != NULL) {
         fprintf(stderr, "Semantic Error (Line No: %d): Identifier '%s' already in current scope at Line No %d. Cannot be declared\n", idNode->token.line_no, idNode->token.lexeme, search->token.line_no);
         has_semantic_error = true;
@@ -219,13 +233,13 @@ static void process_declaration_statement(SymbolHashTable*** symboltables_ptr, A
     ASTNode* N3Node = idListNode->children[1];
     if (N3Node != NULL) {
         for (ASTNode* curr = N3Node; ;curr = curr->children[1]) {
-            search = st_search(symboltables[start_scope], curr->children[0]->token.lexeme);
+            search = st_search_scope(symboltables_ptr, curr->children[0]->token.lexeme, start_scope, start_scope);
             if (search != NULL) {
                 fprintf(stderr, "Semantic Error (Line No: %d): Identifier '%s' already in current scope. Cannot be declared\n", curr->children[0]->token.line_no, search->token.lexeme);
                 has_semantic_error = true;
                 return;
             }
-            search = st_search(symboltables[0], curr->children[0]->token.lexeme);
+            search = st_search_scope(symboltables_ptr, curr->children[0]->token.lexeme, 0, 0);
             if (search != NULL) {
                 fprintf(stderr, "Semantic Error (Line No: %d): Identifier '%s' already in global scope. Cannot be declared\n", curr->children[0]->token.line_no, search->token.lexeme);
                 has_semantic_error = true;
@@ -268,7 +282,7 @@ static void get_type_of_expression(SymbolHashTable*** symboltables_ptr, ASTNode*
             ASTNode* idNode = var_id_numNode->children[0];
             if (var_id_numNode->children[1] == NULL) {
                 // Simply an identifier
-                SymbolRecord* search = st_search(symboltables[start_scope], idNode->token.lexeme);
+                SymbolRecord* search = st_search_scope(symboltables_ptr, idNode->token.lexeme, start_scope, end_scope);
                 if (search == NULL) {
                     fprintf(stderr, "Semantic Error (Line No: %d) : Identifier '%s' used in arithmetic expression not declared in scope\n", idNode->token.line_no, idNode->token.lexeme);
                     has_semantic_error = true;
@@ -277,7 +291,7 @@ static void get_type_of_expression(SymbolHashTable*** symboltables_ptr, ASTNode*
                 }
                 expr_type = search->type_name;
                 if (expression_type != TYPE_NONE && expr_type != expression_type) {
-                    fprintf(stderr, "Semantic Error (Line No: %d) : Identifier '%s' used in arithmetic expression not conforming to type %s\n", search->token.line_no, search->token.lexeme, get_string_from_type(expression_type));
+                    fprintf(stderr, "Semantic Error (Line No: %d) : Identifier '%s' used in arithmetic expression not conforming to type %s\n", idNode->token.line_no, idNode->token.lexeme, get_string_from_type(expression_type));
                     has_semantic_error = true;
                     error = 1; expression_type = TYPE_ERROR;
                     return;
@@ -287,7 +301,7 @@ static void get_type_of_expression(SymbolHashTable*** symboltables_ptr, ASTNode*
                 // An array index
                 SymbolRecord* search;
                 ASTNode* idxNode = var_id_numNode->children[1];
-                search = st_search(symboltables[start_scope], idNode->token.lexeme);
+                search = st_search_scope(symboltables_ptr, idNode->token.lexeme, start_scope, end_scope);
                 if (search == NULL) {
                     fprintf(stderr, "Semantic Error (Line No: %d) : Identifier '%s' used in arithmetic expression not declared in scope\n", idNode->token.line_no, idNode->token.lexeme);
                     has_semantic_error = true;
@@ -296,7 +310,7 @@ static void get_type_of_expression(SymbolHashTable*** symboltables_ptr, ASTNode*
                 }
                 expr_type = get_typename_from_term(search->element_type);
                 if (expression_type != TYPE_NONE && expr_type != expression_type) {
-                    fprintf(stderr, "Semantic Error (Line No: %d) : Identifier '%s' used in arithmetic expression not conforming to type\n", search->token.line_no, search->token.lexeme);
+                    fprintf(stderr, "Semantic Error (Line No: %d) : Identifier '%s' used in arithmetic expression not conforming to type %s\n", idNode->token.line_no, idNode->token.lexeme, get_string_from_type(expression_type));
                     has_semantic_error = true;
                     error = 1; expression_type = TYPE_ERROR;
                     return;
@@ -305,7 +319,7 @@ static void get_type_of_expression(SymbolHashTable*** symboltables_ptr, ASTNode*
                     expression_type = expr_type;
                     return;
                 }
-                search = st_search(symboltables[start_scope], idxNode->token.lexeme);
+                search = st_search_scope(symboltables_ptr, idxNode->token.lexeme, start_scope, end_scope);
                 if (search == NULL) {
                     fprintf(stderr, "Semantic Error (Line No: %d) : Identifier '%s' used in arithmetic expression not declared in scope\n", idxNode->token.line_no, idxNode->token.lexeme);
                     has_semantic_error = true;
@@ -323,7 +337,7 @@ static void get_type_of_expression(SymbolHashTable*** symboltables_ptr, ASTNode*
             }
         }
         if (expression_type != TYPE_NONE && expr_type != expression_type) {
-            fprintf(stderr, "Semantic Error (Line No: %d) : Identifier '%s' used in arithmetic expression not conforming to type\n", var_id_numNode->children[0]->token.line_no, var_id_numNode->children[0]->token.lexeme);
+            fprintf(stderr, "Semantic Error (Line No: %d) : Identifier '%s' used in arithmetic expression not conforming to type %s\n", var_id_numNode->children[0]->token.line_no, var_id_numNode->children[0]->token.lexeme, get_string_from_type(expression_type));
             has_semantic_error = true;
             error = 1; expression_type = TYPE_ERROR;
             return;
@@ -365,7 +379,7 @@ static void process_assignment_statement(SymbolHashTable*** symboltables_ptr, AS
     SymbolHashTable** symboltables = *symboltables_ptr;
     ASTNode* lvalueNode = root->children[0];
     // This must already be declared
-    SymbolRecord* search = st_search(symboltables[start_scope], lvalueNode->token.lexeme);
+    SymbolRecord* search = st_search_scope(symboltables_ptr, lvalueNode->token.lexeme, start_scope, end_scope);
     if (search == NULL) {
         fprintf(stderr, "Semantic Error (Line No: %d): Identifier '%s' being assigned before declaration\n", lvalueNode->token.line_no, lvalueNode->token.lexeme);
         has_semantic_error = true;
@@ -376,7 +390,7 @@ static void process_assignment_statement(SymbolHashTable*** symboltables_ptr, AS
         // Array
         ASTNode* idxNode = root->children[1];
         if (idxNode->token.token_type == TK_ID) {
-            SymbolRecord* idx_search = st_search(symboltables[start_scope], idxNode->token.lexeme);
+            SymbolRecord* idx_search = st_search_scope(symboltables_ptr, idxNode->token.lexeme, start_scope, end_scope);
             if (idx_search == NULL) {
                 fprintf(stderr, "Semantic Error (Line No: %d): Lvalue array index %s being assigned before declaration\n", idxNode->token.line_no, idxNode->token.lexeme);
                 has_semantic_error = true;
@@ -437,7 +451,7 @@ static void process_module_reuse(SymbolHashTable*** symboltables_ptr, ASTNode* r
                 ASTNode* idNode = temp->children[0];
                 SymbolRecord* search;
                 // Search the local scope first
-                search = st_search(symboltables[start_scope], idNode->token.lexeme);
+                search = st_search_scope(symboltables_ptr, idNode->token.lexeme, start_scope, end_scope);
                 if (search == NULL) {
                     // Otherwise Search the global scope
                     search = st_search(symboltables[0], idNode->token.lexeme);
@@ -468,7 +482,7 @@ static void process_iterative_statement(SymbolHashTable*** symboltables_ptr, AST
     create_scope_table(symboltables_ptr, start_scope);
 
     SymbolHashTable** symboltables = *symboltables_ptr;
-    SymbolRecord* search;
+    SymbolRecord* search = NULL;
     // An iterativestmt can be for or while
     if (root->children[0]->token_type == arithmeticOrBooleanExpr) {
         // Case 1: WHILE_STMT
@@ -520,6 +534,7 @@ void perform_semantic_analysis(SymbolHashTable*** symboltables_ptr, ASTNode* roo
     if (root->token_type == TK_END) {
         // End of Scope
         end_scope ++;
+        printf("Now, start_scope = %d, end_scope = %d\n", start_scope, end_scope);
     }
     else if (root->token_type == moduleDeclaration) {
         // Module Declaration. Add the moduleID to both local and global scopes.
