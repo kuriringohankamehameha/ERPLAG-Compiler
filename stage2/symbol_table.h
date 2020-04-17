@@ -101,4 +101,8 @@ static int curr_scope = 0;
 static int start_scope = 0;
 static int end_scope = 0;
 
+static int error = 0;
+static TypeName expression_type = TYPE_NONE;
+static bool set_to_boolean = false;
+
 #endif
