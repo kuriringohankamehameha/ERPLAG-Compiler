@@ -116,4 +116,6 @@ static bool has_semantic_error = false;
 // Stack for nested scopes
 static Stack** scope_stacks = NULL;
 
+static bool convert_to_bool = false;
+
 #endif
