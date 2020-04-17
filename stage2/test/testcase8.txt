@@ -20,6 +20,12 @@ start
 	start
 		index := s + list[index];
 	end
+
+    while (index > 0)
+    start
+        index := index - 1;
+    end
+
 	sum := s;
 end
 

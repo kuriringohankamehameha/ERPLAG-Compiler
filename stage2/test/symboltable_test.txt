@@ -3,7 +3,7 @@
 
 
 <<module var_demo_array>>
-takes input [x:integer, m:array [2..20] of integer, p:real, z1:array[low..high]of real];
+takes input [x:integer, m:array [2..20] of integer, t:real, z1:array[low..high]of real];
 returns [ n:integer, k: boolean];
 start
 	declare a,b,h:integer;	

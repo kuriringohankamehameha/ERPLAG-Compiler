@@ -105,4 +105,6 @@ static int error = 0;
 static TypeName expression_type = TYPE_NONE;
 static bool set_to_boolean = false;
 
+static bool has_semantic_error = false;
+
 #endif

@@ -134,6 +134,7 @@ static void process_module_definition(SymbolHashTable*** symboltables_ptr, ASTNo
         free(offsets);
         if (a > b) {
             fprintf(stderr, "Semantic Error (Line No %d): Array Indices must be of the form [lower..higher]\n", typeNode->children[1]->children[0]->token.line_no);
+            has_semantic_error = true;
             return;
         }
         SymbolRecord* record;
@@ -178,6 +179,7 @@ static void insert_identifier(SymbolHashTable*** symboltables_ptr, ASTNode* idNo
     free(offsets);
     if (a > b) {
         fprintf(stderr, "Semantic Error (Line No %d): Array Indices must be of the form [lower..higher]\n", dataTypeNode->children[1]->children[0]->token.line_no);
+        has_semantic_error = true;
         return;
     }
     if (dataTypeNode->children[0]->token.token_type == TK_ARRAY)
@@ -197,15 +199,17 @@ static void process_declaration_statement(SymbolHashTable*** symboltables_ptr, A
     ASTNode* idListNode = root->children[0];
     ASTNode* dataTypeNode = root->children[1];
     ASTNode* idNode = idListNode->children[0];
-    
+
     search = st_search(symboltables[start_scope], idNode->token.lexeme);
     if (search != NULL) {
-        fprintf(stderr, "Semantic Error (Line No: %d): Identifier %s already in current scope. Cannot be declared\n", search->token.line_no, search->token.lexeme);
+        fprintf(stderr, "Semantic Error (Line No: %d): Identifier '%s' already in current scope at Line No %d. Cannot be declared\n", idNode->token.line_no, idNode->token.lexeme, search->token.line_no);
+        has_semantic_error = true;
         return;
     }
     search = st_search(symboltables[0], idNode->token.lexeme);
     if (search != NULL) {
-        fprintf(stderr, "Semantic Error (Line No: %d): Identifier %s already in global scope. Cannot be declared\n", search->token.line_no, search->token.lexeme);
+        fprintf(stderr, "Semantic Error (Line No: %d): Identifier '%s' already in global scope. Cannot be declared\n", idNode->token.line_no, idNode->token.lexeme);
+        has_semantic_error = true;
         return;
     }
 
@@ -217,12 +221,14 @@ static void process_declaration_statement(SymbolHashTable*** symboltables_ptr, A
         for (ASTNode* curr = N3Node; ;curr = curr->children[1]) {
             search = st_search(symboltables[start_scope], curr->children[0]->token.lexeme);
             if (search != NULL) {
-                fprintf(stderr, "Semantic Error (Line No: %d): Identifier %s already in current scope. Cannot be declared\n", search->token.line_no, search->token.lexeme);
+                fprintf(stderr, "Semantic Error (Line No: %d): Identifier '%s' already in current scope. Cannot be declared\n", curr->children[0]->token.line_no, search->token.lexeme);
+                has_semantic_error = true;
                 return;
             }
             search = st_search(symboltables[0], curr->children[0]->token.lexeme);
             if (search != NULL) {
-                fprintf(stderr, "Semantic Error (Line No: %d): Identifier %s already in global scope. Cannot be declared\n", search->token.line_no, search->token.lexeme);
+                fprintf(stderr, "Semantic Error (Line No: %d): Identifier '%s' already in global scope. Cannot be declared\n", curr->children[0]->token.line_no, search->token.lexeme);
+                has_semantic_error = true;
                 return;
             }
             // Insert into the table
@@ -264,13 +270,15 @@ static void get_type_of_expression(SymbolHashTable*** symboltables_ptr, ASTNode*
                 // Simply an identifier
                 SymbolRecord* search = st_search(symboltables[start_scope], idNode->token.lexeme);
                 if (search == NULL) {
-                    fprintf(stderr, "Semantic Error (Line No: %d) : Identifier %s used in arithmetic expression not declared in scope\n", idNode->token.line_no, idNode->token.lexeme);
+                    fprintf(stderr, "Semantic Error (Line No: %d) : Identifier '%s' used in arithmetic expression not declared in scope\n", idNode->token.line_no, idNode->token.lexeme);
+                    has_semantic_error = true;
                     error = 1; expression_type = TYPE_ERROR;
                     return;
                 }
                 expr_type = search->type_name;
                 if (expression_type != TYPE_NONE && expr_type != expression_type) {
-                    fprintf(stderr, "Semantic Error (Line No: %d) : Identifier %s used in arithmetic expression not conforming to type %s\n", search->token.line_no, search->token.lexeme, get_string_from_type(expression_type));
+                    fprintf(stderr, "Semantic Error (Line No: %d) : Identifier '%s' used in arithmetic expression not conforming to type %s\n", search->token.line_no, search->token.lexeme, get_string_from_type(expression_type));
+                    has_semantic_error = true;
                     error = 1; expression_type = TYPE_ERROR;
                     return;
                 }
@@ -281,13 +289,15 @@ static void get_type_of_expression(SymbolHashTable*** symboltables_ptr, ASTNode*
                 ASTNode* idxNode = var_id_numNode->children[1];
                 search = st_search(symboltables[start_scope], idNode->token.lexeme);
                 if (search == NULL) {
-                    fprintf(stderr, "Semantic Error (Line No: %d) : Identifier %s used in arithmetic expression not declared in scope\n", idNode->token.line_no, idNode->token.lexeme);
+                    fprintf(stderr, "Semantic Error (Line No: %d) : Identifier '%s' used in arithmetic expression not declared in scope\n", idNode->token.line_no, idNode->token.lexeme);
+                    has_semantic_error = true;
                     error = 1; expression_type = TYPE_ERROR;
                     return;
                 }
                 expr_type = get_typename_from_term(search->element_type);
                 if (expression_type != TYPE_NONE && expr_type != expression_type) {
-                    fprintf(stderr, "Semantic Error (Line No: %d) : Identifier %s used in arithmetic expression not conforming to type\n", search->token.line_no, search->token.lexeme);
+                    fprintf(stderr, "Semantic Error (Line No: %d) : Identifier '%s' used in arithmetic expression not conforming to type\n", search->token.line_no, search->token.lexeme);
+                    has_semantic_error = true;
                     error = 1; expression_type = TYPE_ERROR;
                     return;
                 }
@@ -297,21 +307,24 @@ static void get_type_of_expression(SymbolHashTable*** symboltables_ptr, ASTNode*
                 }
                 search = st_search(symboltables[start_scope], idxNode->token.lexeme);
                 if (search == NULL) {
-                    fprintf(stderr, "Semantic Error (Line No: %d) : Identifier %s used in arithmetic expression not declared in scope\n", idxNode->token.line_no, idxNode->token.lexeme);
+                    fprintf(stderr, "Semantic Error (Line No: %d) : Identifier '%s' used in arithmetic expression not declared in scope\n", idxNode->token.line_no, idxNode->token.lexeme);
+                    has_semantic_error = true;
                     error = 1; expression_type = TYPE_ERROR;
                     return;
                 }
                 // Check if array index is of integer type
                 // TODO: Add Dynamic Arrays
                 if (search->type_name != TYPE_INTEGER) {
-                    fprintf(stderr, "Semantic Error (Line No: %d) : Identifier %s used in array index must be an integer\n", idxNode->token.line_no, idxNode->token.lexeme);
+                    fprintf(stderr, "Semantic Error (Line No: %d) : Identifier '%s' used in array index must be an integer\n", idxNode->token.line_no, idxNode->token.lexeme);
+                    has_semantic_error = true;
                     error = 1; expression_type = TYPE_ERROR;
                     return;
                 }
             }
         }
         if (expression_type != TYPE_NONE && expr_type != expression_type) {
-            fprintf(stderr, "Semantic Error (Line No: %d) : Identifier %s used in arithmetic expression not conforming to type\n", var_id_numNode->children[0]->token.line_no, var_id_numNode->children[0]->token.lexeme);
+            fprintf(stderr, "Semantic Error (Line No: %d) : Identifier '%s' used in arithmetic expression not conforming to type\n", var_id_numNode->children[0]->token.line_no, var_id_numNode->children[0]->token.lexeme);
+            has_semantic_error = true;
             error = 1; expression_type = TYPE_ERROR;
             return;
         }
@@ -354,7 +367,8 @@ static void process_assignment_statement(SymbolHashTable*** symboltables_ptr, AS
     // This must already be declared
     SymbolRecord* search = st_search(symboltables[start_scope], lvalueNode->token.lexeme);
     if (search == NULL) {
-        fprintf(stderr, "Semantic Error (Line No: %d): Identifier %s being assigned before declaration\n", lvalueNode->token.line_no, lvalueNode->token.lexeme);
+        fprintf(stderr, "Semantic Error (Line No: %d): Identifier '%s' being assigned before declaration\n", lvalueNode->token.line_no, lvalueNode->token.lexeme);
+        has_semantic_error = true;
         return;
     }
 
@@ -365,13 +379,15 @@ static void process_assignment_statement(SymbolHashTable*** symboltables_ptr, AS
             SymbolRecord* idx_search = st_search(symboltables[start_scope], idxNode->token.lexeme);
             if (idx_search == NULL) {
                 fprintf(stderr, "Semantic Error (Line No: %d): Lvalue array index %s being assigned before declaration\n", idxNode->token.line_no, idxNode->token.lexeme);
+                has_semantic_error = true;
                 return;
             }
         }
         TypeName expr_type = get_expression_type(symboltables_ptr, root);
         if (expr_type != TYPE_ERROR) {
             if (expr_type != get_typename_from_term(search->element_type)) {
-                fprintf(stderr, "Semantic Error (Line No: %d): Identifier %s. Incompatible types for an lvalue assignment statement. lvalue is of type %s, while the assignment statement is of type %s\n", lvalueNode->token.line_no, lvalueNode->token.lexeme, get_string_from_type(get_typename_from_term(search->element_type)), get_string_from_type(expr_type));
+                fprintf(stderr, "Semantic Error (Line No: %d): Identifier '%s'. Incompatible types for an lvalue assignment statement. lvalue is of type %s, while the assignment statement is of type %s\n", lvalueNode->token.line_no, lvalueNode->token.lexeme, get_string_from_type(get_typename_from_term(search->element_type)), get_string_from_type(expr_type));
+                has_semantic_error = true;
             }
         }
         return;
@@ -382,7 +398,8 @@ static void process_assignment_statement(SymbolHashTable*** symboltables_ptr, AS
     TypeName expr_type = get_expression_type(symboltables_ptr, root);
     if (expr_type != TYPE_ERROR) {
         if (expr_type != search->type_name) {
-            fprintf(stderr, "Semantic Error (Line No: %d): Identifier %s. Incompatible types for an lvalue assignment statement. lvalue is of type %s, while the assignment statement is of type %s\n", lvalueNode->token.line_no, lvalueNode->token.lexeme, get_string_from_type(search->type_name), get_string_from_type(expr_type));
+            fprintf(stderr, "Semantic Error (Line No: %d): Identifier '%s'. Incompatible types for an lvalue assignment statement. lvalue is of type %s, while the assignment statement is of type %s\n", lvalueNode->token.line_no, lvalueNode->token.lexeme, get_string_from_type(search->type_name), get_string_from_type(expr_type));
+                has_semantic_error = true;
         }
     }
 }
@@ -408,7 +425,8 @@ static void process_module_reuse(SymbolHashTable*** symboltables_ptr, ASTNode* r
                 search = st_search(symboltables[0], idNode->token.lexeme);
                 if (search == NULL) {
                     // Not found. Error
-                    fprintf(stderr, "Semantic Error (Line No: %d): Identifier %s not found in scope, but used in module call statement\n", idNode->token.line_no, idNode->token.lexeme);
+                    fprintf(stderr, "Semantic Error (Line No: %d): Identifier '%s' not found in scope, but used in module call statement\n", idNode->token.line_no, idNode->token.lexeme);
+                    has_semantic_error = true;
                     return;
                 }
             }
@@ -425,7 +443,8 @@ static void process_module_reuse(SymbolHashTable*** symboltables_ptr, ASTNode* r
                     search = st_search(symboltables[0], idNode->token.lexeme);
                     if (search == NULL) {
                         // Not found. Error
-                        fprintf(stderr, "Semantic Error (Line No: %d): Identifier %s not found\n", idNode->token.line_no, idNode->token.lexeme);
+                        fprintf(stderr, "Semantic Error (Line No: %d): Identifier '%s' not found\n", idNode->token.line_no, idNode->token.lexeme);
+                        has_semantic_error = true;
                         return;
                     }
                 }
@@ -441,8 +460,60 @@ static void process_module_reuse(SymbolHashTable*** symboltables_ptr, ASTNode* r
     }
 }
 
+static void process_iterative_statement(SymbolHashTable*** symboltables_ptr, ASTNode* root) {
+    assert (root->token_type == iterativeStmt);
+    
+    // Start a new scope and create a new scope table
+    start_scope ++;
+    create_scope_table(symboltables_ptr, start_scope);
+
+    SymbolHashTable** symboltables = *symboltables_ptr;
+    SymbolRecord* search;
+    // An iterativestmt can be for or while
+    if (root->children[0]->token_type == arithmeticOrBooleanExpr) {
+        // Case 1: WHILE_STMT
+        TypeName expr_type = get_expression_type(symboltables_ptr, root->children[0]);
+        if (expr_type == TYPE_INTEGER) {
+            // Should we convert it to expression != 0 ?
+        }
+        else if (expr_type == TYPE_REAL) {
+            // Should we convert it to expression != 0.0 ?
+        }
+    }
+    else {
+        // Case 2: FOR_STMT
+        ASTNode* idNode = root->children[0];
+        ASTNode* rangeNode = root->children[1];
+        for (int i=start_scope; i>=end_scope; i--) {
+            search = st_search(symboltables[start_scope], idNode->token.lexeme);
+            if (search != NULL)
+                break;
+        }
+        if (search == NULL) {
+            fprintf(stderr, "Semantic Error (Line No %d): Identifier '%s' in FOR statement was not declared in scope\n", idNode->token.line_no, idNode->token.lexeme);
+            has_semantic_error = true;
+            return;
+        }
+        else {
+            TypeName type = search->type_name;
+            if (type != TYPE_INTEGER) {
+                fprintf(stderr, "Semantic Error (Line No %d): Identifier '%s' in FOR statement is of type %s. Expected integer type\n", idNode->token.line_no, idNode->token.lexeme, get_string_from_type(type));
+                has_semantic_error = true;
+                return;
+            }
+        }
+        int lower = atoi(rangeNode->children[0]->token.lexeme);
+        int upper = atoi(rangeNode->children[1]->token.lexeme);
+        if (lower > upper) {
+            fprintf(stderr, "Semantic Error (Line No %d): a FOR statement must be of the form lower..higher\n", rangeNode->children[0]->token.line_no);
+            has_semantic_error = true;
+            return;
+        }
+    }
+}
+
 void perform_semantic_analysis(SymbolHashTable*** symboltables_ptr, ASTNode* root, int enna_child) {
-    // Performs Type Extraction 
+    // Performs all required Semantic Checks using the Symbol Table
     if (!root)
         return;
     SymbolHashTable** symboltables = *symboltables_ptr; // Careful with realloc()
@@ -457,6 +528,7 @@ void perform_semantic_analysis(SymbolHashTable*** symboltables_ptr, ASTNode* roo
         SymbolRecord* search = st_search(symboltables[0], root->children[0]->token.lexeme);
         if (search != NULL) {
             fprintf(stderr, "Semantic Error (Line No: %d): Function definition before a declaration\n", search->token.line_no);
+            has_semantic_error = true;
         }
         else
             process_module_declaration(symboltables_ptr, root);
@@ -469,6 +541,7 @@ void perform_semantic_analysis(SymbolHashTable*** symboltables_ptr, ASTNode* roo
         if (search != NULL) {
             // Definition before declaration. Not allowed
             fprintf(stderr, "Semantic Error (Line No: %d): Function declaration is redundant\n", search->token.line_no);
+            has_semantic_error = true;
         }
         else {
             process_module_definition(symboltables_ptr, root);
@@ -486,10 +559,12 @@ void perform_semantic_analysis(SymbolHashTable*** symboltables_ptr, ASTNode* roo
     else if (root->token_type == driverModule) {
         process_driver_module(symboltables_ptr, root);
     }
+    else if (root->token_type == iterativeStmt) {
+        process_iterative_statement(symboltables_ptr, root);
+    }
     //else if (root->token_type == arithmeticExpr) {
     //    process_expression(symboltables_ptr, root);
     //}
-    // TODO: Unary Operators
     for (int i=0; i<root->num_children; i++)
         perform_semantic_analysis(symboltables_ptr, root->children[i], i);
 }
