@@ -4,6 +4,7 @@
 #include "common.h"
 #include "lexerDef.h"
 #include "parserDef.h"
+#include "stack.h"
 
 typedef enum {
     TYPE_INTEGER,
@@ -31,7 +32,7 @@ struct SymbolRecord {
     Token token;
     TypeName type_name;
     int scope_label; // Defaults to 0 for global scope
-    int total_size;
+    int end;
     int offset;
     term element_type;
 };
@@ -72,7 +73,7 @@ struct SymbolHashTable {
 
 
 SymbolHashTable* create_symtable(int size, unsigned long (*hash_fun)(char*));
-SymbolRecord* create_symbolrecord(Token token, TypeName type_name, int scope_label, int total_size, int offset, term element_type);
+SymbolRecord* create_symbolrecord(Token token, TypeName type_name, int scope_label, int end, int offset, term element_type);
 void free_symtable(SymbolHashTable* table);
 St_item* create_symitem(char* key, SymbolRecord* value);
 void free_symitem(St_item* item);
@@ -93,6 +94,7 @@ SymbolHashTable*** createSymbolTables(ASTNode* root);
 void create_scope_table(SymbolHashTable*** symboltables_ptr, int index);
 void insert_into_symbol_table(SymbolHashTable*** symboltables_ptr, char* key, SymbolRecord* record, int index);
 void perform_semantic_analysis(SymbolHashTable*** symboltables_ptr, ASTNode* root, int enna_child);
+void semantic_analyzer_wrapper(SymbolHashTable*** symboltables_ptr, ASTNode* root);
 void free_symtables(SymbolHashTable** tables, int num_tables);
 
 static int curr_scope = 0;
@@ -101,10 +103,16 @@ static int curr_scope = 0;
 static int start_scope = 0;
 static int end_scope = 0;
 
+// Keep track of modulewise scopes
+static int module_scope = 0;
+
 static int error = 0;
 static TypeName expression_type = TYPE_NONE;
 static bool set_to_boolean = false;
 
 static bool has_semantic_error = false;
+
+// Stack for nested scopes
+static Stack** scope_stacks = NULL;
 
 #endif

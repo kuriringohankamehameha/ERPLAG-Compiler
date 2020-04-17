@@ -3,6 +3,7 @@
 #include "parser.h"
 #include "ast.h"
 #include "symbol_table.h"
+#include "stack.h"
 #include <assert.h>
 
 int total_scope = 0;
@@ -114,13 +115,19 @@ static void process_module_declaration(SymbolHashTable*** symboltables_ptr, ASTN
 }
 
 static void process_module_definition(SymbolHashTable*** symboltables_ptr, ASTNode* root) {
+    ASTNode* moduleIDNode = root->children[0];
+    ASTNode* input_plistNode = root->children[1];
+    ASTNode* retNode;
+    // Search in the global scope. It may be present, due to moduledeclaration
+    SymbolRecord* search = st_search_scope(symboltables_ptr, moduleIDNode->token.lexeme, 0, 0);
+    if (search != NULL) {
+        fprintf(stderr, "Semantic Error (Line No %d): Module %s already declared at Line %d\n", moduleIDNode->token.line_no, moduleIDNode->token.lexeme, search->token.line_no);
+        return;
+    }
     // Move to local scope
     start_scope ++;
     // Create a scope table
     create_scope_table(symboltables_ptr, start_scope);
-    ASTNode* moduleIDNode = root->children[0];
-    ASTNode* input_plistNode = root->children[1];
-    ASTNode* retNode;
     //ASTNode* moduleDefNode;
     if (root->syn_attribute.token_type == TK_EPSILON) {
         retNode = NULL;
@@ -153,9 +160,9 @@ static void process_module_definition(SymbolHashTable*** symboltables_ptr, ASTNo
         }
         SymbolRecord* record;
         if (typeNode->num_children > 1)
-            record = create_symbolrecord(idNode->token, get_typename_from_term(typeNode->children[0]->token_type), start_scope, b-a, a, typeNode->children[2]->token_type);
+            record = create_symbolrecord(idNode->token, get_typename_from_term(typeNode->children[0]->token_type), start_scope, b, a, typeNode->children[2]->token_type);
         else
-            record = create_symbolrecord(idNode->token, get_typename_from_term(typeNode->children[0]->token_type), start_scope, b-a, a, TK_EPSILON);
+            record = create_symbolrecord(idNode->token, get_typename_from_term(typeNode->children[0]->token_type), start_scope, b, a, TK_EPSILON);
         insert_into_symbol_table(symboltables_ptr, idNode->token.lexeme, record, start_scope);
         if (temp->children[2] == NULL)
             break;
@@ -197,9 +204,9 @@ static void insert_identifier(SymbolHashTable*** symboltables_ptr, ASTNode* idNo
         return;
     }
     if (dataTypeNode->children[0]->token.token_type == TK_ARRAY)
-        record = create_symbolrecord(idNode->token, get_typename_from_term(TK_ARRAY), start_scope, b-a, a, dataTypeNode->children[2]->token.token_type);
+        record = create_symbolrecord(idNode->token, get_typename_from_term(TK_ARRAY), start_scope, b, a, dataTypeNode->children[2]->token.token_type);
     else
-        record = create_symbolrecord(idNode->token, get_typename_from_term(dataTypeNode->children[0]->token.token_type), start_scope, b-a, a, TK_EPSILON);
+        record = create_symbolrecord(idNode->token, get_typename_from_term(dataTypeNode->children[0]->token.token_type), start_scope, b, a, TK_EPSILON);
     insert_into_symbol_table(symboltables_ptr, idNode->token.lexeme, record, start_scope);
 }
 
@@ -526,6 +533,28 @@ static void process_iterative_statement(SymbolHashTable*** symboltables_ptr, AST
     }
 }
 
+static void initialize_stacks(int max_modules, int max_nesting_level) {
+    scope_stacks = calloc (max_modules, sizeof(Stack*));
+    for (int i=0; i<max_modules; i++) {
+        scope_stacks[i] = init_stack(0, max_nesting_level);
+    }
+}
+
+static void free_stacks(int max_modules) {
+    for (int i=0; i<max_modules; i++) {
+        if (scope_stacks[i]) free_stacknode(scope_stacks[i]);
+    }
+    if (scope_stacks) free(scope_stacks);
+}
+
+void semantic_analyzer_wrapper(SymbolHashTable*** symboltables_ptr, ASTNode* root) {
+    // Wrapper function for the semantic analyzer
+    int max_modules = 30; int max_nesting_level = 10;
+    initialize_stacks(max_modules, max_nesting_level);
+    perform_semantic_analysis(symboltables_ptr, root, 0);
+    free_stacks(max_modules);
+}
+
 void perform_semantic_analysis(SymbolHashTable*** symboltables_ptr, ASTNode* root, int enna_child) {
     // Performs all required Semantic Checks using the Symbol Table
     if (!root)
@@ -589,17 +618,17 @@ SymbolHashTable*** createSymbolTables(ASTNode* root) {
     symboltables_ptr[0] = calloc (1, sizeof(SymbolHashTable*));
     symboltables_ptr[0][0] = create_symtable(CAPACITY, hash_function_symbol);
     ASTNode* temp = root;
-    perform_semantic_analysis(symboltables_ptr, temp, 0);
+    semantic_analyzer_wrapper(symboltables_ptr, temp);
     total_scope = start_scope;
     return symboltables_ptr;
 }
 
-SymbolRecord* create_symbolrecord(Token token, TypeName type_name, int scope_label, int total_size, int offset, term element_type) {
+SymbolRecord* create_symbolrecord(Token token, TypeName type_name, int scope_label, int end, int offset, term element_type) {
     SymbolRecord* symbolrecord = (SymbolRecord*) calloc (1, sizeof(SymbolRecord));
     symbolrecord->token = token;
     symbolrecord->type_name = type_name;
     symbolrecord->scope_label = scope_label;
-    symbolrecord->total_size = total_size;
+    symbolrecord->end = end;
     symbolrecord->offset = offset;
     symbolrecord->element_type = element_type;
     return symbolrecord;
@@ -894,7 +923,7 @@ void print_symrecord(SymbolRecord* t, char ch) {
         printf("lexeme = %s , ", t->token.lexeme);
     }
     printf("scope_label = %d , ", t->scope_label);
-    printf("total_size = %d , ", t->total_size);
+    printf("end = %d , ", t->end);
     printf("offset = %d , ", t->offset);
     printf("element_type = %s%c", get_string_from_term(t->element_type), ch);
 }
