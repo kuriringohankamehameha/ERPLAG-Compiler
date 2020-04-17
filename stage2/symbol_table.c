@@ -334,7 +334,7 @@ static TypeName get_expression_type(SymbolHashTable*** symboltables_ptr, ASTNode
     // Remember to reset expression_type and error after every call
     error = 0; expression_type = TYPE_NONE; set_to_boolean = false;
     get_type_of_expression(symboltables_ptr, root);
-    if (expression_type !=  TYPE_NONE && set_to_boolean == true)
+    if ((expression_type !=  TYPE_NONE || expression_type != TYPE_ERROR) && set_to_boolean == true)
         expression_type = TYPE_BOOLEAN;
     TypeName expr_type = expression_type;
     // Remember to reset expression_type and error after every call
