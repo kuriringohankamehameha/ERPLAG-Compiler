@@ -85,11 +85,25 @@ void insert_into_symbol_table(SymbolHashTable*** symboltables_ptr, char* key, Sy
 static SymbolRecord* st_search_scope(SymbolHashTable*** symboltables_ptr, char* key, int start_scope, int end_scope) {
     SymbolRecord* search;
     SymbolHashTable** symboltables = *symboltables_ptr;
-    for (int i=start_scope; i>=end_scope; i--) {
-        search = st_search(symboltables[i], key);
+    if (start_scope == 0 && end_scope == 0) {
+        search = st_search(symboltables[0], key);
         if (search != NULL) {
             return search;
         }
+        return NULL;
+    }
+    int module_scope = modules[module_index];
+    for (Stack* head = scope_stacks[module_index]; head != NULL; head=head->next) {
+        if (head->data == 0)
+            break;
+        search = st_search(symboltables[head->data], key);
+        if (search != NULL) {
+            return search;
+        }
+    }
+    search = st_search(symboltables[module_scope], key);
+    if (search != NULL) {
+        return search;
     }
     return NULL;
 }
@@ -104,14 +118,19 @@ int* get_offsets(ASTNode* node) {
 }
 
 static void process_module_declaration(SymbolHashTable*** symboltables_ptr, ASTNode* root) {
-    SymbolRecord* record;
     ASTNode* moduleIDNode = root->children[0];
-    record = create_symbolrecord(moduleIDNode->token, TYPE_MODULE, 0, 0, 0, TK_EPSILON);
+    SymbolHashTable** symboltables = *symboltables_ptr;
+    SymbolRecord* search = st_search(symboltables[0], moduleIDNode->token.lexeme);
+    if (search != NULL) {
+        fprintf(stderr, "Semantic Error (Line No %d): Module ID %s already defined in global scope\n", moduleIDNode->token.line_no, moduleIDNode->token.lexeme);
+        return;
+    }
+    SymbolRecord* record = create_symbolrecord(moduleIDNode->token, TYPE_MODULE, 0, 0, 0, TK_EPSILON);
     insert_into_symbol_table(symboltables_ptr, moduleIDNode->token.lexeme, record, 0);
     // Move onto local scope
-    start_scope ++;
-    record = create_symbolrecord(moduleIDNode->token, TYPE_MODULE, start_scope, 0, 0, TK_EPSILON);
-    insert_into_symbol_table(symboltables_ptr, moduleIDNode->token.lexeme, record, start_scope);
+    // start_scope ++;
+    // record = create_symbolrecord(moduleIDNode->token, TYPE_MODULE, start_scope, 0, 0, TK_EPSILON);
+    // insert_into_symbol_table(symboltables_ptr, moduleIDNode->token.lexeme, record, start_scope);
 }
 
 static void process_module_definition(SymbolHashTable*** symboltables_ptr, ASTNode* root) {
@@ -126,6 +145,8 @@ static void process_module_definition(SymbolHashTable*** symboltables_ptr, ASTNo
     }
     // Move to local scope
     start_scope ++;
+    module_index ++;
+    modules[module_index] = start_scope;
     // Create a scope table
     create_scope_table(symboltables_ptr, start_scope);
     //ASTNode* moduleDefNode;
@@ -188,6 +209,8 @@ static void process_module_definition(SymbolHashTable*** symboltables_ptr, ASTNo
 static void process_driver_module(SymbolHashTable*** symboltables_ptr, ASTNode* root) {
     // Driver Module is inside it's own scope
     start_scope ++;
+    module_index ++;
+    modules[module_index] = start_scope;
     // Create a scope table
     create_scope_table(symboltables_ptr, start_scope);
 }
@@ -221,7 +244,7 @@ static void process_declaration_statement(SymbolHashTable*** symboltables_ptr, A
     ASTNode* dataTypeNode = root->children[1];
     ASTNode* idNode = idListNode->children[0];
 
-    search = st_search_scope(symboltables_ptr, idNode->token.lexeme, start_scope, start_scope);
+    search = st_search(symboltables[start_scope], idNode->token.lexeme);
     if (search != NULL) {
         fprintf(stderr, "Semantic Error (Line No: %d): Identifier '%s' already in current scope at Line No %d. Cannot be declared\n", idNode->token.line_no, idNode->token.lexeme, search->token.line_no);
         has_semantic_error = true;
@@ -240,7 +263,7 @@ static void process_declaration_statement(SymbolHashTable*** symboltables_ptr, A
     ASTNode* N3Node = idListNode->children[1];
     if (N3Node != NULL) {
         for (ASTNode* curr = N3Node; ;curr = curr->children[1]) {
-            search = st_search_scope(symboltables_ptr, curr->children[0]->token.lexeme, start_scope, start_scope);
+            search = st_search(symboltables[start_scope], curr->children[0]->token.lexeme);
             if (search != NULL) {
                 fprintf(stderr, "Semantic Error (Line No: %d): Identifier '%s' already in current scope. Cannot be declared\n", curr->children[0]->token.line_no, search->token.lexeme);
                 has_semantic_error = true;
@@ -486,6 +509,7 @@ static void process_iterative_statement(SymbolHashTable*** symboltables_ptr, AST
     
     // Start a new scope and create a new scope table
     start_scope ++;
+    scope_stacks[module_index] = stack_push(scope_stacks[module_index], start_scope);
     create_scope_table(symboltables_ptr, start_scope);
 
     SymbolHashTable** symboltables = *symboltables_ptr;
@@ -505,11 +529,7 @@ static void process_iterative_statement(SymbolHashTable*** symboltables_ptr, AST
         // Case 2: FOR_STMT
         ASTNode* idNode = root->children[0];
         ASTNode* rangeNode = root->children[1];
-        for (int i=start_scope; i>=end_scope; i--) {
-            search = st_search(symboltables[start_scope], idNode->token.lexeme);
-            if (search != NULL)
-                break;
-        }
+        search = st_search_scope(symboltables_ptr, idNode->token.lexeme, start_scope, start_scope);
         if (search == NULL) {
             fprintf(stderr, "Semantic Error (Line No %d): Identifier '%s' in FOR statement was not declared in scope\n", idNode->token.line_no, idNode->token.lexeme);
             has_semantic_error = true;
@@ -534,6 +554,7 @@ static void process_iterative_statement(SymbolHashTable*** symboltables_ptr, AST
 }
 
 static void initialize_stacks(int max_modules, int max_nesting_level) {
+    modules = calloc (max_modules, sizeof(int));
     scope_stacks = calloc (max_modules, sizeof(Stack*));
     for (int i=0; i<max_modules; i++) {
         scope_stacks[i] = init_stack(0, max_nesting_level);
@@ -545,6 +566,7 @@ static void free_stacks(int max_modules) {
         if (scope_stacks[i]) free_stacknode(scope_stacks[i]);
     }
     if (scope_stacks) free(scope_stacks);
+    if (modules) free(modules);
 }
 
 void semantic_analyzer_wrapper(SymbolHashTable*** symboltables_ptr, ASTNode* root) {
@@ -561,6 +583,12 @@ void perform_semantic_analysis(SymbolHashTable*** symboltables_ptr, ASTNode* roo
         return;
     SymbolHashTable** symboltables = *symboltables_ptr; // Careful with realloc()
     if (root->token_type == TK_END) {
+        if (root->parent->token_type == condionalStmt || root->parent->token_type == iterativeStmt) {
+            // End of Scope. Pop off from the module stack
+            //printf("Popping from module num: %d, scope_num = %d\n", module_index, scope_stacks[module_index]->data);
+            scope_stacks[module_index] = stack_pop(scope_stacks[module_index]);
+            //print_stack(scope_stacks[module_index]);
+        }
         // End of Scope
         end_scope ++;
     }

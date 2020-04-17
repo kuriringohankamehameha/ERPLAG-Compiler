@@ -104,7 +104,8 @@ static int start_scope = 0;
 static int end_scope = 0;
 
 // Keep track of modulewise scopes
-static int module_scope = 0;
+static int* modules = NULL;
+static int module_index = -1;
 
 static int error = 0;
 static TypeName expression_type = TYPE_NONE;
