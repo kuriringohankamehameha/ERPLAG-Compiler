@@ -581,6 +581,56 @@ static void process_iterative_statement(SymbolHashTable*** symboltables_ptr, AST
     }
 }
 
+static void process_conditional_statement(SymbolHashTable*** symboltables_ptr, ASTNode* root) {
+    // Start a new scope and create a new scope table
+    // NOTE: I'm creating tables despite it being potentially empty. For now, I'm not placing
+    // any conditional check to open or close scope tables wrt TK_END, although I may do so later
+    start_scope ++;
+    scope_stacks[module_index] = stack_push(scope_stacks[module_index], start_scope);
+    create_scope_table(symboltables_ptr, start_scope);
+
+    ASTNode* idNode = root->children[0];
+    ASTNode* caseStmtsNode = root->children[1];
+    ASTNode* defaultNode = root->children[2];
+
+    // Identifier must already be visible in scope
+    SymbolRecord* search = st_search_scope(symboltables_ptr, idNode->token.lexeme, start_scope, start_scope);
+    if (search == NULL) {
+        fprintf(stderr, "Semantic Error (Line No %d): Identifier '%s' in SWITCH statement not declared in current scope\n", idNode->token.line_no, idNode->token.lexeme);
+        has_semantic_error = true;
+        return;
+    }
+    
+    int next_jump = 2;
+    for (ASTNode* curr = caseStmtsNode; ; curr = curr->children[next_jump]) {
+        next_jump = curr->num_children - 1;
+        if (next_jump < 0)
+            break;
+        if (curr->children[1]->token_type == statements) {
+            // statements exists
+            ASTNode* statementsNode = curr->children[1];
+            TypeName expr_type = get_expression_type(symboltables_ptr, statementsNode->children[0]);
+            if (expr_type == TYPE_INTEGER) {
+                // Dummy Check
+            }
+        }
+        if (curr->children[next_jump]->token_type != N9) {
+            // N9 -> E
+            break;
+        }
+    }
+    if (defaultNode == NULL) {
+        // defaultnode -> E
+        return;
+    }
+    else {
+        // defaultnode -> <statements> and <statements> is not Epsilon   
+        TypeName expr_type = get_expression_type(symboltables_ptr, defaultNode->children[0]);
+        if (expr_type == TYPE_INTEGER) { // Dummy Check
+        }
+    }
+}
+
 static void initialize_stacks(int max_modules, int max_nesting_level) {
     modules = calloc (max_modules, sizeof(int));
     scope_stacks = calloc (max_modules, sizeof(Stack*));
@@ -660,6 +710,9 @@ void perform_semantic_analysis(SymbolHashTable*** symboltables_ptr, ASTNode* roo
     }
     else if (root->token_type == iterativeStmt) {
         process_iterative_statement(symboltables_ptr, root);
+    }
+    else if (root->token_type == condionalStmt) {
+        process_conditional_statement(symboltables_ptr, root);
     }
     //else if (root->token_type == arithmeticExpr) {
     //    process_expression(symboltables_ptr, root);

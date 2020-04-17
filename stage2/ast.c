@@ -934,8 +934,13 @@ void generate_AST(TreeNode* root)
         // <g_default> -> TK_DEFAULT TK_COLON <statements> TK_BREAK TK_SEMICOL
         TreeNode *statementsNode = root->children[2];
         generate_AST(statementsNode);
-        root->node = make_ASTNode(make_ASTLeaf(NULL, root->children[0]->token), g_default);
-        add_ASTChild(root->node, statementsNode->node);
+        if (statementsNode == NULL) {
+            root->node = NULL;
+        }
+        else {
+            root->node = make_ASTNode(make_ASTLeaf(NULL, root->children[0]->token), g_default);
+            add_ASTChild(root->node, statementsNode->node);
+        }
     }
     else if AST_COND(root, g_default, TK_EPSILON)
     {
