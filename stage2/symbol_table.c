@@ -534,7 +534,6 @@ void perform_semantic_analysis(SymbolHashTable*** symboltables_ptr, ASTNode* roo
     if (root->token_type == TK_END) {
         // End of Scope
         end_scope ++;
-        printf("Now, start_scope = %d, end_scope = %d\n", start_scope, end_scope);
     }
     else if (root->token_type == moduleDeclaration) {
         // Module Declaration. Add the moduleID to both local and global scopes.
