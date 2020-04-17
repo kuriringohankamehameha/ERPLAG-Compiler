@@ -38,6 +38,13 @@ start
 	for( k in 6..10)
 	start
 		A[k]:=(num - k)*(num-k);
+        while ((num - k) >= A[0] AND false)
+        start
+            declare op:integer;
+            num := num - 1;
+            op := num;
+            print(op);
+        end
 		print(A[k]);
         cond := (k < k + 1);
         print(cond);

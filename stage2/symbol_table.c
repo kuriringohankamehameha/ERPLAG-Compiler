@@ -288,24 +288,8 @@ static void get_type_of_expression(SymbolHashTable*** symboltables_ptr, ASTNode*
     // Will return TYPE_ERROR if there's a semantic error when processing the expression
     if (!root) return;
     root->visited = true;
-    SymbolHashTable** symboltables = *symboltables_ptr;
     TypeName expr_type = TYPE_NONE;
-    if (root->token_type == arithmeticOrBooleanExpr) {
-        if (root->children[1] != NULL) {
-            ASTNode* N7Node = root->children[1];
-            for (ASTNode* temp = N7Node; ; temp = temp->children[1]) {
-                ASTNode* AnyTermNode = temp->children[0];
-                temp->visited = true;
-                get_type_of_expression(symboltables_ptr, AnyTermNode);
-                if (expression_type == TYPE_ERROR)
-                    return;
-                if (temp->children[1] == NULL)
-                    break;
-            }
-            return;
-        }
-    }
-    else if (root->token_type == AnyTerm) {
+    if (root->token_type == AnyTerm) {
         if (root->children[0]->token_type == arithmeticExpr) {
             if (root->children[1] != NULL) {
                 // RelatonalOp
