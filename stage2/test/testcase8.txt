@@ -56,7 +56,8 @@ start
 	for( k in 6..10)
 	start
 		A[k]:=(num - k)*(num-k);
-        while (((num - k) >= A[0] AND false) + 3 >= 0)
+		A[lol]:=(num - k)*(num-k);
+        while (((num - k) >= A[5] AND false) >= 0)
         start
             declare op:integer;
             num := num - 1;

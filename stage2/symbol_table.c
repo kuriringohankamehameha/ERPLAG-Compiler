@@ -295,16 +295,18 @@ static void get_type_of_expression(SymbolHashTable*** symboltables_ptr, ASTNode*
                 // RelatonalOp
                 // Convert it to boolean
                 convert_to_bool = true;
-                for (ASTNode* exprNode=root->children[0]; ; exprNode = exprNode->children[1]) {
+                get_type_of_expression(symboltables_ptr, root->children[0]);
+                if (expression_type == TYPE_ERROR) {
+                    convert_to_bool = false;
+                    return;
+                }
+                for (ASTNode* exprNode=root->children[1]; ; exprNode = exprNode->children[1]) {
+                    if (exprNode == NULL || exprNode->children == NULL) break;
+                    get_type_of_expression(symboltables_ptr, exprNode->children[0]);
                     exprNode->visited = true;
-                    get_type_of_expression(symboltables_ptr, exprNode);
                     if (expression_type == TYPE_ERROR) {
                         convert_to_bool = false;
                         return;
-                    }
-                    if (exprNode->children[1] == NULL) {
-                        convert_to_bool = false;
-                        break;
                     }
                 }
                 expression_type = TYPE_BOOLEAN;
@@ -363,8 +365,21 @@ static void get_type_of_expression(SymbolHashTable*** symboltables_ptr, ASTNode*
                     }
                 }
                 if (idxNode->token.token_type == TK_NUM) {
-                    expression_type = expr_type;
-                    return;
+                    // Check if array index integer within bounds
+                    // Integer
+                    // Check for bounds
+                    int value = atoi(idxNode->token.lexeme);
+                    if (value >= search->end || value < search->offset - 1) {
+                        fprintf(stderr, "Semantic Error (Line No: %d): Array index for %s out of bounds\n", idxNode->token.line_no, var_id_numNode->children[0]->token.lexeme);
+                        has_semantic_error = true;
+                        expression_type = TYPE_ERROR;
+                        error = 1;
+                        return;
+                    }
+                    else {
+                        expression_type = expr_type;
+                        return;
+                    }
                 }
                 search = st_search_scope(symboltables_ptr, idxNode->token.lexeme, start_scope, end_scope);
                 if (search == NULL) {
@@ -444,9 +459,23 @@ static void process_assignment_statement(SymbolHashTable*** symboltables_ptr, AS
         return;
     }
 
-    if (root->children[1]->token_type != expression) {
-        // Array
-        ASTNode* idxNode = root->children[1];
+    if (root->children[1]->token_type == expression) {
+        // lvalueIDStmt
+        ASTNode* exprNode = root->children[1];
+        TypeName expr_type = get_expression_type(symboltables_ptr, exprNode);
+        if (expr_type != TYPE_ERROR) {
+            if (expr_type != search->type_name) {
+                fprintf(stderr, "Semantic Error (Line No: %d): Identifier '%s'. Incompatible types for an lvalue assignment statement. lvalue is of type %s, while the assignment statement is of type %s\n", lvalueNode->token.line_no, lvalueNode->token.lexeme, get_string_from_type(search->type_name), get_string_from_type(expr_type));
+                has_semantic_error = true;
+                return;
+            }
+        }
+    }
+    else {
+        // lvalueARRStmt
+        assert (root->children[1]->token_type == lvalueARRStmt);
+        ASTNode* lvalueARRStmt = root->children[1];
+        ASTNode* idxNode = lvalueARRStmt->children[0];
         if (idxNode->token.token_type == TK_ID) {
             SymbolRecord* idx_search = st_search_scope(symboltables_ptr, idxNode->token.lexeme, start_scope, end_scope);
             if (idx_search == NULL) {
@@ -455,7 +484,17 @@ static void process_assignment_statement(SymbolHashTable*** symboltables_ptr, AS
                 return;
             }
         }
-        TypeName expr_type = get_expression_type(symboltables_ptr, root);
+        else if (idxNode->token.token_type == TK_NUM){
+            // Integer
+            // Check for bounds
+            int value = atoi(idxNode->token.lexeme);
+            if (value >= search->end || value < search->offset - 1) {
+                fprintf(stderr, "Semantic Error (Line No: %d): Array index out of bounds\n", idxNode->token.line_no);
+                has_semantic_error = true;
+                return;
+            }
+        }
+        TypeName expr_type = get_expression_type(symboltables_ptr, lvalueARRStmt->children[1]);
         if (expr_type != TYPE_ERROR) {
             if (expr_type != get_typename_from_term(search->element_type)) {
                 fprintf(stderr, "Semantic Error (Line No: %d): Identifier '%s'. Incompatible types for an lvalue assignment statement. lvalue is of type %s, while the assignment statement is of type %s\n", lvalueNode->token.line_no, lvalueNode->token.lexeme, get_string_from_type(get_typename_from_term(search->element_type)), get_string_from_type(expr_type));
@@ -463,16 +502,6 @@ static void process_assignment_statement(SymbolHashTable*** symboltables_ptr, AS
             }
         }
         return;
-    }
-    // Now the type expressions must match
-    // Consider the rhs
-    // ASTNode* whichStmtNode = root->children[1];
-    TypeName expr_type = get_expression_type(symboltables_ptr, root);
-    if (expr_type != TYPE_ERROR) {
-        if (expr_type != search->type_name) {
-            fprintf(stderr, "Semantic Error (Line No: %d): Identifier '%s'. Incompatible types for an lvalue assignment statement. lvalue is of type %s, while the assignment statement is of type %s\n", lvalueNode->token.line_no, lvalueNode->token.lexeme, get_string_from_type(search->type_name), get_string_from_type(expr_type));
-                has_semantic_error = true;
-        }
     }
 }
 
