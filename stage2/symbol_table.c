@@ -453,6 +453,10 @@ static void get_type_of_expression(SymbolHashTable*** symboltables_ptr, ASTNode*
                     expression_array_params[2] = search->end;
                     expression_array_params[3] = idNode->token.line_no;
                     expression_array_name = search->token.lexeme;
+                    if (search->offset_id != NULL && search->end_id != NULL) {
+                        // Dynamic Arrays
+                        is_dynamic = true;
+                    }
                 }
                 if (convert_to_bool != true) {
                     if (expression_type != TYPE_NONE && expr_type != expression_type) {
@@ -587,6 +591,8 @@ static void process_assignment_statement(SymbolHashTable*** symboltables_ptr, AS
         if (expr_type == TYPE_ARRAY) {
             int lvalue_offset = search->offset;
             int lvalue_end = search->end;
+            // For Dynamic Arrays
+            // For Static Arrays
             if ((TypeName)expression_array_params[0] != TYPE_NONE) {
                 if (get_typename_from_term(search->element_type) != (TypeName)expression_array_params[0]) {
                     // Types of arrays don't match
@@ -595,17 +601,22 @@ static void process_assignment_statement(SymbolHashTable*** symboltables_ptr, AS
                     has_semantic_error = true;
                     return;
                 }
-                if (lvalue_offset != expression_array_params[1]) {
-                    fprintf(stderr, "Semantic Error (Line No: %d): Types do not match when assigning array '%s' to '%s'\n", lvalueNode->token.line_no, expression_array_name, lvalueNode->token.lexeme);
-                    clear_expression_array();
-                    has_semantic_error = true;
-                    return;
+                if (is_dynamic == false) {
+                    if (lvalue_offset != expression_array_params[1]) {
+                        fprintf(stderr, "Semantic Error (Line No: %d): Types do not match when assigning array '%s' to '%s'\n", lvalueNode->token.line_no, expression_array_name, lvalueNode->token.lexeme);
+                        clear_expression_array();
+                        has_semantic_error = true;
+                        return;
+                    }
+                    if (lvalue_end != expression_array_params[2]) {
+                        fprintf(stderr, "Semantic Error (Line No: %d): Types do not match when assigning array '%s' to '%s'\n", lvalueNode->token.line_no, expression_array_name, lvalueNode->token.lexeme);
+                        clear_expression_array();
+                        has_semantic_error = true;
+                        return;
+                    }
                 }
-                if (lvalue_end != expression_array_params[2]) {
-                    fprintf(stderr, "Semantic Error (Line No: %d): Types do not match when assigning array '%s' to '%s'\n", lvalueNode->token.line_no, expression_array_name, lvalueNode->token.lexeme);
-                    clear_expression_array();
-                    has_semantic_error = true;
-                    return;
+                else {
+                    is_dynamic = false;
                 }
             }
         }
