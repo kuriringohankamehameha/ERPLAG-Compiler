@@ -129,10 +129,10 @@ static char* expression_array_name = NULL;
 struct ArrayOffset {
     int offset;
     int end;
-    char* offset_id;
-    char* end_id;
+    Token offset_id;
+    Token end_id;
 }ArrayOffset;
 
-static struct ArrayOffset array_offset = {0, 0, NULL, NULL};
+static struct ArrayOffset array_offset = {0, 0, {TK_NONE, NULL, -1}, {TK_NONE, NULL, -1}};
 
 #endif

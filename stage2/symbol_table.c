@@ -122,21 +122,21 @@ void get_offsets(ASTNode* node) {
     if (node->token_type == dataType && node->children[0]->token_type == TK_ARRAY) {
         if (node->children[1]->children[0]->token_type == TK_ID) {
             // Variable Index
-            array_offset.offset_id = node->children[1]->children[0]->token.lexeme;
+            array_offset.offset_id = (node->children[1]->children[0]->token);
             array_offset.offset = -1;
         }
         else {
             array_offset.offset = atoi(node->children[1]->children[0]->token.lexeme);
-            array_offset.offset_id = NULL;
+            array_offset.offset_id.lexeme = NULL;
         }
         if (node->children[1]->children[1]->token_type == TK_ID) {
             // Variable Index
-            array_offset.end_id = node->children[1]->children[1]->token.lexeme;
+            array_offset.end_id = (node->children[1]->children[1]->token);
             array_offset.end = -1;
         }
         else {
             array_offset.end = atoi(node->children[1]->children[1]->token.lexeme);
-            array_offset.end_id = NULL;
+            array_offset.end_id.lexeme = NULL;
         }
     }
 }
@@ -203,25 +203,46 @@ static void process_module_definition(SymbolHashTable*** symboltables_ptr, ASTNo
                 fprintf(stderr, "Semantic Error (Line No %d): Array Indices must be of the form [lower..higher]\n", typeNode->children[1]->children[0]->token.line_no);
                 has_semantic_error = true;
                 // Clear array offset parameters
-                array_offset.offset = -1; array_offset.end = -1; array_offset.offset_id = NULL; array_offset.end_id = NULL;
+                array_offset.offset = -1; array_offset.end = -1; array_offset.offset_id.lexeme = NULL; array_offset.end_id.lexeme = NULL;
                 return;
             }
         }
         SymbolRecord* record;
         if (typeNode->num_children > 1)
-            record = create_symbolrecord(idNode->token, get_typename_from_term(typeNode->children[0]->token_type), start_scope, array_offset.end, array_offset.offset, typeNode->children[2]->token_type, array_offset.offset_id, array_offset.end_id);
+            record = create_symbolrecord(idNode->token, get_typename_from_term(typeNode->children[0]->token_type), start_scope, array_offset.end, array_offset.offset, typeNode->children[2]->token_type, array_offset.offset_id.lexeme, array_offset.end_id.lexeme);
         else
-            record = create_symbolrecord(idNode->token, get_typename_from_term(typeNode->children[0]->token_type), start_scope, array_offset.end, array_offset.offset, TK_EPSILON, array_offset.offset_id, array_offset.end_id);
+            record = create_symbolrecord(idNode->token, get_typename_from_term(typeNode->children[0]->token_type), start_scope, array_offset.end, array_offset.offset, TK_EPSILON, array_offset.offset_id.lexeme, array_offset.end_id.lexeme);
 
         insert_into_symbol_table(symboltables_ptr, idNode->token.lexeme, record, start_scope);
 
-        if (array_offset.offset_id) {
+        if (array_offset.offset_id.lexeme) {
             // Add the dynamic array identifiers into scope
-            //insert_into_symbol_table(symboltables_ptr, array_offset.offset_id, record, start_scope);
+            SymbolRecord* search = st_search_scope(symboltables_ptr, array_offset.offset_id.lexeme, start_scope, start_scope);
+            if (search != NULL) {
+                fprintf(stderr, "Semantic Error (Line No %d): Identifier '%s' already in scope\n", array_offset.offset_id.line_no, array_offset.offset_id.lexeme);
+                has_semantic_error = true;
+                array_offset.offset = -1; array_offset.end = -1; array_offset.offset_id.lexeme = NULL; array_offset.end_id.lexeme = NULL;
+                return;
+            }
+            record = create_symbolrecord(array_offset.offset_id, TYPE_INTEGER, start_scope, -1, -1, TK_EPSILON, NULL, NULL);
+            insert_into_symbol_table(symboltables_ptr, array_offset.offset_id.lexeme, record, start_scope);
+        }
+
+        if (array_offset.end_id.lexeme) {
+            // Add the dynamic array identifiers into scope
+            SymbolRecord* search = st_search_scope(symboltables_ptr, array_offset.end_id.lexeme, start_scope, start_scope);
+            if (search != NULL) {
+                fprintf(stderr, "Semantic Error (Line No %d): Identifier '%s' already in scope\n", array_offset.end_id.line_no, array_offset.end_id.lexeme);
+                has_semantic_error = true;
+                array_offset.offset = -1; array_offset.end = -1; array_offset.offset_id.lexeme = NULL; array_offset.end_id.lexeme = NULL;
+                return;
+            }
+            record = create_symbolrecord(array_offset.end_id, TYPE_INTEGER, start_scope, -1, -1, TK_EPSILON, NULL, NULL);
+            insert_into_symbol_table(symboltables_ptr, array_offset.end_id.lexeme, record, start_scope);
         }
             
         // Clear array offset parameters
-        array_offset.offset = -1; array_offset.end = -1; array_offset.offset_id = NULL; array_offset.end_id = NULL;
+        array_offset.offset = -1; array_offset.end = -1; array_offset.offset_id.lexeme = NULL; array_offset.end_id.lexeme = NULL;
         
         if (temp->children[2] == NULL)
             break;
@@ -263,17 +284,53 @@ static void insert_identifier(SymbolHashTable*** symboltables_ptr, ASTNode* idNo
             fprintf(stderr, "Semantic Error (Line No %d): Array Indices must be of the form [lower..higher]\n", dataTypeNode->children[1]->children[0]->token.line_no);
             has_semantic_error = true;
             // Clear array offset parameters
-            array_offset.offset = -1; array_offset.end = -1; array_offset.offset_id = NULL; array_offset.end_id = NULL;
+            array_offset.offset = -1; array_offset.end = -1; array_offset.offset_id.lexeme = NULL; array_offset.end_id.lexeme = NULL;
             return;
         }
     }
     if (dataTypeNode->children[0]->token.token_type == TK_ARRAY)
-        record = create_symbolrecord(idNode->token, get_typename_from_term(TK_ARRAY), start_scope, array_offset.end, array_offset.offset, dataTypeNode->children[2]->token.token_type, array_offset.offset_id, array_offset.end_id);
+        record = create_symbolrecord(idNode->token, get_typename_from_term(TK_ARRAY), start_scope, array_offset.end, array_offset.offset, dataTypeNode->children[2]->token.token_type, array_offset.offset_id.lexeme, array_offset.end_id.lexeme);
     else
-        record = create_symbolrecord(idNode->token, get_typename_from_term(dataTypeNode->children[0]->token.token_type), start_scope, array_offset.end, array_offset.offset, TK_EPSILON, array_offset.offset_id, array_offset.end_id);
+        record = create_symbolrecord(idNode->token, get_typename_from_term(dataTypeNode->children[0]->token.token_type), start_scope, array_offset.end, array_offset.offset, TK_EPSILON, array_offset.offset_id.lexeme, array_offset.end_id.lexeme);
     // Clear array offset parameters
-    array_offset.offset = -1; array_offset.end = -1; array_offset.offset_id = NULL; array_offset.end_id = NULL;
+    array_offset.offset = -1; array_offset.end = -1; array_offset.offset_id.lexeme = NULL; array_offset.end_id.lexeme = NULL;
     insert_into_symbol_table(symboltables_ptr, idNode->token.lexeme, record, start_scope);
+    
+    if (array_offset.offset_id.lexeme) {
+        // Add the dynamic array identifiers into scope
+        SymbolRecord* search = st_search_scope(symboltables_ptr, array_offset.offset_id.lexeme, start_scope, start_scope);
+        if (search == NULL) {
+            fprintf(stderr, "Semantic Error (Line No %d): Identifier '%s' not declared in scope\n", array_offset.offset_id.line_no, array_offset.offset_id.lexeme);
+            has_semantic_error = true;
+            array_offset.offset = -1; array_offset.end = -1; array_offset.offset_id.lexeme = NULL; array_offset.end_id.lexeme = NULL;
+            return;
+        }
+        if (search->type_name != TYPE_INTEGER) {
+            // Error. The identifier for dynamic arrays must be integer types
+            fprintf(stderr, "Semantic Error (Line No %d): Dynamic Array index '%s' must be an integer\n", array_offset.offset_id.line_no, array_offset.offset_id.lexeme);
+            has_semantic_error = true;
+            array_offset.offset = -1; array_offset.end = -1; array_offset.offset_id.lexeme = NULL; array_offset.end_id.lexeme = NULL;
+            return;
+        }
+    }
+
+    if (array_offset.end_id.lexeme) {
+        // Add the dynamic array identifiers into scope
+        SymbolRecord* search = st_search_scope(symboltables_ptr, array_offset.end_id.lexeme, start_scope, start_scope);
+        if (search == NULL) {
+            fprintf(stderr, "Semantic Error (Line No %d): Identifier '%s' not declared in scope\n", array_offset.end_id.line_no, array_offset.end_id.lexeme);
+            has_semantic_error = true;
+            array_offset.offset = -1; array_offset.end = -1; array_offset.offset_id.lexeme = NULL; array_offset.end_id.lexeme = NULL;
+            return;
+        }
+        if (search->type_name != TYPE_INTEGER) {
+            // Error. The identifier for dynamic arrays must be integer types
+            fprintf(stderr, "Semantic Error (Line No %d): Dynamic Array index '%s' must be an integer\n", array_offset.end_id.line_no, array_offset.end_id.lexeme);
+            has_semantic_error = true;
+            array_offset.offset = -1; array_offset.end = -1; array_offset.offset_id.lexeme = NULL; array_offset.end_id.lexeme = NULL;
+            return;
+        }
+    }
 }
 
 static void process_declaration_statement(SymbolHashTable*** symboltables_ptr, ASTNode* root) {
