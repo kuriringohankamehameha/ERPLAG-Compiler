@@ -220,6 +220,7 @@ static void process_module_definition(SymbolHashTable*** symboltables_ptr, ASTNo
 
 static void process_driver_module(SymbolHashTable*** symboltables_ptr, ASTNode* root) {
     // Driver Module is inside it's own scope
+    if (root == NULL) return;
     start_scope ++;
     module_index ++;
     modules[module_index] = start_scope;
@@ -473,14 +474,7 @@ static TypeName get_expression_type(SymbolHashTable*** symboltables_ptr, ASTNode
     return expr_type;
 }
 
-static void process_expression(SymbolHashTable*** symboltables_ptr, ASTNode* root) {
-    TypeName expr_type = get_expression_type(symboltables_ptr, root);
-    if (expr_type != TYPE_NONE)
-        printf("Type of Expression : %s\n", get_string_from_type(expr_type));
-}
-
 static void process_assignment_statement(SymbolHashTable*** symboltables_ptr, ASTNode* root) {
-    SymbolHashTable** symboltables = *symboltables_ptr;
     ASTNode* lvalueNode = root->children[0];
     // This must already be declared
     SymbolRecord* search = st_search_scope(symboltables_ptr, lvalueNode->token.lexeme, start_scope, end_scope);
@@ -627,7 +621,6 @@ static void process_iterative_statement(SymbolHashTable*** symboltables_ptr, AST
     scope_stacks[module_index] = stack_push(scope_stacks[module_index], start_scope);
     create_scope_table(symboltables_ptr, start_scope);
 
-    SymbolHashTable** symboltables = *symboltables_ptr;
     SymbolRecord* search = NULL;
     // An iterativestmt can be for or while
     if (root->children[0]->token_type == arithmeticOrBooleanExpr) {
@@ -738,11 +731,11 @@ void semantic_analyzer_wrapper(SymbolHashTable*** symboltables_ptr, ASTNode* roo
     // Wrapper function for the semantic analyzer
     int max_modules = 30; int max_nesting_level = 10;
     initialize_stacks(max_modules, max_nesting_level);
-    perform_semantic_analysis(symboltables_ptr, root, 0);
+    perform_semantic_analysis(symboltables_ptr, root);
     free_stacks(max_modules);
 }
 
-void perform_semantic_analysis(SymbolHashTable*** symboltables_ptr, ASTNode* root, int enna_child) {
+void perform_semantic_analysis(SymbolHashTable*** symboltables_ptr, ASTNode* root) {
     // Performs all required Semantic Checks using the Symbol Table
     if (!root)
         return;
@@ -805,7 +798,7 @@ void perform_semantic_analysis(SymbolHashTable*** symboltables_ptr, ASTNode* roo
     //    process_expression(symboltables_ptr, root);
     //}
     for (int i=0; i<root->num_children; i++)
-        perform_semantic_analysis(symboltables_ptr, root->children[i], i);
+        perform_semantic_analysis(symboltables_ptr, root->children[i]);
 }
 
 SymbolHashTable*** createSymbolTables(ASTNode* root) {

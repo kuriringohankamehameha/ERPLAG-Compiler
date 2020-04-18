@@ -93,11 +93,9 @@ char* get_string_from_type(TypeName);
 SymbolHashTable*** createSymbolTables(ASTNode* root);
 void create_scope_table(SymbolHashTable*** symboltables_ptr, int index);
 void insert_into_symbol_table(SymbolHashTable*** symboltables_ptr, char* key, SymbolRecord* record, int index);
-void perform_semantic_analysis(SymbolHashTable*** symboltables_ptr, ASTNode* root, int enna_child);
+void perform_semantic_analysis(SymbolHashTable*** symboltables_ptr, ASTNode* root);
 void semantic_analyzer_wrapper(SymbolHashTable*** symboltables_ptr, ASTNode* root);
 void free_symtables(SymbolHashTable** tables, int num_tables);
-
-static int curr_scope = 0;
 
 // Keep two variables to keep track of nested scopes
 static int start_scope = 0;
@@ -121,6 +119,7 @@ static bool convert_to_bool = false;
 // Temp array to hold array type expression parameters
 // First parameter is the type name, while the second and third
 // correspond to the offset and the end indices of the array
+// The last parameter is for the line number
 static int expression_array_params[4] = {(int)TYPE_NONE, -1, -1, -1};
 static char* expression_array_name = NULL;
 
