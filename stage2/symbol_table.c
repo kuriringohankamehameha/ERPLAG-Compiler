@@ -639,7 +639,7 @@ static void process_assignment_statement(SymbolHashTable*** symboltables_ptr, AS
             // Check for bounds
             int value = atoi(idxNode->token.lexeme);
             if (value >= search->end || value < search->offset) {
-                fprintf(stderr, "Semantic Error (Line No: %d): Array index out of bounds\n", idxNode->token.line_no);
+                fprintf(stderr, "Semantic Error (Line No: %d): Array index for '%s' out of bounds\n", idxNode->token.line_no, search->token.lexeme);
                 has_semantic_error = true;
                 return;
             }
