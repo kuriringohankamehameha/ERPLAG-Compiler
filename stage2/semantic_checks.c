@@ -23,7 +23,7 @@ int main(int argc, char* argv[]) {
     hash_fun = &hash_func;
     keyword_table = populate_hash_table(keyword_table, keywords, hash_fun);
     
-    TreeNode* parseTree = generateParseTree("test/symboltable_test.txt", p, g);
+    TreeNode* parseTree = generateParseTree("test/semantic_1.txt", p, g);
     printf("-------------------------------------------------------------\n");
     printf("Parse Tree:\n");
     printf("Token\tLine No\tLexeme\t\tNum. Value\t\tParent\t\tIs Leaf\t\tSymbol Type\n");

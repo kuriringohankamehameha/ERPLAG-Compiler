@@ -364,7 +364,8 @@ void generate_AST(TreeNode* root)
     else if AST_COND(root, ioStmt, TK_GET_VALUE)
     {
         // <ioStmt> -> TK_GET_VALUE TK_BO TK_ID TK_BC TK_SEMICOL
-        root->node = make_ASTLeaf(NULL, root->children[2]->token);
+        root->node = make_ASTNode(make_ASTLeaf(NULL, root->children[2]->token), ioStmt);
+        root->node->syn_attribute.token_type = TK_GET_VALUE;
     }
     else if AST_COND(root, ioStmt, TK_PRINT)
     {
@@ -372,8 +373,8 @@ void generate_AST(TreeNode* root)
         TreeNode *varNode = root->children[2];
         generate_AST(varNode);
         // TK_PRINT is included in the AST
-        root->node = make_ASTNode(make_ASTLeaf(NULL, root->children[0]->token), ioStmt);
-        add_ASTChild(root->node, varNode->node);
+        root->node = make_ASTNode(varNode->node, ioStmt);
+        root->node->syn_attribute.token_type = TK_PRINT;
         // root->node = make_ASTNode(varNode->node, ioStmt);
     }
     else if AST_COND(root, var, var_id_num)
@@ -577,16 +578,17 @@ void generate_AST(TreeNode* root)
         // <expression> -> <U>
         TreeNode *UNode = root->children[0];
         generate_AST(UNode);
-        root->node = make_ASTNode(UNode->node, U);
+        root->node = make_ASTNode(UNode->node, expression);
     }
     else if AST_COND(root, U, unary_op)
     {
         // <U> -> <unary_op> <new_NT>
         TreeNode *unary_opNode = root->children[0];
         TreeNode *new_NTNode = root->children[1];
-        //generate_AST(unary_opNode);
+        generate_AST(unary_opNode);
         generate_AST(new_NTNode);
         term syn_token = unary_opNode->children[0]->token.token_type;
+        free_AST(unary_opNode->node);
         //root->node = make_ASTNode(unary_opNode->node, U);
         root->node = make_ASTNode(new_NTNode->node, U);
         root->node->syn_attribute.token_type = syn_token;

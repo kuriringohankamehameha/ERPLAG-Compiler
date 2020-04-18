@@ -137,12 +137,4 @@ static struct ArrayOffset array_offset = {0, 0, {TK_NONE, NULL, -1}, {TK_NONE, N
 
 static bool is_dynamic = false;
 
-typedef struct ActivationRecord {
-    // Structure for the Activation Record
-    // of a module
-    char* lexeme;
-    int num_variables;
-    int total_size;
-}ActivationRecord;
-
 #endif
