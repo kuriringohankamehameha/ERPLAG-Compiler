@@ -150,7 +150,15 @@ static void process_module_declaration(SymbolHashTable*** symboltables_ptr, ASTN
         has_semantic_error = true;
         return;
     }
-    SymbolRecord* record = create_symbolrecord(moduleIDNode->token, TYPE_MODULE, 0, 0, 0, TK_EPSILON, NULL, NULL);
+    
+    // Create a new scope and a scope table
+    start_scope ++;
+    module_index ++;
+    modules[module_index] = start_scope;
+    create_scope_table(symboltables_ptr, start_scope);
+
+    // Use the scope in the global scope table as a reference when encountering module declaration
+    SymbolRecord* record = create_symbolrecord(moduleIDNode->token, TYPE_MODULE, start_scope, 0, 0, TK_EPSILON, NULL, NULL);
     insert_into_symbol_table(symboltables_ptr, moduleIDNode->token.lexeme, record, 0);
     // Move onto local scope
     // start_scope ++;
@@ -187,7 +195,7 @@ static void process_module_definition(SymbolHashTable*** symboltables_ptr, ASTNo
     
     // Module Name. Add to local and global Symbol table
     SymbolRecord* record;
-    record = create_symbolrecord(moduleIDNode->token, TYPE_MODULE, 0, 0, 0, TK_EPSILON, NULL, NULL);
+    record = create_symbolrecord(moduleIDNode->token, TYPE_MODULE, start_scope, 0, 0, TK_EPSILON, NULL, NULL);
     insert_into_symbol_table(symboltables_ptr, moduleIDNode->token.lexeme, record, 0);
 
     record = create_symbolrecord(moduleIDNode->token, TYPE_MODULE, start_scope, 0, 0, TK_EPSILON, NULL, NULL);
@@ -655,7 +663,7 @@ static void process_assignment_statement(SymbolHashTable*** symboltables_ptr, AS
     }
 }
 
-static void process_module_reuse(SymbolHashTable*** symboltables_ptr, ASTNode* root) {
+static void process_module_reuse(SymbolHashTable*** symboltables_ptr, ASTNode* root, char* moduleID) {
     // <optional> => <output_plist> and <idList> => <input_plist>
     // Case 1: If <optional> is not E
     SymbolHashTable** symboltables = *symboltables_ptr;
@@ -690,20 +698,27 @@ static void process_module_reuse(SymbolHashTable*** symboltables_ptr, ASTNode* r
                 // Search the local scope first
                 search = st_search_scope(symboltables_ptr, idNode->token.lexeme, start_scope, end_scope);
                 if (search == NULL) {
-                    // Otherwise Search the global scope
-                    search = st_search(symboltables[0], idNode->token.lexeme);
-                    if (search == NULL) {
-                        // Not found. Error
-                        fprintf(stderr, "Semantic Error (Line No: %d): Identifier '%s' not found\n", idNode->token.line_no, idNode->token.lexeme);
-                        has_semantic_error = true;
-                        return;
-                    }
+                    fprintf(stderr, "Semantic Error (Line No: %d): Identifier '%s' not found in scope, but used in module call statement\n", idNode->token.line_no, idNode->token.lexeme);
+                    has_semantic_error = true;
+                    return;
                 }
                 // Ssearch must have the matched variable
                 // Now check types of parameters
                 // Result types must match <output_plist>
                 // Maintain a Stack / List of all modules with their scopes.
                 // This list is used to lookup parameter lists and verify types
+                
+                // Search the global scope for the moduleID
+                search = st_search(symboltables[0], moduleID);
+                if (search == NULL) {
+                    fprintf(stderr, "Semantic Error (Line No: %d): Module ID '%s' not found in global scope. Cannot be called\n", idNode->token.line_no, moduleID);
+                    has_semantic_error = true;
+                    return;
+                }
+
+                int module_scope = search->scope_label;
+
+                // Now search the module activation records for the identifier
                 if (temp->children[1]== NULL)
                     break;
             }
@@ -878,7 +893,8 @@ void perform_semantic_analysis(SymbolHashTable*** symboltables_ptr, ASTNode* roo
         process_assignment_statement(symboltables_ptr, root);
     }
     else if (root->token_type == moduleReuseStmt) {
-        process_module_reuse(symboltables_ptr, root);
+        char* moduleID = root->children[1]->token.lexeme;
+        process_module_reuse(symboltables_ptr, root, moduleID);
     }
     else if (root->token_type == declareStmt) {
         process_declaration_statement(symboltables_ptr, root);
