@@ -35,6 +35,9 @@ struct SymbolRecord {
     int end;
     int offset;
     term element_type;
+    // For Dynamic Arrays
+    char* offset_id;
+    char* end_id;
 };
 
 typedef struct SymbolRecord SymbolRecord;
@@ -73,7 +76,7 @@ struct SymbolHashTable {
 
 
 SymbolHashTable* create_symtable(int size, unsigned long (*hash_fun)(char*));
-SymbolRecord* create_symbolrecord(Token token, TypeName type_name, int scope_label, int end, int offset, term element_type);
+SymbolRecord* create_symbolrecord(Token token, TypeName type_name, int scope_label, int end, int offset, term element_type, char* offset_id, char* end_id);
 void free_symtable(SymbolHashTable* table);
 St_item* create_symitem(char* key, SymbolRecord* value);
 void free_symitem(St_item* item);
@@ -122,5 +125,14 @@ static bool convert_to_bool = false;
 // The last parameter is for the line number
 static int expression_array_params[4] = {(int)TYPE_NONE, -1, -1, -1};
 static char* expression_array_name = NULL;
+
+struct ArrayOffset {
+    int offset;
+    int end;
+    char* offset_id;
+    char* end_id;
+}ArrayOffset;
+
+static struct ArrayOffset array_offset = {0, 0, NULL, NULL};
 
 #endif

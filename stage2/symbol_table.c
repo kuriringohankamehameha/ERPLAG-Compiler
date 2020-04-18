@@ -118,13 +118,27 @@ static SymbolRecord* st_search_scope(SymbolHashTable*** symboltables_ptr, char* 
     return NULL;
 }
 
-int* get_offsets(ASTNode* node) {
-    int* offsets = calloc(2, sizeof(int));
+void get_offsets(ASTNode* node) {
     if (node->token_type == dataType && node->children[0]->token_type == TK_ARRAY) {
-        offsets[0] = atoi(node->children[1]->children[0]->token.lexeme);
-        offsets[1] = atoi(node->children[1]->children[1]->token.lexeme);
+        if (node->children[1]->children[0]->token_type == TK_ID) {
+            // Variable Index
+            array_offset.offset_id = node->children[1]->children[0]->token.lexeme;
+            array_offset.offset = -1;
+        }
+        else {
+            array_offset.offset = atoi(node->children[1]->children[0]->token.lexeme);
+            array_offset.offset_id = NULL;
+        }
+        if (node->children[1]->children[1]->token_type == TK_ID) {
+            // Variable Index
+            array_offset.end_id = node->children[1]->children[1]->token.lexeme;
+            array_offset.end = -1;
+        }
+        else {
+            array_offset.end = atoi(node->children[1]->children[1]->token.lexeme);
+            array_offset.end_id = NULL;
+        }
     }
-    return offsets;
 }
 
 static void process_module_declaration(SymbolHashTable*** symboltables_ptr, ASTNode* root) {
@@ -136,11 +150,11 @@ static void process_module_declaration(SymbolHashTable*** symboltables_ptr, ASTN
         has_semantic_error = true;
         return;
     }
-    SymbolRecord* record = create_symbolrecord(moduleIDNode->token, TYPE_MODULE, 0, 0, 0, TK_EPSILON);
+    SymbolRecord* record = create_symbolrecord(moduleIDNode->token, TYPE_MODULE, 0, 0, 0, TK_EPSILON, NULL, NULL);
     insert_into_symbol_table(symboltables_ptr, moduleIDNode->token.lexeme, record, 0);
     // Move onto local scope
     // start_scope ++;
-    // record = create_symbolrecord(moduleIDNode->token, TYPE_MODULE, start_scope, 0, 0, TK_EPSILON);
+    // record = create_symbolrecord(moduleIDNode->token, TYPE_MODULE, start_scope, 0, 0, TK_EPSILON, NULL, NULL);
     // insert_into_symbol_table(symboltables_ptr, moduleIDNode->token.lexeme, record, start_scope);
 }
 
@@ -173,30 +187,42 @@ static void process_module_definition(SymbolHashTable*** symboltables_ptr, ASTNo
     
     // Module Name. Add to local and global Symbol table
     SymbolRecord* record;
-    record = create_symbolrecord(moduleIDNode->token, TYPE_MODULE, 0, 0, 0, TK_EPSILON);
+    record = create_symbolrecord(moduleIDNode->token, TYPE_MODULE, 0, 0, 0, TK_EPSILON, NULL, NULL);
     insert_into_symbol_table(symboltables_ptr, moduleIDNode->token.lexeme, record, 0);
 
-    record = create_symbolrecord(moduleIDNode->token, TYPE_MODULE, start_scope, 0, 0, TK_EPSILON);
+    record = create_symbolrecord(moduleIDNode->token, TYPE_MODULE, start_scope, 0, 0, TK_EPSILON, NULL, NULL);
     insert_into_symbol_table(symboltables_ptr, moduleIDNode->token.lexeme, record, start_scope);
     
     // Insert <input_plist>
     for (ASTNode* temp = input_plistNode; ; temp=temp->children[2]) {
         ASTNode* idNode = temp->children[0];
         ASTNode* typeNode = temp->children[1];
-        int* offsets = get_offsets(typeNode);
-        int a = offsets[0]; int b = offsets[1];
-        free(offsets);
-        if (a > b) {
-            fprintf(stderr, "Semantic Error (Line No %d): Array Indices must be of the form [lower..higher]\n", typeNode->children[1]->children[0]->token.line_no);
-            has_semantic_error = true;
-            return;
+        get_offsets(typeNode);
+        if(array_offset.offset != -1 && array_offset.end != -1) { 
+            if (array_offset.offset > array_offset.end) {
+                fprintf(stderr, "Semantic Error (Line No %d): Array Indices must be of the form [lower..higher]\n", typeNode->children[1]->children[0]->token.line_no);
+                has_semantic_error = true;
+                // Clear array offset parameters
+                array_offset.offset = -1; array_offset.end = -1; array_offset.offset_id = NULL; array_offset.end_id = NULL;
+                return;
+            }
         }
         SymbolRecord* record;
         if (typeNode->num_children > 1)
-            record = create_symbolrecord(idNode->token, get_typename_from_term(typeNode->children[0]->token_type), start_scope, b, a, typeNode->children[2]->token_type);
+            record = create_symbolrecord(idNode->token, get_typename_from_term(typeNode->children[0]->token_type), start_scope, array_offset.end, array_offset.offset, typeNode->children[2]->token_type, array_offset.offset_id, array_offset.end_id);
         else
-            record = create_symbolrecord(idNode->token, get_typename_from_term(typeNode->children[0]->token_type), start_scope, b, a, TK_EPSILON);
+            record = create_symbolrecord(idNode->token, get_typename_from_term(typeNode->children[0]->token_type), start_scope, array_offset.end, array_offset.offset, TK_EPSILON, array_offset.offset_id, array_offset.end_id);
+
         insert_into_symbol_table(symboltables_ptr, idNode->token.lexeme, record, start_scope);
+
+        if (array_offset.offset_id) {
+            // Add the dynamic array identifiers into scope
+            //insert_into_symbol_table(symboltables_ptr, array_offset.offset_id, record, start_scope);
+        }
+            
+        // Clear array offset parameters
+        array_offset.offset = -1; array_offset.end = -1; array_offset.offset_id = NULL; array_offset.end_id = NULL;
+        
         if (temp->children[2] == NULL)
             break;
     }
@@ -210,7 +236,7 @@ static void process_module_definition(SymbolHashTable*** symboltables_ptr, ASTNo
         for (ASTNode* temp = output_plistNode; ; temp=temp->children[2]) {
             ASTNode* idNode = temp->children[0];
             ASTNode* typeNode = temp->children[1];
-            record = create_symbolrecord(idNode->token, get_typename_from_term(typeNode->token_type), start_scope, 0, 0, TK_EPSILON);
+            record = create_symbolrecord(idNode->token, get_typename_from_term(typeNode->token_type), start_scope, 0, 0, TK_EPSILON, NULL, NULL);
             insert_into_symbol_table(symboltables_ptr, idNode->token.lexeme, record, start_scope);
             if (temp->children[2] == NULL)
                 break;
@@ -231,18 +257,22 @@ static void process_driver_module(SymbolHashTable*** symboltables_ptr, ASTNode* 
 static void insert_identifier(SymbolHashTable*** symboltables_ptr, ASTNode* idNode, ASTNode* dataTypeNode) {
     // Inserts a single identifier, specified by datatype
     SymbolRecord* record;
-    int* offsets = get_offsets(dataTypeNode);
-    int a = offsets[0]; int b = offsets[1];
-    free(offsets);
-    if (a > b) {
-        fprintf(stderr, "Semantic Error (Line No %d): Array Indices must be of the form [lower..higher]\n", dataTypeNode->children[1]->children[0]->token.line_no);
-        has_semantic_error = true;
-        return;
+    get_offsets(dataTypeNode);
+    if(array_offset.offset != -1 && array_offset.end != -1) { 
+        if (array_offset.offset > array_offset.end) {
+            fprintf(stderr, "Semantic Error (Line No %d): Array Indices must be of the form [lower..higher]\n", dataTypeNode->children[1]->children[0]->token.line_no);
+            has_semantic_error = true;
+            // Clear array offset parameters
+            array_offset.offset = -1; array_offset.end = -1; array_offset.offset_id = NULL; array_offset.end_id = NULL;
+            return;
+        }
     }
     if (dataTypeNode->children[0]->token.token_type == TK_ARRAY)
-        record = create_symbolrecord(idNode->token, get_typename_from_term(TK_ARRAY), start_scope, b, a, dataTypeNode->children[2]->token.token_type);
+        record = create_symbolrecord(idNode->token, get_typename_from_term(TK_ARRAY), start_scope, array_offset.end, array_offset.offset, dataTypeNode->children[2]->token.token_type, array_offset.offset_id, array_offset.end_id);
     else
-        record = create_symbolrecord(idNode->token, get_typename_from_term(dataTypeNode->children[0]->token.token_type), start_scope, b, a, TK_EPSILON);
+        record = create_symbolrecord(idNode->token, get_typename_from_term(dataTypeNode->children[0]->token.token_type), start_scope, array_offset.end, array_offset.offset, TK_EPSILON, array_offset.offset_id, array_offset.end_id);
+    // Clear array offset parameters
+    array_offset.offset = -1; array_offset.end = -1; array_offset.offset_id = NULL; array_offset.end_id = NULL;
     insert_into_symbol_table(symboltables_ptr, idNode->token.lexeme, record, start_scope);
 }
 
@@ -812,7 +842,7 @@ SymbolHashTable*** createSymbolTables(ASTNode* root) {
     return symboltables_ptr;
 }
 
-SymbolRecord* create_symbolrecord(Token token, TypeName type_name, int scope_label, int end, int offset, term element_type) {
+SymbolRecord* create_symbolrecord(Token token, TypeName type_name, int scope_label, int end, int offset, term element_type, char* offset_id, char* end_id) {
     SymbolRecord* symbolrecord = (SymbolRecord*) calloc (1, sizeof(SymbolRecord));
     symbolrecord->token = token;
     symbolrecord->type_name = type_name;
@@ -820,6 +850,8 @@ SymbolRecord* create_symbolrecord(Token token, TypeName type_name, int scope_lab
     symbolrecord->end = end;
     symbolrecord->offset = offset;
     symbolrecord->element_type = element_type;
+    symbolrecord->offset_id = offset_id;
+    symbolrecord->end_id = end_id;
     return symbolrecord;
 }
 
@@ -1114,7 +1146,10 @@ void print_symrecord(SymbolRecord* t, char ch) {
     printf("scope_label = %d , ", t->scope_label);
     printf("end = %d , ", t->end);
     printf("offset = %d , ", t->offset);
-    printf("element_type = %s%c", get_string_from_term(t->element_type), ch);
+    printf("element_type = %s , ", get_string_from_term(t->element_type));
+    if (t->offset_id) printf("offset_id = %s , ", t->offset_id);
+    if (t->end_id) printf("end_id = %s , ", t->end_id);
+    printf("%c", ch);
 }
 
 void print_search_symtable(SymbolHashTable* table, char* key) {
