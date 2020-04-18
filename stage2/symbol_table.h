@@ -118,4 +118,10 @@ static Stack** scope_stacks = NULL;
 
 static bool convert_to_bool = false;
 
+// Temp array to hold array type expression parameters
+// First parameter is the type name, while the second and third
+// correspond to the offset and the end indices of the array
+static int expression_array_params[4] = {(int)TYPE_NONE, -1, -1, -1};
+static char* expression_array_name = NULL;
+
 #endif

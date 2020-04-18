@@ -60,6 +60,16 @@ unsigned long hash_function_symbol(char* str) {
     return i % CAPACITY;
 }
 
+static inline void clear_expression_array() {
+    // Clears the expression parameter array
+    expression_array_params[0] = (int)TYPE_NONE;
+    expression_array_params[1] = -1;
+    expression_array_params[2] = -1;
+    expression_array_params[3] = -1;
+    expression_array_name = NULL;
+}
+
+
 void create_scope_table(SymbolHashTable*** symboltables_ptr, int index) {
     // Creates a scope table
     //printf("Entering a new scope. start_scope = %d\n...\n", start_scope);
@@ -122,7 +132,8 @@ static void process_module_declaration(SymbolHashTable*** symboltables_ptr, ASTN
     SymbolHashTable** symboltables = *symboltables_ptr;
     SymbolRecord* search = st_search(symboltables[0], moduleIDNode->token.lexeme);
     if (search != NULL) {
-        fprintf(stderr, "Semantic Error (Line No %d): Module ID %s already defined in global scope\n", moduleIDNode->token.line_no, moduleIDNode->token.lexeme);
+        fprintf(stderr, "Semantic Error (Line No %d): Module ID '%s' already defined in global scope\n", moduleIDNode->token.line_no, moduleIDNode->token.lexeme);
+        has_semantic_error = true;
         return;
     }
     SymbolRecord* record = create_symbolrecord(moduleIDNode->token, TYPE_MODULE, 0, 0, 0, TK_EPSILON);
@@ -140,7 +151,8 @@ static void process_module_definition(SymbolHashTable*** symboltables_ptr, ASTNo
     // Search in the global scope. It may be present, due to moduledeclaration
     SymbolRecord* search = st_search_scope(symboltables_ptr, moduleIDNode->token.lexeme, 0, 0);
     if (search != NULL) {
-        fprintf(stderr, "Semantic Error (Line No %d): Module %s already declared at Line %d\n", moduleIDNode->token.line_no, moduleIDNode->token.lexeme, search->token.line_no);
+        fprintf(stderr, "Semantic Error (Line No %d): Module '%s' already declared at Line %d\n", moduleIDNode->token.line_no, moduleIDNode->token.lexeme, search->token.line_no);
+        has_semantic_error = true;
         return;
     }
     // Move to local scope
@@ -315,6 +327,17 @@ static void get_type_of_expression(SymbolHashTable*** symboltables_ptr, ASTNode*
             }
         }
     }
+    else if (root->token_type == N4 || root->token_type == U || root->token_type == N5) {
+        // N4 or Unary Operator or N5 cannot have array operands
+        ASTNode* prev_expressionNode = root->parent->children[0];
+        get_type_of_expression(symboltables_ptr, prev_expressionNode);
+        if (expression_type == TYPE_ARRAY) {
+            fprintf(stderr, "Semantic Error (Line No: %d): Arrays cannot be used with operand %s\n", expression_array_params[3], get_string_from_term(root->syn_attribute.token_type));
+            has_semantic_error = true;
+            error = 1; expression_type = TYPE_ERROR;
+            return;
+        }
+    }
     else if (root->token_type == var_id_num) {
         //printf("Reached var_id_num: %s\n", root->children[0]->token.lexeme);
         ASTNode* var_id_numNode = root;
@@ -335,6 +358,14 @@ static void get_type_of_expression(SymbolHashTable*** symboltables_ptr, ASTNode*
                     return;
                 }
                 expr_type = search->type_name;
+                // If the expression type is an array, there should be nothing else
+                if (expr_type == TYPE_ARRAY) {
+                    expression_array_params[0] = (int)get_typename_from_term(search->element_type);
+                    expression_array_params[1] = search->offset;
+                    expression_array_params[2] = search->end;
+                    expression_array_params[3] = idNode->token.line_no;
+                    expression_array_name = search->token.lexeme;
+                }
                 if (convert_to_bool != true) {
                     if (expression_type != TYPE_NONE && expr_type != expression_type) {
                         fprintf(stderr, "Semantic Error (Line No: %d) : Identifier '%s' used in arithmetic expression not conforming to type %s\n", idNode->token.line_no, idNode->token.lexeme, get_string_from_type(expression_type));
@@ -369,8 +400,8 @@ static void get_type_of_expression(SymbolHashTable*** symboltables_ptr, ASTNode*
                     // Integer
                     // Check for bounds
                     int value = atoi(idxNode->token.lexeme);
-                    if (value >= search->end || value < search->offset - 1) {
-                        fprintf(stderr, "Semantic Error (Line No: %d): Array index for %s out of bounds\n", idxNode->token.line_no, var_id_numNode->children[0]->token.lexeme);
+                    if (value >= search->end || value < search->offset) {
+                        fprintf(stderr, "Semantic Error (Line No: %d): Array index for '%s' out of bounds\n", idxNode->token.line_no, var_id_numNode->children[0]->token.lexeme);
                         has_semantic_error = true;
                         expression_type = TYPE_ERROR;
                         error = 1;
@@ -461,6 +492,8 @@ static void process_assignment_statement(SymbolHashTable*** symboltables_ptr, AS
 
     if (root->children[1]->token_type == expression) {
         // lvalueIDStmt
+        // However, ID can also be an array.
+        // We must check the offsets and end indices too in that case
         ASTNode* exprNode = root->children[1];
         TypeName expr_type = get_expression_type(symboltables_ptr, exprNode);
         if (expr_type != TYPE_ERROR) {
@@ -468,6 +501,31 @@ static void process_assignment_statement(SymbolHashTable*** symboltables_ptr, AS
                 fprintf(stderr, "Semantic Error (Line No: %d): Identifier '%s'. Incompatible types for an lvalue assignment statement. lvalue is of type %s, while the assignment statement is of type %s\n", lvalueNode->token.line_no, lvalueNode->token.lexeme, get_string_from_type(search->type_name), get_string_from_type(expr_type));
                 has_semantic_error = true;
                 return;
+            }
+        }
+        if (expr_type == TYPE_ARRAY) {
+            int lvalue_offset = search->offset;
+            int lvalue_end = search->end;
+            if ((TypeName)expression_array_params[0] != TYPE_NONE) {
+                if (get_typename_from_term(search->element_type) != (TypeName)expression_array_params[0]) {
+                    // Types of arrays don't match
+                    fprintf(stderr, "Semantic Error (Line No: %d): Types do not match when assigning array '%s' to '%s'\n", lvalueNode->token.line_no, expression_array_name, lvalueNode->token.lexeme);
+                    clear_expression_array();
+                    has_semantic_error = true;
+                    return;
+                }
+                if (lvalue_offset != expression_array_params[1]) {
+                    fprintf(stderr, "Semantic Error (Line No: %d): Types do not match when assigning array '%s' to '%s'\n", lvalueNode->token.line_no, expression_array_name, lvalueNode->token.lexeme);
+                    clear_expression_array();
+                    has_semantic_error = true;
+                    return;
+                }
+                if (lvalue_end != expression_array_params[2]) {
+                    fprintf(stderr, "Semantic Error (Line No: %d): Types do not match when assigning array '%s' to '%s'\n", lvalueNode->token.line_no, expression_array_name, lvalueNode->token.lexeme);
+                    clear_expression_array();
+                    has_semantic_error = true;
+                    return;
+                }
             }
         }
     }
@@ -479,7 +537,7 @@ static void process_assignment_statement(SymbolHashTable*** symboltables_ptr, AS
         if (idxNode->token.token_type == TK_ID) {
             SymbolRecord* idx_search = st_search_scope(symboltables_ptr, idxNode->token.lexeme, start_scope, end_scope);
             if (idx_search == NULL) {
-                fprintf(stderr, "Semantic Error (Line No: %d): Lvalue array index %s being assigned before declaration\n", idxNode->token.line_no, idxNode->token.lexeme);
+                fprintf(stderr, "Semantic Error (Line No: %d): Lvalue array index '%s' being assigned before declaration\n", idxNode->token.line_no, idxNode->token.lexeme);
                 has_semantic_error = true;
                 return;
             }
@@ -488,7 +546,7 @@ static void process_assignment_statement(SymbolHashTable*** symboltables_ptr, AS
             // Integer
             // Check for bounds
             int value = atoi(idxNode->token.lexeme);
-            if (value >= search->end || value < search->offset - 1) {
+            if (value >= search->end || value < search->offset) {
                 fprintf(stderr, "Semantic Error (Line No: %d): Array index out of bounds\n", idxNode->token.line_no);
                 has_semantic_error = true;
                 return;
