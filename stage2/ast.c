@@ -941,6 +941,7 @@ void generate_AST(TreeNode* root)
         }
         else {
             root->node = make_ASTNode(make_ASTLeaf(NULL, root->children[0]->token), g_default);
+            root->node->syn_attribute.token_type = TK_DEFAULT;
             add_ASTChild(root->node, statementsNode->node);
         }
     }
