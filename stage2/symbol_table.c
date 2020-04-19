@@ -4,11 +4,11 @@
 #include "ast.h"
 #include "symbol_table.h"
 #include "stack.h"
-#include "activation_record.h"
+#include "function_table.h"
 #include <assert.h>
 
 int total_scope = 0;
-extern ActivationRecord* activation_records;
+extern FunctionTable* function_tables;
 
 char* get_string_from_type(TypeName typename) {
     switch(typename) {
@@ -158,7 +158,7 @@ static void process_module_declaration(SymbolHashTable*** symboltables_ptr, ASTN
     module_index ++;
     modules[module_index] = start_scope;
     create_scope_table(symboltables_ptr, start_scope);
-    activation_records = realloc (activation_records, (start_scope + 1) * sizeof(ActivationRecord));
+    function_tables = realloc (function_tables, (start_scope + 1) * sizeof(FunctionTable));
 
     // Use the scope in the global scope table as a reference when encountering module declaration
     SymbolRecord* record = create_symbolrecord(moduleIDNode->token, TYPE_MODULE, start_scope, 0, 0, TK_EPSILON, NULL, NULL);
@@ -187,7 +187,7 @@ static void process_module_definition(SymbolHashTable*** symboltables_ptr, ASTNo
     modules[module_index] = start_scope;
     // Create a scope table
     create_scope_table(symboltables_ptr, start_scope);
-    activation_records = realloc (activation_records, (start_scope + 1) * sizeof(ActivationRecord));
+    function_tables = realloc (function_tables, (start_scope + 1) * sizeof(FunctionTable));
 
     if (root->syn_attribute.token_type == TK_EPSILON) {
         retNode = NULL;
@@ -291,7 +291,7 @@ static void process_driver_module(SymbolHashTable*** symboltables_ptr, ASTNode* 
     modules[module_index] = start_scope;
     // Create a scope table
     create_scope_table(symboltables_ptr, start_scope);
-    activation_records = realloc (activation_records, (start_scope + 1) * sizeof(ActivationRecord));
+    function_tables = realloc (function_tables, (start_scope + 1) * sizeof(FunctionTable));
 }
 
 static void insert_identifier(SymbolHashTable*** symboltables_ptr, ASTNode* idNode, ASTNode* dataTypeNode) {
@@ -354,7 +354,7 @@ static void insert_identifier(SymbolHashTable*** symboltables_ptr, ASTNode* idNo
 }
 
 static bool is_module_parameter(SymbolHashTable*** symboltables_ptr, char* id) {
-    return search_activation_record_input_parameter(id, module_index);
+    return search_function_table_input_parameter(id, module_index);
 }
 
 static void process_declaration_statement(SymbolHashTable*** symboltables_ptr, ASTNode* root) {
@@ -763,7 +763,7 @@ static void process_iterative_statement(SymbolHashTable*** symboltables_ptr, AST
     start_scope ++;
     scope_stacks[module_index] = stack_push(scope_stacks[module_index], start_scope);
     create_scope_table(symboltables_ptr, start_scope);
-    activation_records = realloc (activation_records, (start_scope + 1) * sizeof(ActivationRecord));
+    function_tables = realloc (function_tables, (start_scope + 1) * sizeof(FunctionTable));
 
     SymbolRecord* search = NULL;
     // An iterativestmt can be for or while
@@ -812,7 +812,7 @@ static void process_conditional_statement(SymbolHashTable*** symboltables_ptr, A
     start_scope ++;
     scope_stacks[module_index] = stack_push(scope_stacks[module_index], start_scope);
     create_scope_table(symboltables_ptr, start_scope);
-    activation_records = realloc (activation_records, (start_scope + 1) * sizeof(ActivationRecord));
+    function_tables = realloc (function_tables, (start_scope + 1) * sizeof(FunctionTable));
 
     ASTNode* idNode = root->children[0];
     ASTNode* caseStmtsNode = root->children[1];
@@ -924,10 +924,10 @@ void semantic_analyzer_wrapper(SymbolHashTable*** symboltables_ptr, ASTNode* roo
     // Wrapper function for the semantic analyzer
     int max_modules = 30; int max_nesting_level = 10;
     initialize_stacks(max_modules, max_nesting_level);
-    activation_records = calloc (1, sizeof(ActivationRecord));
+    function_tables = calloc (1, sizeof(FunctionTable));
     perform_semantic_analysis(symboltables_ptr, root);
-    print_activation_records(start_scope + 1);
-    free_activation_record(start_scope + 1);
+    print_function_tables(start_scope + 1);
+    free_function_table(start_scope + 1);
     free_stacks(max_modules);
 }
 
