@@ -305,7 +305,7 @@ void generate_AST(TreeNode* root)
         // <moduleDef> -> TK_START <statements> TK_END
         TreeNode *statementsNode = root->children[1];
         generate_AST(statementsNode);
-        root->node = make_ASTLeaf(NULL, root->children[0]->token);
+        root->node = make_ASTNode(make_ASTLeaf(NULL, root->children[0]->token), moduleDef);
         if (statementsNode->node)
             add_ASTChild(root->node, statementsNode->node);
         add_ASTChild(root->node, make_ASTLeaf(NULL, root->children[2]->token));

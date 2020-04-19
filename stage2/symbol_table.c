@@ -938,8 +938,18 @@ void perform_semantic_analysis(SymbolHashTable*** symboltables_ptr, ASTNode* roo
         if (root->parent->token_type == condionalStmt || root->parent->token_type == iterativeStmt) {
             // End of Scope. Pop off from the module stack
             //printf("Popping from module num: %d, scope_num = %d\n", module_index, scope_stacks[module_index]->data);
+            if (tmp_scope == -1) {
+                tmp_scope = start_scope;
+            }
             scope_stacks[module_index] = stack_pop(scope_stacks[module_index]);
             //print_stack(scope_stacks[module_index]);
+            start_scope --;
+        }
+        else if (root->parent->token_type == moduleDef) {
+            if (tmp_scope != -1) {
+                start_scope = tmp_scope;
+                tmp_scope = -1;
+            }
         }
         // End of Scope
         end_scope ++;
