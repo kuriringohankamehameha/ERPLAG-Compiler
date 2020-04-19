@@ -38,6 +38,8 @@ struct SymbolRecord {
     // For Dynamic Arrays
     char* offset_id;
     char* end_id;
+    // Runtime address
+    int addr;
 };
 
 typedef struct SymbolRecord SymbolRecord;
@@ -93,6 +95,7 @@ void print_symtables(SymbolHashTable** tables, int num_tables);
 
 
 char* get_string_from_type(TypeName);
+TypeName get_typename_from_term(term token_type);
 SymbolHashTable*** createSymbolTables(ASTNode* root);
 void create_scope_table(SymbolHashTable*** symboltables_ptr, int index);
 void insert_into_symbol_table(SymbolHashTable*** symboltables_ptr, char* key, SymbolRecord* record, int index);
