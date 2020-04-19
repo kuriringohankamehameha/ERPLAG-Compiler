@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include "activation_record.h"
 
-ActivationRecord* activation_record = NULL;
+ActivationRecord* activation_records = NULL;
 
 bool search_activation_record_lexeme(char* lexeme, int index);
 bool search_activation_record_input_parameter(char* input_parameter, int index);
@@ -29,86 +29,86 @@ ActivationRecord* create_activation_record(char** variables, int num_variables, 
 }
 
 void realloc_activation(int index) {
-    activation_record = realloc(activation_record, (index + 1) * sizeof (ActivationRecord));
+    activation_records = realloc(activation_records, (index + 1) * sizeof (ActivationRecord));
 }
 
 bool search_activation_record_lexeme(char* lexeme, int index) {
-    for (int i=0; i<activation_record[index].num_variables;i++) {
-        if (strcmp(activation_record[index].variables[i], lexeme) == 0)
+    for (int i=0; i<activation_records[index].num_variables;i++) {
+        if (strcmp(activation_records[index].variables[i], lexeme) == 0)
             return true;
     }
     return false;
 }
 
 bool search_activation_record_input_parameter(char* input_parameter, int index) {
-    for (int i=0; i<activation_record[index].num_input_params;i++) {
-        if (strcmp(activation_record[index].input_plist[i], input_parameter) == 0)
+    for (int i=0; i<activation_records[index].num_input_params;i++) {
+        if (strcmp(activation_records[index].input_plist[i], input_parameter) == 0)
             return true;
     }
     return false;
 }
 
 bool search_activation_record_output_parameter(char* output_parameter, int index) {
-    for (int i=0; i<activation_record[index].num_output_params;i++) {
-        if (strcmp(activation_record[index].output_plist[i], output_parameter) == 0)
+    for (int i=0; i<activation_records[index].num_output_params;i++) {
+        if (strcmp(activation_records[index].output_plist[i], output_parameter) == 0)
             return true;
     }
     return false;
 }
 
 void add_variable_activation(char* variable, int index) {
-    if (activation_record == NULL)
-        activation_record = calloc (1, sizeof(activation_record));
-    if (activation_record[index].variables == NULL)
-        activation_record[index].variables = calloc (1, sizeof(char*));
+    if (activation_records == NULL)
+        activation_records = calloc (1, sizeof(ActivationRecord));
+    if (activation_records[index].variables == NULL)
+        activation_records[index].variables = calloc (1, sizeof(char*));
     else
-        activation_record[index].variables = realloc(activation_record[index].variables, (activation_record[index].num_variables + 1) * sizeof(char*));
-    activation_record[index].variables[activation_record[index].num_variables] = variable;
-    activation_record[index].num_variables++;
+        activation_records[index].variables = realloc(activation_records[index].variables, (activation_records[index].num_variables + 1) * sizeof(char*));
+    activation_records[index].variables[activation_records[index].num_variables] = variable;
+    activation_records[index].num_variables++;
 }
 
 void add_input_parameter(char* input_parameter, int index) {
-    if (activation_record == NULL)
-        activation_record = calloc (1, sizeof(activation_record));
-    if (activation_record[index].input_plist == NULL)
-        activation_record[index].input_plist = calloc (1, sizeof(char*));
+    if (activation_records == NULL)
+        activation_records = calloc (1, sizeof(ActivationRecord));
+    if (activation_records[index].input_plist == NULL)
+        activation_records[index].input_plist = calloc (1, sizeof(char*));
     else
-        activation_record[index].input_plist = realloc(activation_record[index].input_plist, (activation_record[index].num_input_params + 1) * sizeof(char*));
-    activation_record[index].input_plist[activation_record[index].num_input_params] = input_parameter;
-    activation_record[index].num_input_params++;
+        activation_records[index].input_plist = realloc(activation_records[index].input_plist, (activation_records[index].num_input_params + 1) * sizeof(char*));
+    activation_records[index].input_plist[activation_records[index].num_input_params] = input_parameter;
+    activation_records[index].num_input_params++;
 }
 
 void add_output_parameter(char* output_parameter, int index) {
-    if (activation_record == NULL)
-        activation_record = calloc (1, sizeof(activation_record));
-    if (activation_record[index].output_plist == NULL)
-        activation_record[index].output_plist = calloc (1, sizeof(char*));
+    if (activation_records == NULL)
+        activation_records = calloc (1, sizeof(ActivationRecord));
+    if (activation_records[index].output_plist == NULL)
+        activation_records[index].output_plist = calloc (1, sizeof(char*));
     else
-        activation_record[index].output_plist = realloc(activation_record[index].output_plist, (activation_record[index].num_output_params + 1) * sizeof(char*));
-    activation_record[index].output_plist[activation_record[index].num_output_params] = output_parameter;
-    activation_record[index].num_output_params++;
+        activation_records[index].output_plist = realloc(activation_records[index].output_plist, (activation_records[index].num_output_params + 1) * sizeof(char*));
+    activation_records[index].output_plist[activation_records[index].num_output_params] = output_parameter;
+    activation_records[index].num_output_params++;
 }
 
 void print_activation_record(int index) {
     printf("\nFor Index %d:\n", index);
-    if (activation_record[index].variables) {
+    if (activation_records[index].variables) {
         printf("Variables: ");
-        for (int i=0; i<activation_record[index].num_variables; i++) {
-            printf("%s , ", activation_record[index].variables[i]);
+        for (int i=0; i<activation_records[index].num_variables; i++) {
+            printf("%s , ", activation_records[index].variables[i]);
         }
         printf("\n");
     }
-    if (activation_record[index].input_plist) {
+    if (activation_records[index].input_plist) {
         printf("Input Parameters: ");
-        for (int i=0; i<activation_record[index].num_input_params; i++) {
-            printf("%s , ", activation_record[index].input_plist[i]);
+        for (int i=0; i<activation_records[index].num_input_params; i++) {
+            printf("%s , ", activation_records[index].input_plist[i]);
         }
         printf("\n");
     }
-    if (activation_record[index].output_plist) {
+    if (activation_records[index].output_plist) {
         printf("Output Parameters: ");
-        for (int i=0; i<activation_record[index].num_output_params; i++) {
-            printf("%s , ", activation_record[index].output_plist[i]);
+        for (int i=0; i<activation_records[index].num_output_params; i++) {
+            printf("%s , ", activation_records[index].output_plist[i]);
         }
     }
     printf("\n");
@@ -120,28 +120,28 @@ void print_activation_records(int idxs) {
 }
 
 void free_activation_record(int num_modules) {
-    if (activation_record) {
+    if (activation_records) {
         for (int index = 0; index < num_modules; index++) {
-            if (activation_record[index].variables) {
-                for (int i=0; i<activation_record[index].num_variables; i++) {
-                    activation_record[index].variables[i] = NULL;
+            if (activation_records[index].variables) {
+                for (int i=0; i<activation_records[index].num_variables; i++) {
+                    activation_records[index].variables[i] = NULL;
                 }
-                free(activation_record[index].variables);
+                free(activation_records[index].variables);
             }
-            if (activation_record[index].input_plist) {
-                for (int i=0; i<activation_record[index].num_input_params; i++) {
-                    activation_record[index].input_plist[i] = NULL;
+            if (activation_records[index].input_plist) {
+                for (int i=0; i<activation_records[index].num_input_params; i++) {
+                    activation_records[index].input_plist[i] = NULL;
                 }
-                free(activation_record[index].input_plist);
+                free(activation_records[index].input_plist);
             }
-            if (activation_record[index].output_plist) {
-                for (int i=0; i<activation_record[index].num_output_params; i++) {
-                    activation_record[index].output_plist[i] = NULL;
+            if (activation_records[index].output_plist) {
+                for (int i=0; i<activation_records[index].num_output_params; i++) {
+                    activation_records[index].output_plist[i] = NULL;
                 }
-                free(activation_record[index].output_plist);
+                free(activation_records[index].output_plist);
             }
-            activation_record[index].scope_stack = NULL;
+            activation_records[index].scope_stack = NULL;
         }
-        free(activation_record);
+        free(activation_records);
     }
 }

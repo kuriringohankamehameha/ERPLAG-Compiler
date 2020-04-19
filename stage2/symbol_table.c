@@ -8,7 +8,7 @@
 #include <assert.h>
 
 int total_scope = 0;
-extern ActivationRecord* activation_record;
+extern ActivationRecord* activation_records;
 
 char* get_string_from_type(TypeName typename) {
     switch(typename) {
@@ -158,6 +158,7 @@ static void process_module_declaration(SymbolHashTable*** symboltables_ptr, ASTN
     module_index ++;
     modules[module_index] = start_scope;
     create_scope_table(symboltables_ptr, start_scope);
+    activation_records = realloc (activation_records, (start_scope + 1) * sizeof(ActivationRecord));
 
     // Use the scope in the global scope table as a reference when encountering module declaration
     SymbolRecord* record = create_symbolrecord(moduleIDNode->token, TYPE_MODULE, start_scope, 0, 0, TK_EPSILON, NULL, NULL);
@@ -182,10 +183,11 @@ static void process_module_definition(SymbolHashTable*** symboltables_ptr, ASTNo
     // Move to local scope
     start_scope ++;
     module_index ++;
-    realloc_activation(module_index + 1);
+    //realloc_activation(module_index + 1);
     modules[module_index] = start_scope;
     // Create a scope table
     create_scope_table(symboltables_ptr, start_scope);
+    activation_records = realloc (activation_records, (start_scope + 1) * sizeof(ActivationRecord));
 
     if (root->syn_attribute.token_type == TK_EPSILON) {
         retNode = NULL;
@@ -226,7 +228,7 @@ static void process_module_definition(SymbolHashTable*** symboltables_ptr, ASTNo
         // Insert it into the symbol table
         insert_into_symbol_table(symboltables_ptr, idNode->token.lexeme, record, start_scope);
         // Also put it into the activation record of the module
-        add_input_parameter(idNode->token.lexeme, module_index);
+        add_input_parameter(idNode->token.lexeme, start_scope);
 
         if (array_offset.offset_id.lexeme) {
             // Add the dynamic array identifiers into scope
@@ -239,7 +241,7 @@ static void process_module_definition(SymbolHashTable*** symboltables_ptr, ASTNo
             }
             record = create_symbolrecord(array_offset.offset_id, TYPE_INTEGER, start_scope, -1, -1, TK_EPSILON, NULL, NULL);
             insert_into_symbol_table(symboltables_ptr, array_offset.offset_id.lexeme, record, start_scope);
-            add_input_parameter(array_offset.offset_id.lexeme, module_index);
+            add_input_parameter(array_offset.offset_id.lexeme, start_scope);
         }
 
         if (array_offset.end_id.lexeme) {
@@ -253,7 +255,7 @@ static void process_module_definition(SymbolHashTable*** symboltables_ptr, ASTNo
             }
             record = create_symbolrecord(array_offset.end_id, TYPE_INTEGER, start_scope, -1, -1, TK_EPSILON, NULL, NULL);
             insert_into_symbol_table(symboltables_ptr, array_offset.end_id.lexeme, record, start_scope);
-            add_input_parameter(array_offset.end_id.lexeme, module_index);
+            add_input_parameter(array_offset.end_id.lexeme, start_scope);
         }
             
         // Clear array offset parameters
@@ -274,7 +276,7 @@ static void process_module_definition(SymbolHashTable*** symboltables_ptr, ASTNo
             ASTNode* typeNode = temp->children[1];
             record = create_symbolrecord(idNode->token, get_typename_from_term(typeNode->token_type), start_scope, 0, 0, TK_EPSILON, NULL, NULL);
             insert_into_symbol_table(symboltables_ptr, idNode->token.lexeme, record, start_scope);
-            add_output_parameter(idNode->token.lexeme, module_index);
+            add_output_parameter(idNode->token.lexeme, start_scope);
             if (temp->children[2] == NULL)
                 break;
         }
@@ -289,6 +291,7 @@ static void process_driver_module(SymbolHashTable*** symboltables_ptr, ASTNode* 
     modules[module_index] = start_scope;
     // Create a scope table
     create_scope_table(symboltables_ptr, start_scope);
+    activation_records = realloc (activation_records, (start_scope + 1) * sizeof(ActivationRecord));
 }
 
 static void insert_identifier(SymbolHashTable*** symboltables_ptr, ASTNode* idNode, ASTNode* dataTypeNode) {
@@ -311,7 +314,7 @@ static void insert_identifier(SymbolHashTable*** symboltables_ptr, ASTNode* idNo
     // Clear array offset parameters
     array_offset.offset = -1; array_offset.end = -1; array_offset.offset_id.lexeme = NULL; array_offset.end_id.lexeme = NULL;
     insert_into_symbol_table(symboltables_ptr, idNode->token.lexeme, record, start_scope);
-    add_variable_activation(idNode->token.lexeme, module_index);
+    add_variable_activation(idNode->token.lexeme, start_scope);
     
     if (array_offset.offset_id.lexeme) {
         // Add the dynamic array identifiers into scope
@@ -758,6 +761,7 @@ static void process_iterative_statement(SymbolHashTable*** symboltables_ptr, AST
     start_scope ++;
     scope_stacks[module_index] = stack_push(scope_stacks[module_index], start_scope);
     create_scope_table(symboltables_ptr, start_scope);
+    activation_records = realloc (activation_records, (start_scope + 1) * sizeof(ActivationRecord));
 
     SymbolRecord* search = NULL;
     // An iterativestmt can be for or while
@@ -806,6 +810,7 @@ static void process_conditional_statement(SymbolHashTable*** symboltables_ptr, A
     start_scope ++;
     scope_stacks[module_index] = stack_push(scope_stacks[module_index], start_scope);
     create_scope_table(symboltables_ptr, start_scope);
+    activation_records = realloc (activation_records, (start_scope + 1) * sizeof(ActivationRecord));
 
     ASTNode* idNode = root->children[0];
     ASTNode* caseStmtsNode = root->children[1];
@@ -917,10 +922,10 @@ void semantic_analyzer_wrapper(SymbolHashTable*** symboltables_ptr, ASTNode* roo
     // Wrapper function for the semantic analyzer
     int max_modules = 30; int max_nesting_level = 10;
     initialize_stacks(max_modules, max_nesting_level);
-    activation_record = calloc (max_modules, sizeof(ActivationRecord));
+    activation_records = calloc (1, sizeof(ActivationRecord));
     perform_semantic_analysis(symboltables_ptr, root);
-    print_activation_records(module_index + 1);
-    free_activation_record(module_index + 1);
+    print_activation_records(start_scope + 1);
+    free_activation_record(start_scope + 1);
     free_stacks(max_modules);
 }
 

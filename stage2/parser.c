@@ -159,10 +159,12 @@ void free_parse_tree(TreeNode* root) {
     // Free memory for the complete Parse Tree
     if (!root)
         return;
-    for (int i=0; i<root->num_children; i++) {
-        free_parse_tree(root->children[i]);
+    if (root->children) {
+        for (int i=0; i<root->num_children; i++) {
+            free_parse_tree(root->children[i]);
+        }
+        free(root->children);
     }
-    free(root->children);
     if (root->token.lexeme)
         free(root->token.lexeme);
     free(root);
