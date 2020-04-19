@@ -137,4 +137,6 @@ static struct ArrayOffset array_offset = {0, 0, {TK_NONE, NULL, -1}, {TK_NONE, N
 
 static bool is_dynamic = false;
 
+static int tmp_scope = -1;
+
 #endif
