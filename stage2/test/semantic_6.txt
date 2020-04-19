@@ -53,7 +53,7 @@ start
         n:= a - p*b;   **ERROR: types of p and b are different**
     b:= b+3;
     k:= a>b OR b>100;
-    [v1, a, k, n]:=use module function1 with parameters b7, v2, p, b7, b; **ERROR: input parameter type mismatch **case
+    [v1, a, k, n]:=use module function1 with parameters b7, v2, p, b7, b; **ERROR: input parameter type mismatch **
     print(k);
 end
 
