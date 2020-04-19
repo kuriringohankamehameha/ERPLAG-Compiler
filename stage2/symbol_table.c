@@ -744,6 +744,8 @@ static void process_module_reuse(SymbolHashTable*** symboltables_ptr, ASTNode* r
                     has_semantic_error = true;
                 }
 
+                // TODO: Handle the <input_plist> and <output_plist> semantics
+                // using the activation record structure
                 int module_scope = search->scope_label;
 
                 // Now search the module activation records for the identifier
