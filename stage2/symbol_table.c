@@ -183,7 +183,7 @@ static void process_module_definition(SymbolHashTable*** symboltables_ptr, ASTNo
     // Move to local scope
     start_scope ++;
     module_index ++;
-    //realloc_activation(module_index + 1);
+    //realloc_ft(module_index + 1);
     modules[module_index] = start_scope;
     // Create a scope table
     create_scope_table(symboltables_ptr, start_scope);
@@ -227,7 +227,7 @@ static void process_module_definition(SymbolHashTable*** symboltables_ptr, ASTNo
 
         // Insert it into the symbol table
         insert_into_symbol_table(symboltables_ptr, idNode->token.lexeme, record, start_scope);
-        // Also put it into the activation record of the module
+        // Also put it into the ft record of the module
         add_input_parameter(idNode->token.lexeme, start_scope);
 
         if (array_offset.offset_id.lexeme) {
@@ -314,7 +314,7 @@ static void insert_identifier(SymbolHashTable*** symboltables_ptr, ASTNode* idNo
     // Clear array offset parameters
     array_offset.offset = -1; array_offset.end = -1; array_offset.offset_id.lexeme = NULL; array_offset.end_id.lexeme = NULL;
     insert_into_symbol_table(symboltables_ptr, idNode->token.lexeme, record, start_scope);
-    add_variable_activation(idNode->token.lexeme, start_scope);
+    add_variable_ft(idNode->token.lexeme, start_scope);
     
     if (array_offset.offset_id.lexeme) {
         // Add the dynamic array identifiers into scope
@@ -745,10 +745,10 @@ static void process_module_reuse(SymbolHashTable*** symboltables_ptr, ASTNode* r
                 }
 
                 // TODO: Handle the <input_plist> and <output_plist> semantics
-                // using the activation record structure
+                // using the ft record structure
                 int module_scope = search->scope_label;
 
-                // Now search the module activation records for the identifier
+                // Now search the module ft records for the identifier
                 if (temp->children[1]== NULL)
                     break;
             }

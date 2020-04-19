@@ -23,11 +23,11 @@ FunctionTable* create_function_table(char** variables, int num_variables, int to
 bool search_function_table_lexeme(char* lexeme, int index);
 bool search_function_table_input_parameter(char* input_parameter, int index);
 bool search_function_table_output_parameter(char* output_parameter, int index);
-void add_variable_activation(char* variable, int index);
+void add_variable_ft(char* variable, int index);
 void add_input_parameter(char* input_parameter, int index);
 void add_output_parameter(char* output_parameter, int index);
 void free_function_table(int num_modules);
-void realloc_activation(int index);
+void realloc_ft(int index);
 void print_function_tables(int idxs);
 void print_function_table(int index);
 

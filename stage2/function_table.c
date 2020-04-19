@@ -7,7 +7,7 @@ FunctionTable* function_tables = NULL;
 bool search_function_table_lexeme(char* lexeme, int index);
 bool search_function_table_input_parameter(char* input_parameter, int index);
 bool search_function_table_output_parameter(char* output_parameter, int index);
-void add_variable_activation(char* variable, int index);
+void add_variable_ft(char* variable, int index);
 void add_input_parameter(char* input_parameter, int index);
 void add_output_parameter(char* output_parameter, int index);
 void free_function_table(int num_modules);
@@ -28,7 +28,7 @@ FunctionTable* create_function_table(char** variables, int num_variables, int to
     return function_table;
 }
 
-void realloc_activation(int index) {
+void realloc_ft(int index) {
     function_tables = realloc(function_tables, (index + 1) * sizeof (FunctionTable));
 }
 
@@ -56,7 +56,7 @@ bool search_function_table_output_parameter(char* output_parameter, int index) {
     return false;
 }
 
-void add_variable_activation(char* variable, int index) {
+void add_variable_ft(char* variable, int index) {
     if (function_tables == NULL)
         function_tables = calloc (1, sizeof(FunctionTable));
     if (function_tables[index].variables == NULL)
