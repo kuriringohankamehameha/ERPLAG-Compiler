@@ -291,6 +291,9 @@ static void process_driver_module(SymbolHashTable*** symboltables_ptr, ASTNode* 
     modules[module_index] = start_scope;
     // Create a scope table
     create_scope_table(symboltables_ptr, start_scope);
+    SymbolRecord* record;
+    record = create_symbolrecord(root->children[0]->token, TYPE_MODULE, start_scope, 0, 0, TK_EPSILON, NULL, NULL);
+    insert_into_symbol_table(symboltables_ptr, root->children[0]->token.lexeme, record, 0);
     activation_records = realloc (activation_records, (start_scope + 1) * sizeof(ActivationRecord));
 }
 

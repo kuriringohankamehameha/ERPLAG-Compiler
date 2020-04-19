@@ -1023,10 +1023,10 @@ void print_AST(ASTNode* root) {
     }
     else {
         for (int i=0; i<root->num_children; i++) {
-            //printf("Children of %s\n", get_string_from_term(root->token_type));
+            printf("Children of %s\n", get_string_from_term(root->token_type));
             print_AST(root->children[i]);
         }       
-        //printf("Children End of %s\n", get_string_from_term(root->token_type));
+        printf("Children End of %s\n", get_string_from_term(root->token_type));
     }
 }
 
