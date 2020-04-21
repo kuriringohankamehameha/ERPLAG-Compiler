@@ -7,9 +7,9 @@
 #include "ast.h"
 #include "symbol_table.h"
 
-#define SIZE_INTEGER 2
-#define SIZE_BOOLEAN 1
-#define SIZE_REAL 4
+#define SIZE_INTEGER 8
+#define SIZE_BOOLEAN 8
+#define SIZE_REAL 8
 
 void open_files();
 void code_init();
@@ -30,6 +30,6 @@ void assign_handler(SymbolHashTable*** symboltables_ptr, ASTNode* assignmentStmt
 void assign_handler(SymbolHashTable*** symboltables_ptr, ASTNode* assignmentStmtNode, int scope);
 void stmt_handler(SymbolHashTable*** symboltables_ptr, ASTNode* stmtNode, int scope);
 void statements_handler(SymbolHashTable*** symboltables_ptr, ASTNode* statementsNode, int scope);
-void generate_code(ASTNode* node, FILE* fp, FunctionTable** function_tables, SymbolHashTable*** symboltables_ptr);
+void write_code(ASTNode* root, FunctionTable** function_tables, SymbolHashTable*** symboltables_ptr);
 
 #endif

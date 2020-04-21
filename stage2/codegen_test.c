@@ -6,7 +6,7 @@
 #include "stack.h"
 #include "function_table.h"
 #include "symbol_table.h"
-#include "gen_code.h"
+#include "codegen.h"
 
 extern HashTable* keyword_table;
 extern unsigned long (*hash_fun)(char*); // Function Pointer to the Hash Function
@@ -40,14 +40,14 @@ int main() {
     FunctionTable** function_tables = create_function_tables(100);
     SymbolHashTable*** dup = createSymbolTables(parseTree->node);
     function_tables = semantic_analysis(dup,parseTree->node);
-    printf("GG\n");
-    print_function_tables(function_tables, start_scope + 1);
+    
+    //print_function_tables(function_tables, start_scope + 1);
 
     // SymbolHashTable** tables = *tables_ptr;
 
     printf("Now performing Code Generation\n");
 
-    fp = fopen("output.txt", "w");
+    fp = fopen("output.asm", "w");
     printf("Writing...\n");
     write_code(parseTree->node, function_tables, tables_ptr);
     printf("Done\n");
