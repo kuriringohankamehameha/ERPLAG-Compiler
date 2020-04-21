@@ -7,9 +7,9 @@
 #include "ast.h"
 #include "symbol_table.h"
 
-#define SIZE_INTEGER 8
-#define SIZE_BOOLEAN 8
-#define SIZE_REAL 8
+#define SIZE_INTEGER 4
+#define SIZE_BOOLEAN 4
+#define SIZE_REAL 4
 
 void open_files();
 void code_init();

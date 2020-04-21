@@ -17,8 +17,9 @@ void code_init() {
   
   fprintf(fp,"SECTION .data\n");
   //--
-  fprintf(fp,"fmt: db \"Output:%%ld\", 10, 0\n"); 
-  
+  fprintf(fp,"fmt: db \"Output:%%d\", 10, 0\n"); 
+  fprintf(fp,"intFormat:     db        \"%%d\", 0\n");
+  fprintf(fp, "int_inMsg:    db        \"Enter an integer value\" , 10, 0\n"); 
   fprintf(fp,"extern printf\nextern scanf\n");
   fprintf(fp,"section .text\nglobal main\n");  
 } 
@@ -128,8 +129,7 @@ void io_handler(SymbolHashTable*** symboltables_ptr, ASTNode* ioStmtNode , int s
                   if (idNode->parent->num_children == 1) {
                     // id  can be array
                       SymbolRecord* record = st_search_scope(symboltables_ptr, idNode->token.lexeme, scope, scope);
-                      fprintf(fp,"mov rax, [base+%d]\n", record->addr);   
-                      fprintf(fp,"add rax, 2\n");  
+                      fprintf(fp,"mov eax, [base+%d]\n", record->addr);   
                       fprintf(fp,"mov rdi, fmt\n");
                       fprintf(fp,"mov rsi, [base+%d]\n", record->addr);  
                       fprintf(fp,"call printf\n");
@@ -160,6 +160,7 @@ void io_handler(SymbolHashTable*** symboltables_ptr, ASTNode* ioStmtNode , int s
       		//
           else {
               printf("boolconstt\n");
+
             // boolConstt
             //char* value = ioStmtNode->children[0]->token.lexeme;
             /*
@@ -177,16 +178,18 @@ void io_handler(SymbolHashTable*** symboltables_ptr, ASTNode* ioStmtNode , int s
           }
         }
       	else {
-          // Scan
           char* vname =  ioStmtNode->children[0]->token.lexeme;
           SymbolRecord* record = st_search_scope(symboltables_ptr, vname, scope, scope);
           if(record->type_name == TYPE_INTEGER) {
-            /*message: db "The result is = %d", 10, 0
-  			request: db "Enter the number: ", 0
-            mov dx,record.addr  
-          	*/
-          }
-          
+    		fprintf(fp,"lea rdi, [int_inMsg]\n"); 
+            fprintf(fp, "xor rax, rax\n");
+            fprintf(fp,"call printf\n");
+        	
+            fprintf(fp,"lea rdi, [intFormat]\n");
+        	fprintf(fp,"lea rsi, [base+%d]\n", record->addr);
+            fprintf(fp, "xor rax, rax\n");
+            fprintf(fp,"call scanf\n");
+        }
         }
 }
 
@@ -207,10 +210,11 @@ void assign_handler (SymbolHashTable*** symboltables_ptr, ASTNode* assignmentStm
           
           if(search->type_name == TYPE_INTEGER) {
             
+            printf("Going to handling expression\n");
             expression_handler(symboltables_ptr, lvalueStmt->children[0],scope);
-            printf("expression\n");
+            printf("Handled expression\n");
             //WARNING-------------------
-            fprintf(fp,"mov [base+%d],rax\n",search->addr);  
+            fprintf(fp,"mov [base+%d], eax\n",search->addr);  
           }
          // if(search->type_name == TYPE_)
         	//boolean;
@@ -220,13 +224,14 @@ void assign_handler (SymbolHashTable*** symboltables_ptr, ASTNode* assignmentStm
 
 
 void expression_handler(SymbolHashTable*** symboltables_ptr, ASTNode* expNode, int scope) {
-	if (expNode->children[0]->token_type == arithmeticOrBooleanExpr){
+    printf("Ecpression type: %s\n", get_string_from_term(expNode->token_type));
+	if (expNode->token_type == arithmeticOrBooleanExpr){
         printf("aob handler\n");
-      aob_handler(symboltables_ptr, expNode->children[0],scope);
+      aob_handler(symboltables_ptr, expNode,scope);
     }
-  else if(expNode->children[0]->token_type == U){
+  else if(expNode->token_type == U){
       printf("unary handler\n");
-     unary_handler(symboltables_ptr,expNode->children[0],scope);
+     unary_handler(symboltables_ptr,expNode,scope);
   }
 }
 
@@ -253,14 +258,14 @@ void varidnum_handler(SymbolHashTable*** symboltables_ptr, ASTNode* varnode, int
         	// use var to get record 
         	SymbolRecord* record = st_search_scope(symboltables_ptr, value, scope, scope);
         	int address = record->addr;
-        	fprintf(fp,"MOV	EAX, [%d]\n", address);
+        	fprintf(fp,"MOV	EAX, [base + %d]\n", address);
   	  }
   }
   else if (varchild->token_type == TK_NUM) {
   //NUM
   	char* value = varchild->token.lexeme; 
   	int val = atoi(value);	
-  	fprintf(fp,"MOV	EAX, DWORD [%d]\n", val);
+  	fprintf(fp,"MOV	EAX, %d\n", val);
   }
   else if( varchild->token_type == TK_RNUM){/**/}
   
@@ -272,8 +277,10 @@ void term_handler (SymbolHashTable*** symboltables_ptr, ASTNode* node, int scope
  
   if(node->children[1] == NULL)
     return;
-  fprintf(fp,"MOV	EBX, EAX\n");
+  //fprintf(fp,"MOV	EBX, EAX\n");
+  fprintf(fp, "push rax\n");
   term_handler(symboltables_ptr, node->children[1],scope);
+  fprintf(fp, "pop rbx\n");
   
   if(node->children[1]->syn_attribute.token_type == TK_MUL) {
 	//multiply eax and ebx;
@@ -295,8 +302,10 @@ void arithmetic_handler(SymbolHashTable*** symboltables_ptr, ASTNode* node, int 
   term_handler(symboltables_ptr, node->children[0], scope);
   if(node->children[1] == NULL)
 	return;
-  fprintf(fp,"MOV	EBX, EAX\n");
+  // fprintf(fp,"MOV	EBX, EAX\n");
+  fprintf(fp, "push rax\n");
   arithmetic_handler(symboltables_ptr, node->children[1],scope);
+  fprintf(fp, "pop rbx\n");
 
   if(node->children[1]->syn_attribute.token_type == TK_PLUS) {
 	fprintf(fp,"ADD	EAX,EBX\n");
@@ -336,8 +345,10 @@ void aob_handler(SymbolHashTable*** symboltables_ptr, ASTNode* aobnode, int scop
   if(aobnode->children[1] == NULL)
     return;
   // logical operator;
-  fprintf(fp,"MOV ECX,EAX\n");
+  // fprintf(fp,"MOV ECX,EAX\n");
+  fprintf(fp, "push rax\n");
   aob_handler(symboltables_ptr, aobnode->children[1],scope);
+  fprintf(fp, "pop rcx\n");
   
   if(aobnode->children[1]->syn_attribute.token_type == TK_AND){
   	  fprintf(fp,"AND EAX,ECX\n");
