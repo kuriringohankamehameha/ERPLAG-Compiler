@@ -1,3 +1,6 @@
+// Group 42:
+// R.VIJAY KRISHNA 2017A7PS0183P
+// ROHIT K 2017A7PS0177P
 #include "common.h"
 #include "lexer.h"
 #include "parser.h"
@@ -969,6 +972,7 @@ void generate_AST(TreeNode* root)
         generate_AST(rangeNode);
         generate_AST(statementsNode);
         root->node = make_ASTNode(make_ASTLeaf(NULL, root->children[2]->token), iterativeStmt);
+        root->node->syn_attribute.token_type = TK_FOR;
         if (rangeNode->node)
             add_ASTChild(root->node, rangeNode->node);
         add_ASTChild(root->node, make_ASTLeaf(NULL, root->children[6]->token));
@@ -984,6 +988,7 @@ void generate_AST(TreeNode* root)
         generate_AST(arithmeticOrBooleanExprNode);
         generate_AST(statementsNode);
         root->node = make_ASTNode(arithmeticOrBooleanExprNode->node, iterativeStmt);
+        root->node->syn_attribute.token_type = TK_WHILE;
         add_ASTChild(root->node, make_ASTLeaf(NULL, root->children[4]->token));
         if (statementsNode->node)
             add_ASTChild(root->node, statementsNode->node);

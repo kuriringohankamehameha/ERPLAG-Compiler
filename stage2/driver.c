@@ -10,6 +10,7 @@
 #include "symbol_table.h"
 #include "function_table.h"
 #include "time.h"
+#include "old_codegen.h"
 
 extern HashTable* keyword_table;
 extern unsigned long (*hash_fun)(char*); // Function Pointer to the Hash Function
@@ -25,6 +26,8 @@ extern bool has_semantic_error;
 extern int* modules;
 extern int module_index;
 char** module_names;
+extern FILE* fp;
+extern int uno;
 
 int main(int argc, char* argv[]) {
     if (argc != 2 && argc != 3) {
@@ -193,6 +196,42 @@ int main(int argc, char* argv[]) {
             num_nodes_AST = 0;
             num_nodes_parse_tree = 0;
             has_semantic_error = false;
+        }
+        else if (option == 9) {
+            TreeNode* parseTree = generateParseTree("test/codegen_2.txt", p, g);
+            // AST Operations Here
+            generate_AST(parseTree);
+
+            printf("Generated AST\n");
+
+            SymbolHashTable*** tables_ptr = createSymbolTables(parseTree->node);
+            SymbolHashTable** tables = *tables_ptr;
+            modules = NULL; module_index = 0; total_scope = 0; start_num_scope = NULL; end_num_scope = NULL; total_scope = 0;
+            FunctionTable** function_tables = create_function_tables(100);
+            SymbolHashTable*** dup = createSymbolTables(parseTree->node);
+            function_tables = semantic_analysis(dup,parseTree->node);
+            
+            //print_function_tables(function_tables, start_scope + 1);
+
+            // SymbolHashTable** tables = *tables_ptr;
+
+            printf("Now performing Code Generation\n");
+
+            if (argc < 3) {
+                printf("Invalid option. Need to specify .asm file\n");
+                continue;
+            }
+
+            fp = fopen(argv[2], "w");
+            write_code(parseTree->node, function_tables, tables_ptr);
+            printf("Done\n");
+            fclose(fp);
+
+            free(tables_ptr);
+
+            free_AST(parseTree->node);
+            free_parse_tree(parseTree);
+
         }
         else {
             printf("\nInvalid Option\n");

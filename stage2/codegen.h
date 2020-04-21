@@ -20,6 +20,7 @@ void generate_code(ASTNode* node, FunctionTable** function_tables, SymbolHashTab
 void io_handler(SymbolHashTable*** symboltables_ptr, ASTNode* ioStmtNode, int scope);
 void expression_handler(SymbolHashTable*** symboltables_ptr, ASTNode* expNode, int scope);
 void varidnum_handler(SymbolHashTable*** symboltables_ptr, ASTNode* varnode, int scope);
+void index_handler(SymbolHashTable*** symboltables_ptr, ASTNode* indexnode, int scope);
 void factor_handler(SymbolHashTable*** symboltables_ptr, ASTNode* factnode, int scope);
 void term_handler(SymbolHashTable*** symboltables_ptr, ASTNode* node, int scope);
 void arithmetic_handler(SymbolHashTable*** symboltables_ptr, ASTNode* node, int scope);

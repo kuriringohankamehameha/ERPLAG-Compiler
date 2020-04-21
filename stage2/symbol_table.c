@@ -1,3 +1,6 @@
+// Group 42:
+// R.VIJAY KRISHNA 2017A7PS0183P
+// ROHIT K 2017A7PS0177P
 #include "common.h"
 #include "lexer.h"
 #include "parser.h"
@@ -946,6 +949,11 @@ static void process_conditional_statement(FunctionTable** function_tables, Symbo
         has_semantic_error = true;
         return;
     }
+
+    if (search->type_name != TYPE_INTEGER || search->type_name != TYPE_BOOLEAN) {
+        if (print_errors) fprintf(stderr, "Semantic Error (Line No %d): Identifier '%s' in SWITCH statement has to be integer or boolean, but declared as %s\n", search->token.line_no, search->token.lexeme, get_string_from_type(search->type_name));
+        has_semantic_error = true;
+    }
     
     int next_jump = 2;
     for (ASTNode* curr = caseStmtsNode; ; curr = curr->children[next_jump]) {
@@ -959,6 +967,9 @@ static void process_conditional_statement(FunctionTable** function_tables, Symbo
             if (expr_type == TYPE_INTEGER) {
                 // Dummy Check
             }
+        }
+        else {
+            // children[1] is N9
         }
         if (curr->children[next_jump]->token_type != N9) {
             // N9 -> E

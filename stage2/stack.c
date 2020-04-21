@@ -1,3 +1,6 @@
+// Group 42:
+// R.VIJAY KRISHNA 2017A7PS0183P
+// ROHIT K 2017A7PS0177P
 #include "stack.h"
 
 Stack* init_stack(int data, size_t capacity) {

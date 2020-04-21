@@ -6,7 +6,8 @@
 #include "stack.h"
 #include "function_table.h"
 #include "symbol_table.h"
-#include "codegen.h"
+//#include "codegen.h"
+#include "old_codegen.h"
 
 extern HashTable* keyword_table;
 extern unsigned long (*hash_fun)(char*); // Function Pointer to the Hash Function
@@ -28,7 +29,7 @@ int main() {
     hash_fun = &hash_func;
     keyword_table = populate_hash_table(keyword_table, keywords, hash_fun);
     
-    TreeNode* parseTree = generateParseTree("test/codegen_1.txt", p, g);
+    TreeNode* parseTree = generateParseTree("test/codegen_2.txt", p, g);
     // AST Operations Here
     generate_AST(parseTree);
 
