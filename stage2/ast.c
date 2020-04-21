@@ -686,17 +686,10 @@ void generate_AST(TreeNode* root)
     }
     else if AST_COND(root, AnyTerm, boolConstt)
     {
-        // <AnyTerm> -> <boolConstt> <N8>
+        // <AnyTerm> -> <boolConstt>
         TreeNode *boolConsttNode = root->children[0];
-        TreeNode *N8Node = root->children[1];
         generate_AST(boolConsttNode);
-        if (N8Node->node) {
-            root->node = make_ASTNode(boolConsttNode->node, AnyTerm);
-            add_ASTChild(root->node, N8Node->node);
-        }
-        else {
-            root->node = make_ASTNode(boolConsttNode->node, AnyTerm);
-        }
+        root->node = make_ASTNode(boolConsttNode->node, AnyTerm);
     }
     else if AST_COND(root, N8, relationalOp)
     {

@@ -67,7 +67,7 @@ $ <arithmeticOrBooleanExpr> -> <AnyTerm> <N7>
 $ <N7> -> <logicalOp> <AnyTerm> <N7> 
 $ <N7> -> E
 $ <AnyTerm> -> <arithmeticExpr> <N8> 
-$ <AnyTerm> -> <boolConstt> <N8>
+$ <AnyTerm> -> <boolConstt>
 $ <N8> -> <relationalOp> <arithmeticExpr> 
 $ <N8> -> E
 $ <arithmeticExpr> -> <g_term> <N4>

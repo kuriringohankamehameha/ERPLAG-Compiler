@@ -50,6 +50,9 @@ int main(int argc, char* argv[]) {
         printf("4: For displaying the amount of memory and number of nodes to each of the parse tree and abstract syntax tree\n");
         printf("5: For printing the Symbol Table on the console, with appropriate parameters\n");
         printf("6: For printing the total memory requirement for each function\n");
+        printf("7: For printing Static and Dynamic Arrays\n");
+        printf("8: Errors reporting and total compilation time\n");
+        printf("9: Code Generation\n");
 
         int option;
         scanf("%d",&option);
@@ -149,36 +152,47 @@ int main(int argc, char* argv[]) {
             free_parse_tree(parseTree);
         }
         else if (option == 7) {
-
+            TreeNode* parseTree = generateParseTree(argv[1], p, g);
+            generate_AST(parseTree);
+            SymbolHashTable*** tables_ptr = createSymbolTables(parseTree->node);
+            print_symtables_arrays(*tables_ptr, total_scope);
+            total_scope = 0;
         }
         else if (option == 8) {
             clock_t start_time, end_time;
-            double total_CPU_time_lexer, total_CPU_time_parser, total_CPU_time_in_seconds_lexer, total_CPU_time_in_seconds_parser;
+            double total_CPU_time_analysis, total_CPU_time_in_seconds_analysis;
 
             start_time = clock();
-            run_tokenizer(argv[1]);
-            end_time = clock();
-            total_CPU_time_lexer  =  (double) (end_time - start_time);
-            total_CPU_time_in_seconds_lexer =   total_CPU_time_lexer / CLOCKS_PER_SEC;
-
-            start_time = clock();
+            // run_tokenizer(argv[1]);
             TreeNode* parseTree = generateParseTree(argv[1], p, g);
+            generate_AST(parseTree);
+            SymbolHashTable*** symtables_ptr = driver_semantic_analysis(parseTree->node);
+
             end_time = clock();
-            total_CPU_time_parser  =  (double) (end_time - start_time);
-            total_CPU_time_in_seconds_parser =   total_CPU_time_parser / CLOCKS_PER_SEC;
+            
+            total_CPU_time_analysis  =  (double) (end_time - start_time);
+            total_CPU_time_in_seconds_analysis =   (double) total_CPU_time_analysis / (double) CLOCKS_PER_SEC;
             
             printf("--------------------------------------------------------------\n");
-            printf("Total CPU Time taken for the Lexer: %.6f\n", total_CPU_time_lexer);
-            printf("Total CPU Time in seconds taken for the Lexer: %.6f seconds\n", total_CPU_time_in_seconds_lexer);
                     
-            printf("Time CPU Time taken for the Parser: %.6f\n", total_CPU_time_parser);
-            printf("Time CPU Time in seconds taken for the Parser: %.6f seconds\n", total_CPU_time_in_seconds_parser);
+            printf("Time CPU Time taken for the Integrated Compiler: %.6f\n", total_CPU_time_analysis);
+            printf("Time CPU Time in seconds taken for the Integrated Compiler: %.6f seconds\n", total_CPU_time_in_seconds_analysis);
             printf("--------------------------------------------------------------\n");
+
+            
+            free_stacks(30);
+            if (start_num_scope) free(start_num_scope);
+            if (end_num_scope) free(end_num_scope);
+            
+            free_symtables(*symtables_ptr, total_scope);
+            free_AST(parseTree->node);
             free_parse_tree(parseTree);
+
             total_memory_AST = 0;
             total_memory_parse_tree = 0;
             num_nodes_AST = 0;
             num_nodes_parse_tree = 0;
+            has_semantic_error = false;
         }
         else {
             printf("\nInvalid Option\n");

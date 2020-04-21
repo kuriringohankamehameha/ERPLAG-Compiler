@@ -103,13 +103,17 @@ TypeName get_typename_from_term(term token_type);
 SymbolHashTable*** createSymbolTables(ASTNode* root);
 void create_scope_table(SymbolHashTable*** symboltables_ptr, int index);
 void insert_into_symbol_table(SymbolHashTable*** symboltables_ptr, char* key, SymbolRecord* record, int index);
-void perform_semantic_analysis(FunctionTable** function_tables, SymbolHashTable*** symboltables_ptr, ASTNode* root);
-void semantic_analyzer_wrapper(SymbolHashTable*** symboltables_ptr, ASTNode* root);
+void perform_semantic_analysis(FunctionTable** function_tables, SymbolHashTable*** symboltables_ptr, ASTNode* root, bool print_errors);
+void semantic_analyzer_wrapper(SymbolHashTable*** symboltables_ptr, ASTNode* root, bool print_errors);
 FunctionTable** semantic_analysis(SymbolHashTable*** symboltables_ptr, ASTNode* root);
 void free_symtables(SymbolHashTable** tables, int num_tables);
 void initialize_stacks(int max_modules, int max_nesting_level);
 void free_stacks(int max_modules);
 char* get_module_name(int scope_number);
+void print_array(SymbolRecord* t, char ch);
+void print_symtables_arrays(SymbolHashTable** tables, int num_tables);
+
+SymbolHashTable*** driver_semantic_analysis(ASTNode* root);
 
 // Keep two variables to keep track of nested scopes
 static int start_scope = 0;
