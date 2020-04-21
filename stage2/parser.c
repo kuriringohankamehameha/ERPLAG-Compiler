@@ -6,6 +6,8 @@
 
 // Define all Global Variables here
 HashTable* hash_table = NULL;
+int total_memory_parse_tree = 0;
+int num_nodes_parse_tree = 0;
 
 // Complete list of Grammar Symbols here
 Symbol symbols[] = {
@@ -152,6 +154,8 @@ TreeNode* make_tree_node(TreeNode* parent, Token token) {
     node->num_children = 0;
     node->rule_no = -1;
     node->check_term = is_terminal(token.token_type);
+    num_nodes_parse_tree++;
+    total_memory_parse_tree += sizeof(TreeNode);
     return node;
 }
 

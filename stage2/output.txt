@@ -1,0 +1,25 @@
+SECTION .bss
+base: resb 10000
+SECTION .data
+fmt: db "Output:%ld", 10, 0
+extern printf
+extern scanf
+section .text
+global main
+driver:
+sub rsp,8
+mov [base+24],rax
+mov [base+32],rax
+mov [base+16],rax
+mov rax, [base+16]
+add rax, 2
+mov rdi, fmt
+mov rsi, [base+16]
+call printf
+add rsp,8
+ret
+main:
+sub rsp,8
+call driver
+add rsp,8
+ret

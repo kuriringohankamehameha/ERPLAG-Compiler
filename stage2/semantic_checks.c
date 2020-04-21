@@ -7,11 +7,14 @@
 #include "parser.h"
 #include "ast.h"
 #include "symbol_table.h"
+#include "function_table.h"
 
 extern HashTable* keyword_table;
 extern unsigned long (*hash_fun)(char*); // Function Pointer to the Hash Function
 extern Keyword keywords[];
 extern int total_scope;
+extern int* start_num_scope;
+extern int* end_num_scope;
 
 int main(int argc, char* argv[]) {    
     FILE* fp = fopen("grammar_rules.txt", "r");
@@ -40,6 +43,9 @@ int main(int argc, char* argv[]) {
     printf("Printing Symbol Tables\n");
     SymbolHashTable** tables = *tables_ptr;
     print_symtables(tables, total_scope);
+    if (start_num_scope) free(start_num_scope);
+    if (end_num_scope) free(end_num_scope);
+    free_stacks(30);
     free_symtables(tables, total_scope);
     free(tables_ptr);
 

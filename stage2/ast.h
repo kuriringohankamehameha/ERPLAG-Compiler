@@ -7,6 +7,7 @@
 
 typedef struct Synthesized {
     term token_type;
+    int scope_no;
 }Synthesized;
 
 typedef struct ASTNode {
@@ -18,6 +19,7 @@ typedef struct ASTNode {
     // For synthesized attributes (type checking, etc)
     Synthesized syn_attribute;
     bool visited;
+    bool check_term;
 }ASTNode;
 
 ASTNode* make_ASTNode(ASTNode* child, term token_type);
@@ -27,6 +29,8 @@ void generate_AST(TreeNode* root);
 void synthesize_attributes(ASTNode* root);
 void print_AST(ASTNode* root);
 void print_AST_without_parent(ASTNode* parent);
+void pretty_print_AST(ASTNode* node);
+void printAbstractSyntaxTree(ASTNode* root);
 void free_AST(ASTNode* root);
 
 #endif

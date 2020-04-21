@@ -5,6 +5,7 @@
 #include "lexerDef.h"
 #include "parserDef.h"
 #include "stack.h"
+#include "function_table.h"
 
 typedef enum {
     TYPE_INTEGER,
@@ -40,6 +41,8 @@ struct SymbolRecord {
     char* end_id;
     // Runtime address
     int addr;
+    // Field to check if the key is an i/p or o/p parameter
+    bool is_param;
 };
 
 typedef struct SymbolRecord SymbolRecord;
@@ -85,10 +88,11 @@ void free_symitem(St_item* item);
 void free_symrecord(SymbolRecord* record);
 void free_symtable(SymbolHashTable* table);
 SymbolHashTable* st_insert(SymbolHashTable* table, char* key, SymbolRecord* value);
+SymbolRecord* st_search_scope(SymbolHashTable*** symboltables_ptr, char* key, int start_scope, int end_scope);
 SymbolRecord* st_search(SymbolHashTable* table, char* key);
 void handle_collision(SymbolHashTable* table, unsigned long index, St_item* item);
 void st_delete(SymbolHashTable* table, char* key);
-void print_symrecord(SymbolRecord* symbolrecord, char ch);
+void print_symrecord(SymbolHashTable*** symboltables_ptr, SymbolRecord* symbolrecord, char ch);
 void print_search_symtable(SymbolHashTable* table, char* key);
 void print_symtable(SymbolHashTable* table);
 void print_symtables(SymbolHashTable** tables, int num_tables);
@@ -99,26 +103,21 @@ TypeName get_typename_from_term(term token_type);
 SymbolHashTable*** createSymbolTables(ASTNode* root);
 void create_scope_table(SymbolHashTable*** symboltables_ptr, int index);
 void insert_into_symbol_table(SymbolHashTable*** symboltables_ptr, char* key, SymbolRecord* record, int index);
-void perform_semantic_analysis(SymbolHashTable*** symboltables_ptr, ASTNode* root);
+void perform_semantic_analysis(FunctionTable** function_tables, SymbolHashTable*** symboltables_ptr, ASTNode* root);
 void semantic_analyzer_wrapper(SymbolHashTable*** symboltables_ptr, ASTNode* root);
+FunctionTable** semantic_analysis(SymbolHashTable*** symboltables_ptr, ASTNode* root);
 void free_symtables(SymbolHashTable** tables, int num_tables);
+void initialize_stacks(int max_modules, int max_nesting_level);
+void free_stacks(int max_modules);
+char* get_module_name(int scope_number);
 
 // Keep two variables to keep track of nested scopes
 static int start_scope = 0;
 static int end_scope = 0;
 
-// Keep track of modulewise scopes
-static int* modules = NULL;
-static int module_index = -1;
-
 static int error = 0;
 static TypeName expression_type = TYPE_NONE;
 static bool set_to_boolean = false;
-
-static bool has_semantic_error = false;
-
-// Stack for nested scopes
-static Stack** scope_stacks = NULL;
 
 static bool convert_to_bool = false;
 

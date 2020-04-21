@@ -90,7 +90,7 @@ end
 <<<driver program>>>
 start
     declare v_1_2_3:integer;
-    get_value(v_1_2_43); **ERROR: variable v_1_2_43 is not declared**case
+    get_value(v_1_2_43); **ERROR: variable v_1_2_43 is not declared**
     declare result_, v7, v9:integer;
     declare v10:real;
     declare u1:boolean;

@@ -6,6 +6,9 @@
 // Reduce Boilerplate code
 #define AST_COND(root, gterm, tk_type) (root->token.token_type == gterm && root->children[0]->token.token_type == tk_type)
 
+int total_memory_AST = 0;
+int num_nodes_AST = 0;
+
 ASTNode* make_ASTNode(ASTNode* child, term token_type)
 {
     // Allocates memory for an AST Node, with a child
@@ -17,6 +20,8 @@ ASTNode* make_ASTNode(ASTNode* child, term token_type)
     node->visited = false;
     child->parent = node;
     node->num_children = 1;
+    num_nodes_AST++;
+    total_memory_AST += sizeof(ASTNode);
     return node;
 }
 
@@ -29,10 +34,14 @@ void add_ASTChild(ASTNode* parent, ASTNode* child)
         parent->children[0] = child;
         parent->num_children = 1;
         child->parent = parent;
+        num_nodes_AST++;
+        total_memory_AST += sizeof(ASTNode*);
     }
     else
     {
         parent->children = (ASTNode**) realloc (parent->children, (parent->num_children + 1) * sizeof(ASTNode*));
+        num_nodes_AST++;
+        total_memory_AST += sizeof(ASTNode*);
         parent->children[parent->num_children] = child;
         parent->num_children++;
         child->parent = parent;
@@ -49,6 +58,8 @@ ASTNode* make_ASTLeaf(ASTNode* parent, Token token)
     node->children = NULL;
     node->num_children = 0;
     node->visited = false;
+    num_nodes_AST++;
+    total_memory_AST += sizeof(ASTNode);
     return node;
 }
 
@@ -675,10 +686,17 @@ void generate_AST(TreeNode* root)
     }
     else if AST_COND(root, AnyTerm, boolConstt)
     {
-        // <AnyTerm> -> <boolConstt>
+        // <AnyTerm> -> <boolConstt> <N8>
         TreeNode *boolConsttNode = root->children[0];
+        TreeNode *N8Node = root->children[1];
         generate_AST(boolConsttNode);
-        root->node = boolConsttNode->node;
+        if (N8Node->node) {
+            root->node = make_ASTNode(boolConsttNode->node, AnyTerm);
+            add_ASTChild(root->node, N8Node->node);
+        }
+        else {
+            root->node = make_ASTNode(boolConsttNode->node, AnyTerm);
+        }
     }
     else if AST_COND(root, N8, relationalOp)
     {
@@ -1052,4 +1070,72 @@ void free_AST(ASTNode* root) {
     free(root->children);
     free(root);
     return;
+}
+
+void pretty_print_AST(ASTNode* node) {
+    // Prints only one node
+    if (!node)
+        return;
+    if (is_terminal(node->token_type)) {
+        // Terminal
+        Token t = node->token;
+        if (t.token_type == TK_EPSILON) {
+            printf("-----\t");
+            printf("-----\t");
+        }
+        else {
+            printf("%s\t", node->token.lexeme);
+            printf("%d\t", node->token.line_no);
+        }
+        printf("%s\t", get_string_from_term(node->token_type));
+        if (t.token_type == TK_NUM)
+            printf("%d\t", atoi(t.lexeme));
+        else if (t.token_type == TK_RNUM) {
+            for (int i=0; t.lexeme[i] != '\0'; i++)
+                if (t.lexeme[i] == 'E')
+                    t.lexeme[i] = 'e';
+            printf("%.4f\t", atof(t.lexeme));
+        }
+        else
+            printf("-----\t");
+        if (node->parent)
+        printf("%s\t", get_string_from_term(node->parent->token_type));
+        if (is_terminal(node->token_type))
+            printf("Yes\t");
+        else
+            printf("No\t");
+        printf("-----\t");
+        if (node->syn_attribute.token_type != TK_EPSILON)
+            printf("%s\t", get_string_from_term(node->syn_attribute.token_type));
+        else
+            printf("-----\t");
+        printf("\n");
+    }
+    else {
+        // Non Terminal
+        printf("-----\t");
+        printf("-----\t");
+        printf("-----\t");
+        printf("-----\t");
+        if (node->parent)
+        printf("%s\t", get_string_from_term(node->parent->token_type));
+        if (is_terminal(node->token_type))
+            printf("Yes\t");
+        else
+            printf("No\t");
+        printf("%s\t", get_string_from_term(node->token_type));
+        if (node->syn_attribute.token_type != TK_EPSILON)
+            printf("%s\t", get_string_from_term(node->syn_attribute.token_type));
+        else
+            printf("-----\t");
+        printf("\n");
+    }
+}
+
+void printAbstractSyntaxTree(ASTNode* root) {
+    if (!root) return;
+    pretty_print_AST(root);
+    for (int i=0; i<root->num_children; i++) {
+        printAbstractSyntaxTree(root->children[i]);
+    }
 }

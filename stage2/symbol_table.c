@@ -8,30 +8,84 @@
 #include <assert.h>
 
 int total_scope = 0;
-extern FunctionTable* function_tables;
+
+// Line numbers for each scope
+int* start_num_scope = NULL;
+int* end_num_scope = NULL;
+
+// To indicate a Semantic Error
+bool has_semantic_error = false;
+
+// To accumulate the offset
+static int total_offset = 0;
+static int total_offset_param = 0;
+
+// Keep track of modulewise scopes
+int* modules = NULL;
+int module_index = -1;
+
+char** module_names = NULL;
+
+// Stack for nested scopes
+Stack** scope_stacks = NULL;
 
 char* get_string_from_type(TypeName typename) {
     switch(typename) {
         case TYPE_INTEGER:
-        return "TYPE_INTEGER";
+        return "integer";
         case TYPE_BOOLEAN:
-        return "TYPE_BOOLEAN";
+        return "boolean";
         case TYPE_REAL:
-        return "TYPE_REAL";
+        return "real";
         case TYPE_ARRAY:
-        return "TYPE_ARRAY";
+        return "array";
         case TYPE_NONE:
         return "TYPE_NONE";
         case TYPE_FUNCTION:
-        return "TYPE_FUNCTION";
+        return "function";
         case TYPE_MODULE:
-        return "TYPE_MODULE";
+        return "module";
         case TYPE_ERROR:
         return "TYPE_ERROR";
         default:
         return "Not Yet Implemented";
     }
     return NULL;
+}
+
+int get_size(TypeName typename) {
+    switch(typename) {
+        case TYPE_INTEGER:
+        return 2;
+        case TYPE_BOOLEAN:
+        return 1;
+        case TYPE_REAL:
+        return 4;
+        default:
+        return 0;
+    }
+}
+
+int get_width(SymbolRecord* record) {
+    if (record->type_name != TYPE_ARRAY) {
+        return get_size(record->type_name);
+    }
+    else {
+        if (record->is_param) {
+            // Passed as parameter. Reserve 5 bytes
+            return 5;
+        }
+        else {
+            if (record->offset_id == NULL) {
+                // Static Array
+                return get_size(get_typename_from_term(record->element_type)) * (record->end - record->offset + 1) + 1;
+            }
+            else {
+                // Dynamic Array
+                return 1;
+            }
+        }
+    }
 }
 
 TypeName get_typename_from_term(term token_type) {
@@ -60,6 +114,16 @@ unsigned long hash_function_symbol(char* str) {
     for (int j=0; str[j]; j++)
         i += str[j];
     return i % CAPACITY;
+}
+
+char* get_module_name(int scope_number) {
+    for (int i=module_index; i>=0; i--) {
+        if (modules[i] <= scope_number) {
+            // Get this enclosing module name
+            return module_names[i];
+        }
+    }
+    return NULL;
 }
 
 static inline void clear_expression_array() {
@@ -94,7 +158,7 @@ void insert_into_symbol_table(SymbolHashTable*** symboltables_ptr, char* key, Sy
     //printf("Inserted %s successfully\n", key);
 }
 
-static SymbolRecord* st_search_scope(SymbolHashTable*** symboltables_ptr, char* key, int start_scope, int end_scope) {
+SymbolRecord* st_search_scope(SymbolHashTable*** symboltables_ptr, char* key, int start_scope, int end_scope) {
     SymbolRecord* search;
     SymbolHashTable** symboltables = *symboltables_ptr;
     if (start_scope == 0 && end_scope == 0) {
@@ -143,7 +207,7 @@ void get_offsets(ASTNode* node) {
     }
 }
 
-static void process_module_declaration(SymbolHashTable*** symboltables_ptr, ASTNode* root) {
+static void process_module_declaration(FunctionTable** function_tables, SymbolHashTable*** symboltables_ptr, ASTNode* root) {
     ASTNode* moduleIDNode = root->children[0];
     SymbolHashTable** symboltables = *symboltables_ptr;
     SymbolRecord* search = st_search(symboltables[0], moduleIDNode->token.lexeme);
@@ -157,8 +221,8 @@ static void process_module_declaration(SymbolHashTable*** symboltables_ptr, ASTN
     start_scope ++;
     module_index ++;
     modules[module_index] = start_scope;
+    module_names[module_index] = moduleIDNode->token.lexeme;
     create_scope_table(symboltables_ptr, start_scope);
-    function_tables = realloc (function_tables, (start_scope + 1) * sizeof(FunctionTable));
 
     // Use the scope in the global scope table as a reference when encountering module declaration
     SymbolRecord* record = create_symbolrecord(moduleIDNode->token, TYPE_MODULE, start_scope, 0, 0, TK_EPSILON, NULL, NULL);
@@ -169,7 +233,7 @@ static void process_module_declaration(SymbolHashTable*** symboltables_ptr, ASTN
     // insert_into_symbol_table(symboltables_ptr, moduleIDNode->token.lexeme, record, start_scope);
 }
 
-static void process_module_definition(SymbolHashTable*** symboltables_ptr, ASTNode* root) {
+static void process_module_definition(FunctionTable** function_tables, SymbolHashTable*** symboltables_ptr, ASTNode* root) {
     ASTNode* moduleIDNode = root->children[0];
     ASTNode* input_plistNode = root->children[1];
     ASTNode* retNode;
@@ -185,16 +249,19 @@ static void process_module_definition(SymbolHashTable*** symboltables_ptr, ASTNo
     module_index ++;
     //realloc_ft(module_index + 1);
     modules[module_index] = start_scope;
+    module_names[module_index] = moduleIDNode->token.lexeme;
     // Create a scope table
     create_scope_table(symboltables_ptr, start_scope);
-    function_tables = realloc (function_tables, (start_scope + 1) * sizeof(FunctionTable));
 
     if (root->syn_attribute.token_type == TK_EPSILON) {
         retNode = NULL;
         //moduleDefNode = root->children[2];
     }
     else {
-        retNode = root->children[2];
+        if (root->num_children >= 3)
+            retNode = root->children[2];
+        else
+            retNode = NULL;
         //moduleDefNode = root->children[3];
     }
     
@@ -225,10 +292,13 @@ static void process_module_definition(SymbolHashTable*** symboltables_ptr, ASTNo
         else
             record = create_symbolrecord(idNode->token, get_typename_from_term(typeNode->children[0]->token_type), start_scope, array_offset.end, array_offset.offset, TK_EPSILON, array_offset.offset_id.lexeme, array_offset.end_id.lexeme);
 
+        // This is a module parameter
+        record->is_param = true;
         // Insert it into the symbol table
         insert_into_symbol_table(symboltables_ptr, idNode->token.lexeme, record, start_scope);
         // Also put it into the ft record of the module
-        add_input_parameter(idNode->token.lexeme, start_scope);
+        function_tables = add_input_parameter(function_tables, idNode->token.lexeme, modules[module_index]);
+        function_tables[modules[module_index]]->total_size += get_width(record);
 
         if (array_offset.offset_id.lexeme) {
             // Add the dynamic array identifiers into scope
@@ -240,8 +310,10 @@ static void process_module_definition(SymbolHashTable*** symboltables_ptr, ASTNo
                 return;
             }
             record = create_symbolrecord(array_offset.offset_id, TYPE_INTEGER, start_scope, -1, -1, TK_EPSILON, NULL, NULL);
+            record->is_param = true;
             insert_into_symbol_table(symboltables_ptr, array_offset.offset_id.lexeme, record, start_scope);
-            add_input_parameter(array_offset.offset_id.lexeme, start_scope);
+            function_tables = add_input_parameter(function_tables, array_offset.offset_id.lexeme, modules[module_index]);
+            function_tables[modules[module_index]]->total_size += get_width(record);
         }
 
         if (array_offset.end_id.lexeme) {
@@ -254,14 +326,16 @@ static void process_module_definition(SymbolHashTable*** symboltables_ptr, ASTNo
                 return;
             }
             record = create_symbolrecord(array_offset.end_id, TYPE_INTEGER, start_scope, -1, -1, TK_EPSILON, NULL, NULL);
+            record->is_param = true;
             insert_into_symbol_table(symboltables_ptr, array_offset.end_id.lexeme, record, start_scope);
-            add_input_parameter(array_offset.end_id.lexeme, start_scope);
+            function_tables = add_input_parameter(function_tables, array_offset.end_id.lexeme, modules[module_index]);
+            function_tables[modules[module_index]]->total_size += get_width(record);
         }
             
         // Clear array offset parameters
         array_offset.offset = -1; array_offset.end = -1; array_offset.offset_id.lexeme = NULL; array_offset.end_id.lexeme = NULL;
         
-        if (temp->children[2] == NULL)
+        if (temp->num_children <= 2)
             break;
     }
 
@@ -275,30 +349,31 @@ static void process_module_definition(SymbolHashTable*** symboltables_ptr, ASTNo
             ASTNode* idNode = temp->children[0];
             ASTNode* typeNode = temp->children[1];
             record = create_symbolrecord(idNode->token, get_typename_from_term(typeNode->token_type), start_scope, 0, 0, TK_EPSILON, NULL, NULL);
+            record->is_param = true;
             insert_into_symbol_table(symboltables_ptr, idNode->token.lexeme, record, start_scope);
-            add_output_parameter(idNode->token.lexeme, start_scope);
-            if (temp->children[2] == NULL)
+            function_tables = add_output_parameter(function_tables, idNode->token.lexeme, modules[module_index]);
+            function_tables[modules[module_index]]->total_size += get_width(record);
+            if (temp->num_children <= 2)
                 break;
         }
     }
 }
 
-static void process_driver_module(SymbolHashTable*** symboltables_ptr, ASTNode* root) {
+static void process_driver_module(FunctionTable** function_tables, SymbolHashTable*** symboltables_ptr, ASTNode* root) {
     // Driver Module is inside it's own scope
     if (root == NULL) return;
     start_scope ++;
     module_index ++;
     modules[module_index] = start_scope;
+    module_names[module_index] = root->children[0]->token.lexeme;
     // Create a scope table
     create_scope_table(symboltables_ptr, start_scope);
     SymbolRecord* record;
     record = create_symbolrecord(root->children[0]->token, TYPE_MODULE, start_scope, 0, 0, TK_EPSILON, NULL, NULL);
     insert_into_symbol_table(symboltables_ptr, root->children[0]->token.lexeme, record, 0);
-    function_tables = realloc (function_tables, (start_scope + 1) * sizeof(FunctionTable));
-    function_tables = realloc (function_tables, (start_scope + 1) * sizeof(FunctionTable));
 }
 
-static void insert_identifier(SymbolHashTable*** symboltables_ptr, ASTNode* idNode, ASTNode* dataTypeNode) {
+static void insert_identifier(FunctionTable** function_tables, SymbolHashTable*** symboltables_ptr, ASTNode* idNode, ASTNode* dataTypeNode) {
     // Inserts a single identifier, specified by datatype
     SymbolRecord* record;
     get_offsets(dataTypeNode);
@@ -318,7 +393,8 @@ static void insert_identifier(SymbolHashTable*** symboltables_ptr, ASTNode* idNo
     // Clear array offset parameters
     array_offset.offset = -1; array_offset.end = -1; array_offset.offset_id.lexeme = NULL; array_offset.end_id.lexeme = NULL;
     insert_into_symbol_table(symboltables_ptr, idNode->token.lexeme, record, start_scope);
-    add_variable_ft(idNode->token.lexeme, start_scope);
+    function_tables = add_variable_ft(function_tables, idNode->token.lexeme, modules[module_index]);
+    function_tables[modules[module_index]]->total_size += get_width(record);
     
     if (array_offset.offset_id.lexeme) {
         // Add the dynamic array identifiers into scope
@@ -357,11 +433,11 @@ static void insert_identifier(SymbolHashTable*** symboltables_ptr, ASTNode* idNo
     }
 }
 
-static bool is_module_parameter(SymbolHashTable*** symboltables_ptr, char* id) {
-    return search_function_table_input_parameter(id, module_index);
+static bool is_module_parameter(FunctionTable** function_tables, SymbolHashTable*** symboltables_ptr, char* id) {
+    return search_function_table_input_parameter(function_tables, id, modules[module_index]);
 }
 
-static void process_declaration_statement(SymbolHashTable*** symboltables_ptr, ASTNode* root) {
+static void process_declaration_statement(FunctionTable** function_tables, SymbolHashTable*** symboltables_ptr, ASTNode* root) {
     SymbolHashTable** symboltables = *symboltables_ptr;
     SymbolRecord* search;
     // <declarestmt> -> <idList> <dataType>
@@ -372,42 +448,55 @@ static void process_declaration_statement(SymbolHashTable*** symboltables_ptr, A
     ASTNode* dataTypeNode = root->children[1];
     ASTNode* idNode = idListNode->children[0];
 
+    bool no_insert = false;
+
     search = st_search(symboltables[start_scope], idNode->token.lexeme);
-    if (search != NULL && !(is_module_parameter(symboltables_ptr, idNode->token.lexeme))) {
+    if (search != NULL && !(is_module_parameter(function_tables, symboltables_ptr, idNode->token.lexeme))) {
         // There is an exception if the matched identifier corresponds to an input_plist
         // or an output_plist node
         // This check can be overridden
         fprintf(stderr, "Semantic Error (Line No: %d): Identifier '%s' already in current scope at Line No %d. Cannot be declared\n", idNode->token.line_no, idNode->token.lexeme, search->token.line_no);
         has_semantic_error = true;
+        no_insert = true;
     }
     search = st_search(symboltables[0], idNode->token.lexeme);
     if (search != NULL) {
         fprintf(stderr, "Semantic Error (Line No: %d): Identifier '%s' already in global scope. Cannot be declared\n", idNode->token.line_no, idNode->token.lexeme);
         has_semantic_error = true;
+        no_insert = true;
     }
 
-    insert_identifier(symboltables_ptr, idNode, dataTypeNode);
+    if (no_insert == false)
+        insert_identifier(function_tables, symboltables_ptr, idNode, dataTypeNode);
+    else
+        no_insert = false;
 
     // Check for the rest of the identifiers
-    ASTNode* N3Node = idListNode->children[1];
+    ASTNode* N3Node = NULL;
+    if (idListNode->num_children >= 2) N3Node = idListNode->children[1];
     if (N3Node != NULL) {
         for (ASTNode* curr = N3Node; ;curr = curr->children[1]) {
             search = st_search(symboltables[start_scope], curr->children[0]->token.lexeme);
-            if (search != NULL && !(is_module_parameter(symboltables_ptr, curr->children[0]->token.lexeme))) {
+            if (search != NULL && !(is_module_parameter(function_tables, symboltables_ptr, curr->children[0]->token.lexeme))) {
                 // There is an exception if the matched identifier corresponds to an input_plist
                 // or an output_plist node
                 // This check can be overridden
                 fprintf(stderr, "Semantic Error (Line No: %d): Identifier '%s' already in current scope. Cannot be declared\n", curr->children[0]->token.line_no, search->token.lexeme);
                 has_semantic_error = true;
+                no_insert = true;
             }
             search = st_search_scope(symboltables_ptr, curr->children[0]->token.lexeme, 0, 0);
             if (search != NULL) {
                 fprintf(stderr, "Semantic Error (Line No: %d): Identifier '%s' already in global scope. Cannot be declared\n", curr->children[0]->token.line_no, search->token.lexeme);
                 has_semantic_error = true;
+                no_insert = true;
             }
             // Insert into the table
-            insert_identifier(symboltables_ptr, curr->children[0], dataTypeNode);
-            if (curr->children[1] == NULL)
+            if (no_insert == false)
+                insert_identifier(function_tables, symboltables_ptr, curr->children[0], dataTypeNode);
+            else
+                no_insert = false;
+            if (curr->num_children < 2)
                 break;
         }
     }
@@ -421,7 +510,7 @@ static void get_type_of_expression(SymbolHashTable*** symboltables_ptr, ASTNode*
     TypeName expr_type = TYPE_NONE;
     if (root->token_type == AnyTerm) {
         if (root->children[0]->token_type == arithmeticExpr) {
-            if (root->children[1] != NULL) {
+            if (root->num_children >= 2) {
                 // RelatonalOp
                 // Convert it to boolean
                 convert_to_bool = true;
@@ -430,7 +519,33 @@ static void get_type_of_expression(SymbolHashTable*** symboltables_ptr, ASTNode*
                     convert_to_bool = false;
                     return;
                 }
-                for (ASTNode* exprNode=root->children[1]; ; exprNode = exprNode->children[1]) {
+                ASTNode* exprNode = NULL;
+                if (root->num_children >= 2) exprNode = root->children[1];
+                for (; exprNode != NULL; exprNode = exprNode->children[1]) {
+                    if (exprNode == NULL || exprNode->children == NULL) break;
+                    get_type_of_expression(symboltables_ptr, exprNode->children[0]);
+                    exprNode->visited = true;
+                    if (expression_type == TYPE_ERROR) {
+                        convert_to_bool = false;
+                    }
+                    if (exprNode->num_children < 2) break;
+                }
+                expression_type = TYPE_BOOLEAN;
+                convert_to_bool = false; // Just in case I do something stupid
+                return;
+            }
+        }
+        else if (root->children[0]->token_type == boolConstt) {
+            if (root->num_children >= 2) {
+                // RelatonalOp
+                // Convert it to boolean
+                convert_to_bool = true;
+                get_type_of_expression(symboltables_ptr, root->children[0]);
+                if (expression_type == TYPE_ERROR) {
+                    convert_to_bool = false;
+                    return;
+                }
+                for (ASTNode* exprNode=(root->num_children >= 2) ? root->children[1] : NULL; ; exprNode = exprNode->children[1]) {
                     if (exprNode == NULL || exprNode->children == NULL) break;
                     get_type_of_expression(symboltables_ptr, exprNode->children[0]);
                     exprNode->visited = true;
@@ -447,7 +562,10 @@ static void get_type_of_expression(SymbolHashTable*** symboltables_ptr, ASTNode*
     else if (root->token_type == N4 || root->token_type == U || root->token_type == N5) {
         // N4 or Unary Operator or N5 cannot have array operands
         if (root->token_type == U) {
-            ASTNode* expressionNode = root->parent->children[1];
+            ASTNode* expressionNode = NULL;
+            expressionNode = root->children[0];
+            get_type_of_expression(symboltables_ptr, expressionNode);
+
             if (expression_type != TYPE_INTEGER && expression_type != TYPE_REAL) {
                 fprintf(stderr, "Semantic Error (Line No: %d): Unary Operand can only apply to an arithmetic expression of type Integer or Real\n", root->children[0]->token.line_no);
                 has_semantic_error = 1;
@@ -475,7 +593,7 @@ static void get_type_of_expression(SymbolHashTable*** symboltables_ptr, ASTNode*
         else {
             // TK_ID
             ASTNode* idNode = var_id_numNode->children[0];
-            if (var_id_numNode->children[1] == NULL) {
+            if (var_id_numNode->num_children <= 1) {
                 // Simply an identifier
                 SymbolRecord* search = st_search_scope(symboltables_ptr, idNode->token.lexeme, start_scope, end_scope);
                 if (search == NULL) {
@@ -536,7 +654,7 @@ static void get_type_of_expression(SymbolHashTable*** symboltables_ptr, ASTNode*
                     // Integer
                     // Check for bounds
                     int value = atoi(idxNode->token.lexeme);
-                    if (value >= search->end || value < search->offset) {
+                    if (value > search->end || value < search->offset) {
                         fprintf(stderr, "Semantic Error (Line No: %d): Array index for '%s' out of bounds\n", idxNode->token.line_no, var_id_numNode->children[0]->token.lexeme);
                         has_semantic_error = true;
                         expression_type = TYPE_ERROR;
@@ -577,8 +695,7 @@ static void get_type_of_expression(SymbolHashTable*** symboltables_ptr, ASTNode*
         //printf("var_id_num returns %s\n", get_string_from_type(expression_type));
     }
     else if (root->token_type == boolConstt) {
-        expr_type = TYPE_BOOLEAN;
-        expression_type = expr_type;
+        expression_type = TYPE_BOOLEAN;
     }
     else if (root->token_type == N7 || root->token_type == N8) {
         // LogicalOp or relationalOp
@@ -681,7 +798,7 @@ static void process_assignment_statement(SymbolHashTable*** symboltables_ptr, AS
             // Integer
             // Check for bounds
             int value = atoi(idxNode->token.lexeme);
-            if (value >= search->end || value < search->offset) {
+            if (value > search->end || value < search->offset) {
                 fprintf(stderr, "Semantic Error (Line No: %d): Array index for '%s' out of bounds\n", idxNode->token.line_no, search->token.lexeme);
                 has_semantic_error = true;
                 return;
@@ -721,6 +838,7 @@ static void process_module_reuse(SymbolHashTable*** symboltables_ptr, ASTNode* r
                     // Not found. Error
                     fprintf(stderr, "Semantic Error (Line No: %d): Identifier '%s' not found in scope, but used in module call statement\n", idNode->token.line_no, idNode->token.lexeme);
                     has_semantic_error = true;
+                    return;
                 }
             }
             // Otherwise, now check types of parameters
@@ -734,6 +852,7 @@ static void process_module_reuse(SymbolHashTable*** symboltables_ptr, ASTNode* r
                 if (search == NULL) {
                     fprintf(stderr, "Semantic Error (Line No: %d): Identifier '%s' not found in scope, but used in module call statement\n", idNode->token.line_no, idNode->token.lexeme);
                     has_semantic_error = true;
+                    return;
                 }
                 // Ssearch must have the matched variable
                 // Now check types of parameters
@@ -746,6 +865,7 @@ static void process_module_reuse(SymbolHashTable*** symboltables_ptr, ASTNode* r
                 if (search == NULL) {
                     fprintf(stderr, "Semantic Error (Line No: %d): Module ID '%s' not found in global scope. Cannot be called\n", idNode->token.line_no, moduleID);
                     has_semantic_error = true;
+                    return;
                 }
 
                 // TODO: Handle the <input_plist> and <output_plist> semantics
@@ -753,21 +873,19 @@ static void process_module_reuse(SymbolHashTable*** symboltables_ptr, ASTNode* r
                 int module_scope = search->scope_label;
 
                 // Now search the module ft records for the identifier
-                if (temp->children[1]== NULL)
-                    break;
+                if (temp->num_children < 2) break;
             }
         }
     }
 }
 
-static void process_iterative_statement(SymbolHashTable*** symboltables_ptr, ASTNode* root) {
+static void process_iterative_statement(FunctionTable** function_tables, SymbolHashTable*** symboltables_ptr, ASTNode* root) {
     assert (root->token_type == iterativeStmt);
     
     // Start a new scope and create a new scope table
     start_scope ++;
     scope_stacks[module_index] = stack_push(scope_stacks[module_index], start_scope);
     create_scope_table(symboltables_ptr, start_scope);
-    function_tables = realloc (function_tables, (start_scope + 1) * sizeof(FunctionTable));
 
     SymbolRecord* search = NULL;
     // An iterativestmt can be for or while
@@ -809,18 +927,17 @@ static void process_iterative_statement(SymbolHashTable*** symboltables_ptr, AST
     }
 }
 
-static void process_conditional_statement(SymbolHashTable*** symboltables_ptr, ASTNode* root) {
+static void process_conditional_statement(FunctionTable** function_tables, SymbolHashTable*** symboltables_ptr, ASTNode* root) {
     // Start a new scope and create a new scope table
     // NOTE: I'm creating tables despite it being potentially empty. For now, I'm not placing
     // any conditional check to open or close scope tables wrt TK_END, although I may do so later
     start_scope ++;
     scope_stacks[module_index] = stack_push(scope_stacks[module_index], start_scope);
     create_scope_table(symboltables_ptr, start_scope);
-    function_tables = realloc (function_tables, (start_scope + 1) * sizeof(FunctionTable));
 
     ASTNode* idNode = root->children[0];
-    ASTNode* caseStmtsNode = root->children[1];
-    ASTNode* defaultNode = root->children[2];
+    ASTNode* caseStmtsNode = (root->num_children >= 2) ? root->children[1] : NULL;
+    ASTNode* defaultNode = (root->num_children >= 3) ? root->children[2] : NULL;
 
     // Identifier must already be visible in scope
     SymbolRecord* search = st_search_scope(symboltables_ptr, idNode->token.lexeme, start_scope, start_scope);
@@ -872,9 +989,9 @@ static void process_io_statement(SymbolHashTable*** symboltables_ptr, ASTNode* r
                     has_semantic_error = true;
                     return;
                 }
-                ASTNode* idxNode = root->children[0]->children[1];
-                if (idxNode != NULL) {
+                if (root->children[0]->num_children >= 2) {
                     // TK_NUM or TK_ID
+                    ASTNode* idxNode = root->children[0]->children[1];
                     if (idxNode->token.token_type == TK_NUM) {
                         if (search->offset > atoi(idxNode->token.lexeme) || search->end <= atoi(idxNode->token.lexeme)) {
                             fprintf(stderr, "Semantic Error (Line No %d): Array index for '%s' out of bounds\n", idNode->token.line_no, idNode->token.lexeme);
@@ -908,39 +1025,75 @@ static void process_io_statement(SymbolHashTable*** symboltables_ptr, ASTNode* r
     }
 }
 
-static void initialize_stacks(int max_modules, int max_nesting_level) {
+void initialize_stacks(int max_modules, int max_nesting_level) {
     modules = calloc (max_modules, sizeof(int));
+    module_names = calloc (max_modules, sizeof(char*));
     scope_stacks = calloc (max_modules, sizeof(Stack*));
     for (int i=0; i<max_modules; i++) {
         scope_stacks[i] = init_stack(0, max_nesting_level);
     }
 }
 
-static void free_stacks(int max_modules) {
+void free_stacks(int max_modules) {
     for (int i=0; i<max_modules; i++) {
         if (scope_stacks[i]) free_stacknode(scope_stacks[i]);
     }
-    if (scope_stacks) free(scope_stacks);
-    if (modules) free(modules);
+    if (scope_stacks) {
+        Stack** tmp = scope_stacks;
+        scope_stacks = NULL;
+        free(tmp);
+    }
+    if (modules) {
+        int* tmp = modules;
+        modules = NULL;
+        free(tmp);
+    }
+    if (module_names) {
+        for (int i=0; i<=module_index; i++)
+            module_names[i] = NULL;
+        free(module_names);
+    }
+}
+
+FunctionTable** semantic_analysis(SymbolHashTable*** symboltables_ptr, ASTNode* root) {
+    int max_modules = 30; int max_nesting_level = 10;
+    initialize_stacks(max_modules, max_nesting_level);
+    module_index = 0; start_scope = 0;
+    start_num_scope = calloc (100, sizeof(int));
+    end_num_scope = calloc (100, sizeof(int));
+    symboltables_ptr = calloc (1, sizeof(SymbolHashTable**));
+    symboltables_ptr[0] = calloc (1, sizeof(SymbolHashTable*));
+    symboltables_ptr[0][0] = create_symtable(CAPACITY, hash_function_symbol);
+    FunctionTable** function_tables = calloc (100, sizeof(FunctionTable*));
+    for (int i=0; i<100; i++) function_tables[i] = NULL;
+    perform_semantic_analysis(function_tables, symboltables_ptr, root);
+    print_function_tables(function_tables, start_scope + 1);
+    return function_tables;
 }
 
 void semantic_analyzer_wrapper(SymbolHashTable*** symboltables_ptr, ASTNode* root) {
     // Wrapper function for the semantic analyzer
     int max_modules = 30; int max_nesting_level = 10;
     initialize_stacks(max_modules, max_nesting_level);
-    function_tables = calloc (1, sizeof(FunctionTable));
-    perform_semantic_analysis(symboltables_ptr, root);
-    print_function_tables(start_scope + 1);
-    free_function_table(start_scope + 1);
-    free_stacks(max_modules);
+    start_num_scope = calloc (100, sizeof(int));
+    end_num_scope = calloc (100, sizeof(int));
+    FunctionTable** function_tables = calloc (100, sizeof(FunctionTable*));
+    for (int i=0; i<100; i++) function_tables[i] = NULL;
+    perform_semantic_analysis(function_tables, symboltables_ptr, root);
+    print_function_tables(function_tables, start_scope + 1);
+    free_function_table(function_tables, start_scope + 1);
 }
 
-void perform_semantic_analysis(SymbolHashTable*** symboltables_ptr, ASTNode* root) {
+void perform_semantic_analysis(FunctionTable** function_tables, SymbolHashTable*** symboltables_ptr, ASTNode* root) {
     // Performs all required Semantic Checks using the Symbol Table
     if (!root)
         return;
     SymbolHashTable** symboltables = *symboltables_ptr; // Careful with realloc()
-    if (root->token_type == TK_END) {
+    if (root->token_type == TK_START) {
+        start_num_scope[start_scope] = root->token.line_no;
+    }
+    else if (root->token_type == TK_END) {
+        end_num_scope[start_scope] = root->token.line_no;
         if (root->parent->token_type == condionalStmt || root->parent->token_type == iterativeStmt) {
             // End of Scope. Pop off from the module stack
             //printf("Popping from module num: %d, scope_num = %d\n", module_index, scope_stacks[module_index]->data);
@@ -970,7 +1123,7 @@ void perform_semantic_analysis(SymbolHashTable*** symboltables_ptr, ASTNode* roo
             has_semantic_error = true;
         }
         else
-            process_module_declaration(symboltables_ptr, root);
+            process_module_declaration(function_tables, symboltables_ptr, root);
     }
     else if (root->token_type == module) {
         // Module Definition. Add moduleID to both local and global scope
@@ -983,7 +1136,7 @@ void perform_semantic_analysis(SymbolHashTable*** symboltables_ptr, ASTNode* roo
             has_semantic_error = true;
         }
         else {
-            process_module_definition(symboltables_ptr, root);
+            process_module_definition(function_tables, symboltables_ptr, root);
         }
     }
     else if (root->token_type == assignmentStmt) {
@@ -994,16 +1147,16 @@ void perform_semantic_analysis(SymbolHashTable*** symboltables_ptr, ASTNode* roo
         process_module_reuse(symboltables_ptr, root, moduleID);
     }
     else if (root->token_type == declareStmt) {
-        process_declaration_statement(symboltables_ptr, root);
+        process_declaration_statement(function_tables, symboltables_ptr, root);
     }
     else if (root->token_type == driverModule) {
-        process_driver_module(symboltables_ptr, root);
+        process_driver_module(function_tables, symboltables_ptr, root);
     }
     else if (root->token_type == iterativeStmt) {
-        process_iterative_statement(symboltables_ptr, root);
+        process_iterative_statement(function_tables, symboltables_ptr, root);
     }
     else if (root->token_type == condionalStmt) {
-        process_conditional_statement(symboltables_ptr, root);
+        process_conditional_statement(function_tables, symboltables_ptr, root);
     }
     else if (root->token_type == ioStmt) {
         process_io_statement(symboltables_ptr, root);
@@ -1012,7 +1165,7 @@ void perform_semantic_analysis(SymbolHashTable*** symboltables_ptr, ASTNode* roo
     //    process_expression(symboltables_ptr, root);
     //}
     for (int i=0; i<root->num_children; i++)
-        perform_semantic_analysis(symboltables_ptr, root->children[i]);
+        perform_semantic_analysis(function_tables, symboltables_ptr, root->children[i]);
 }
 
 SymbolHashTable*** createSymbolTables(ASTNode* root) {
@@ -1321,59 +1474,95 @@ void st_delete(SymbolHashTable* table, char* key) {
 
 }
 
-void print_symrecord(SymbolRecord* t, char ch) {
+void print_symrecord(SymbolHashTable*** symboltables_ptr, SymbolRecord* t, char ch) {
+    SymbolHashTable** symboltables = *symboltables_ptr;
     // Prints the SymbolRecord* type
-    printf("token_type = %s , ", get_string_from_type(t->type_name));
-    if (t->token.lexeme) {
-        printf("lexeme = %s , ", t->token.lexeme);
+    // Width
+    printf("%d\t", get_width(t));
+    // isArray
+    if (t->type_name == TYPE_ARRAY) printf("yes "); else printf("no ");
+    // static or dynamic
+    if (t->type_name == TYPE_ARRAY) {
+        if (t->offset_id == NULL) {
+            printf("static\t\t");
+            // Range lexemes
+            printf("[%d,%d]\t", t->offset, t->end);
+        }
+        else {
+            printf("dynamic\t\t");
+            // Range Lexemes
+            printf("[%s,%s]\t", t->offset_id, t->end_id);
+        }
     }
-    printf("scope_label = %d , ", t->scope_label);
-    printf("end = %d , ", t->end);
-    printf("offset = %d , ", t->offset);
-    printf("element_type = %s , ", get_string_from_term(t->element_type));
-    if (t->offset_id) printf("offset_id = %s , ", t->offset_id);
-    if (t->end_id) printf("end_id = %s , ", t->end_id);
+    else {
+        printf("---\t");
+        printf("---\t");
+    }
+    // type_of_element
+    if (t->element_type != TK_EPSILON) {
+        // Array element type
+        printf("%s\t", get_string_from_type(get_typename_from_term(t->element_type)));
+    }
+    else {
+        printf("%s\t", get_string_from_type(t->type_name));
+    }
+    // offset
+    if (t->is_param) {
+        printf("%d\t", total_offset_param);
+    }
+    else {
+        printf("%d\t", total_offset);
+    }
+    // nesting_level
+    char* mod_name = get_module_name(t->scope_label);
+    int mod_scope = st_search(symboltables[0], mod_name)->scope_label;
+    if (t->is_param == true) {
+        printf("%d", t->scope_label - mod_scope);
+        total_offset_param += get_width(t);
+    }
+    else {
+        printf("%d", t->scope_label - mod_scope + 1);
+        total_offset += get_width(t);
+    }
     printf("%c", ch);
 }
 
-void print_search_symtable(SymbolHashTable* table, char* key) {
-    SymbolRecord* val;
-    if ((val = st_search(table, key)) == NULL) {
-        printf("%s does not exist\n", key);
-        return;
-    }
-    else {
-        printf("Key:%s, Value:", key);
-        print_symrecord(val, '\n');
-    }
-}
-
-void print_symtable(SymbolHashTable* table) {
-    printf("\n-------------------\n");
+void print_symboltable(SymbolHashTable*** symboltables_ptr, SymbolHashTable* table) {
+    if (!table) return;
     for (int i=0; i<table->size; i++) {
         if (table->items[i]) {
-            printf("Index:%d, Key:%s, Value:", i, table->items[i]->key);
-            print_symrecord(table->items[i]->value, '\0');
+            int scope = table->items[i]->value->scope_label;
+            printf("%s\t", table->items[i]->key);
+            printf("%s\t", get_module_name(scope));
+            // Line Nos
+            printf("%d-%d\t\t", start_num_scope[scope], end_num_scope[scope]);
+            // Record stuff
+            print_symrecord(symboltables_ptr, table->items[i]->value, '\n');
             if (table->overflow_buckets[i]) {
-                printf(" => Overflow Bucket => ");
+                // Do the same stuff
                 SymbolLinkedList* head = table->overflow_buckets[i];
                 while (head) {
-                    printf("Key:%s, Value:" , head->item->key);
-                    print_symrecord(head->item->value, ' ');
+                    int scope = head->item->value->scope_label;
+                    printf("%s\t", head->item->key);
+                    printf("%s\t", get_module_name(scope));
+                    // Line Nos
+                    printf("%d-%d\t\t", start_num_scope[scope], end_num_scope[scope]);
+                    // Record stuff
+                    print_symrecord(symboltables_ptr, head->item->value, '\n');
                     head = head->next;
                 }
             }
-            printf("\n");
         }
     }
-    printf("-------------------\n");
 }
 
 void print_symtables(SymbolHashTable** tables, int num_tables) {
     // Table #0 is for global scoped variables
-    for (int i=0; i<=num_tables; i++) {
-        printf("Table #%d\n\n", i);
-        print_symtable(tables[i]);
+    printf("variable_name	scope(module_name)	scope(line_numbers)	width	isArray	static_or_dynamic	range_lexemes	type_of_element	offset	nesting_level\n");
+    for (int i=1; i<=num_tables; i++) {
+        total_offset = 0; total_offset_param = 0;
+        if (tables[i])
+            print_symboltable(&tables, tables[i]);
     }
 }
 
