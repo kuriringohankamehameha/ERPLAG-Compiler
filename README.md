@@ -22,6 +22,25 @@ Build a compiler for a custom C-like language **ERPLAG**, that is a strongly typ
 nasm -f elf64 output.asm
 ```
 
+## Instructions
+
+Compile using:
+```
+make
+```
+
+Run the driver program using:
+```
+./driver.out input_file.txt output.asm
+```
+
+This takes an input testcase file, and returns an `output.asm` assembly file.
+
+You can then run the generated assembly code using *NASM*:
+```
+nasm -f elf64 output.asm
+./output
+```
 
 ## Stage 1
 - [x] DFA
